@@ -7,7 +7,7 @@ import useTheme from '../hooks/useTheme.js'
 const baseLinkClass =
   'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950'
 
-function NavItem({ to, children, onClick }) {
+function NavItem({ to, children, onClick, className }) {
   return (
     <NavLink
       to={to}
@@ -15,6 +15,7 @@ function NavItem({ to, children, onClick }) {
       className={({ isActive }) =>
         [
           baseLinkClass,
+          className,
           isActive
             ? 'gold-gradient-bg text-white ring-1 ring-brand-gold/30 font-extrabold'
             : 'text-slate-700 hover:bg-slate-50 hover:text-brand-goldText dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-brand-goldBright',
@@ -148,14 +149,14 @@ export default function Navbar() {
                 </button>
               </div>
               {links.map((l) => (
-                <NavItem key={l.to} to={l.to} onClick={() => setMobileOpen(false)}>
+                <NavItem key={l.to} to={l.to} onClick={() => setMobileOpen(false)} className="w-full max-w-xs">
                   {l.label}
                 </NavItem>
               ))}
               <NavLink
                 to="/admissions"
                 onClick={() => setMobileOpen(false)}
-                className="gold-gradient-bg mt-1 inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-colors hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                className="gold-gradient-bg mt-1 inline-flex w-full max-w-xs items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-colors hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
               >
                 Enroll Now
               </NavLink>
