@@ -79,11 +79,12 @@ export default function Navbar() {
               <FaSchool className="h-4 w-4 text-white" aria-hidden="true" />
             )}
           </span>
-          <span className="hidden sm:inline">Divine Mercy School of Bukidnon, Inc.</span>
+          <span className="hidden lg:inline">Divine Mercy School of Bukidnon, Inc.</span>
+          <span className="hidden sm:inline lg:hidden">Divine Mercy School</span>
           <span className="sm:hidden">DMSB</span>
         </NavLink>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           {links.map((l) => (
             <NavItem key={l.to} to={l.to}>
               {l.label}
@@ -115,7 +116,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950 md:hidden"
+          className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950 lg:hidden"
           aria-label="Open menu"
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
@@ -125,7 +126,7 @@ export default function Navbar() {
       </div>
 
       {mobileOpen ? (
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <div
             className="fixed inset-0 z-40 bg-slate-900/40 dark:bg-slate-900/60"
             aria-hidden="true"
@@ -149,14 +150,14 @@ export default function Navbar() {
                 </button>
               </div>
               {links.map((l) => (
-                <NavItem key={l.to} to={l.to} onClick={() => setMobileOpen(false)} className="w-full max-w-xs">
+                <NavItem key={l.to} to={l.to} onClick={() => setMobileOpen(false)} className="w-full max-w-xs sm:max-w-sm">
                   {l.label}
                 </NavItem>
               ))}
               <NavLink
                 to="/admissions"
                 onClick={() => setMobileOpen(false)}
-                className="gold-gradient-bg mt-1 inline-flex w-full max-w-xs items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-colors hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                className="gold-gradient-bg mt-1 inline-flex w-full max-w-xs items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-colors hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:max-w-sm"
               >
                 Enroll Now
               </NavLink>

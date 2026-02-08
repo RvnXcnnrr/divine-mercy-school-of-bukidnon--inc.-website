@@ -95,13 +95,13 @@ export default function Admissions() {
             </div>
             <NavLink
               to="/contact"
-              className="inline-flex items-center justify-center rounded-md bg-brand-goldText px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              className="inline-flex w-full items-center justify-center rounded-md bg-brand-goldText px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
             >
               Ask about eligibility
             </NavLink>
           </div>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-3">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-brand-sky text-brand-navy ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700">
                 <FaMapLocationDot className="h-5 w-5" aria-hidden="true" />
@@ -171,7 +171,7 @@ export default function Admissions() {
 
             <div className="mt-5 grid gap-3">
               <a
-                className="inline-flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
+                className="inline-flex w-full items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
                 href="/forms/Admissions-Form.pdf"
                 download
               >
@@ -182,7 +182,7 @@ export default function Admissions() {
                 <span className="text-xs text-slate-500 dark:text-slate-400">Download</span>
               </a>
               <a
-                className="inline-flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
+                className="inline-flex w-full items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
                 href="/forms/Requirements-Checklist.pdf"
                 download
               >
@@ -197,14 +197,14 @@ export default function Admissions() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <NavLink
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-goldText px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-goldText px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
               >
                 <FiUserPlus className="h-4 w-4" aria-hidden="true" />
                 Enrollment Assistance
               </NavLink>
               <NavLink
                 to="/"
-                className="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
+                className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 sm:w-auto"
               >
                 Back to Home
               </NavLink>
@@ -215,7 +215,7 @@ export default function Admissions() {
 
       <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-brand-goldText sm:h-10"
+          className="block h-8 w-full fill-current text-brand-goldText dark:text-slate-950 sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -233,7 +233,7 @@ export default function Admissions() {
           <div className="mt-6">
             <NavLink
               to="/contact"
-              className="gold-gradient-bg inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-goldText"
+              className="gold-gradient-bg inline-flex w-full items-center justify-center rounded-md px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-goldText sm:w-auto"
             >
               Contact Admissions
             </NavLink>

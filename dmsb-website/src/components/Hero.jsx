@@ -33,7 +33,7 @@ export default function Hero() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <NavLink
               to="/admissions"
-              className="gold-gradient-bg inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-extrabold text-white transition-all hover:-translate-y-0.5 hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              className="gold-gradient-bg inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-extrabold text-white transition-all hover:-translate-y-0.5 hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:w-auto"
             >
               <FiUserPlus className="h-4 w-4" aria-hidden="true" />
               Enroll Now
@@ -41,7 +41,7 @@ export default function Hero() {
             </NavLink>
             <NavLink
               to="/contact"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-navy ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-navy ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800 sm:w-auto"
             >
               <FiMail className="h-4 w-4" aria-hidden="true" />
               Contact Us

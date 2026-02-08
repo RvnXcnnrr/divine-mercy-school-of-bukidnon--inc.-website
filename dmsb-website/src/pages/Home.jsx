@@ -32,7 +32,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {highlights.map((h, idx) => (
             <SectionCard
               key={h.title}
@@ -71,20 +71,20 @@ export default function Home() {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <NavLink
                   to="/admissions"
-                  className="inline-flex items-center justify-center rounded-md bg-brand-goldText px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-brand-goldText px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
                 >
                   Learn eligibility
                 </NavLink>
                 <NavLink
                   to="/contact"
-                  className="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900 sm:w-auto"
                 >
                   Ask about transport
                 </NavLink>
               </div>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-1" data-reveal>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1" data-reveal>
               <SectionCard
                 icon={FaMapLocationDot}
                 title={transportProgram.cards[0].title}
@@ -127,13 +127,13 @@ export default function Home() {
             </div>
             <NavLink
               to="/news"
-              className="inline-flex items-center justify-center rounded-md bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              className="inline-flex w-full items-center justify-center rounded-md bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
             >
               View all
             </NavLink>
           </div>
 
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {previewNews.map((item) => (
               <NewsCard key={item.id} item={item} compact />
             ))}
@@ -161,7 +161,7 @@ export default function Home() {
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Parent and guardian feedback from our community.</p>
           </div>
 
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t, idx) => (
               <Testimonial key={idx} quote={t.quote} name={t.name} role={t.role} />
             ))}
@@ -193,13 +193,13 @@ export default function Home() {
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end" data-reveal>
             <NavLink
               to="/admissions"
-              className="gold-gradient-bg inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-goldText"
+              className="gold-gradient-bg inline-flex w-full items-center justify-center rounded-md px-5 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-goldText sm:w-auto"
             >
               Enroll Now
             </NavLink>
             <NavLink
               to="/contact"
-              className="inline-flex items-center justify-center rounded-md bg-white/10 px-5 py-3 text-sm font-extrabold text-white ring-1 ring-white/20 transition-colors hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-goldText"
+              className="inline-flex w-full items-center justify-center rounded-md bg-white/10 px-5 py-3 text-sm font-extrabold text-white ring-1 ring-white/20 transition-colors hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-goldText sm:w-auto"
             >
               Contact Us
             </NavLink>
