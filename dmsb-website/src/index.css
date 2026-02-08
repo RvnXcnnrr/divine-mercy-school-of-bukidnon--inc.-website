@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .gold-gradient-bg {
+    @apply bg-gradient-to-r from-brand-gold via-brand-goldBright to-brand-goldPale;
+  }
+
+  .gold-gradient-text {
+    @apply bg-gradient-to-r from-brand-goldText via-brand-gold to-brand-goldBright bg-clip-text text-transparent;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-brand-sky text-brand-ink antialiased dark:bg-slate-950 dark:text-slate-100;
+}
+
+/* Hero motion accents (respect reduced motion) */
+.hero-animated .hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: 0 0;
+  mask-image: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0) 68%);
+}
+
+.hero-animated .hero-sweep {
+  background-image:
+    radial-gradient(650px 280px at 15% 30%, rgba(7, 26, 47, 0.06), transparent 60%),
+    radial-gradient(520px 240px at 85% 60%, rgba(197, 22, 29, 0.12), transparent 60%);
+  animation: hero-sweep 14s ease-in-out infinite;
+}
+
+.hero-animated .hero-orb {
+  animation: hero-orb 10s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-animated .hero-orb--delay {
+  animation-delay: -4s;
+}
+
+.hero-animated .hero-parallax {
+  transform: translate3d(calc(var(--hx, 0) * 10px), calc(var(--hy, 0) * 8px), 0);
+  transition: transform 220ms ease-out;
+  will-change: transform;
+}
+
+.hero-animated .hero-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-animated .hero-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: -40% -55%;
+  background: linear-gradient(120deg, transparent 44%, rgba(197, 22, 29, 0.12) 50%, transparent 56%);
+  transform: translateX(-70%);
+  opacity: 0.75;
+  animation: hero-shimmer 8.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-animated .hero-float {
+  animation: hero-float 6.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-animated .hero-float--2 {
+  animation-delay: -1.8s;
+}
+
+.hero-animated .hero-float--3 {
+  animation-delay: -3.2s;
+}
+
+@keyframes hero-orb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(22px, 18px, 0) scale(1.08);
+  }
+}
+
+@keyframes hero-sweep {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.18;
+  }
+  50% {
+    transform: translate3d(18px, -10px, 0);
+    opacity: 0.28;
+  }
+}
+
+@keyframes hero-shimmer {
+  0% {
+    transform: translateX(-70%);
+  }
+  30% {
+    transform: translateX(70%);
+  }
+  100% {
+    transform: translateX(70%);
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-animated .hero-sweep,
+  .hero-animated .hero-orb,
+  .hero-animated .hero-float,
+  .hero-animated .hero-shimmer::after {
+    animation: none !important;
+  }
+
+  .hero-animated .hero-parallax {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Scroll-reveal animation (respect reduced motion) */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Divine Mercy School of Bukidnon, Inc. — quality education rooted in faith-based values and student excellence."
+    />
+    <meta name="theme-color" content="#C5161D" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Divine Mercy School of Bukidnon, Inc." />
+    <meta
+      property="og:description"
+      content="Quality education rooted in faith-based values and student excellence."
+    />
+    <meta property="og:image" content="/logo.png" />
+    <script>
+      ;(() => {
+        try {
+          const key = 'dmsb-theme'
+          const stored = localStorage.getItem(key)
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          const theme = stored === 'light' || stored === 'dark' ? stored : prefersDark ? 'dark' : 'light'
+          const root = document.documentElement
+          root.classList.toggle('dark', theme === 'dark')
+          root.style.colorScheme = theme
+        } catch {
+          // ignore
+        }
+      })()
+    </script>
+    <title>Divine Mercy School of Bukidnon, Inc.</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
