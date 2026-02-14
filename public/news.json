@@ -1,0 +1,62 @@
+[
+  {
+    "id": "foundation-day",
+    "title": "Foundation Day Celebration",
+    "category": "School Event",
+    "tags": ["community", "celebration"],
+    "date": "2026-01-18",
+    "location": "Campus Grounds",
+    "excerpt": "Thanksgiving Mass, performances, and recognition of learners and partners.",
+    "status": "past"
+  },
+  {
+    "id": "science-fair",
+    "title": "Science & Innovation Fair",
+    "category": "Academics",
+    "tags": ["stem", "innovation"],
+    "date": "2026-01-29",
+    "location": "Multi-purpose Hall",
+    "excerpt": "Students showcased creative projects, prototypes, and inquiry-based learning outputs.",
+    "status": "past"
+  },
+  {
+    "id": "sportsfest",
+    "title": "Intramurals & Sportsfest Week",
+    "category": "Student Life",
+    "tags": ["sports", "wellness"],
+    "date": "2026-02-03",
+    "location": "Gym & Field",
+    "excerpt": "Teamwork, sportsmanship, and healthy competition across grade levels.",
+    "status": "past"
+  },
+  {
+    "id": "enrollment",
+    "title": "Enrollment Updates & Reminders",
+    "category": "Announcement",
+    "tags": ["enrollment", "admissions"],
+    "date": "2026-02-05",
+    "location": "Admissions Office",
+    "excerpt": "Key dates, requirements, and support options for enrollment.",
+    "status": "current"
+  },
+  {
+    "id": "career-week",
+    "title": "Career & Vocation Week",
+    "category": "Guidance",
+    "tags": ["career", "vocation"],
+    "date": "2026-03-12",
+    "location": "Library Hub",
+    "excerpt": "Talks from industry, alumni, and vocation partners for SHS learners.",
+    "status": "upcoming"
+  },
+  {
+    "id": "outreach",
+    "title": "Community Outreach Drive",
+    "category": "Service",
+    "tags": ["service", "community"],
+    "date": "2026-03-25",
+    "location": "Local Barangay",
+    "excerpt": "Student-led donation and service activity with local partners.",
+    "status": "upcoming"
+  }
+]

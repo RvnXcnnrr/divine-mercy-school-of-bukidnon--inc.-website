@@ -1,4 +1,4 @@
-import { FiArrowRight, FiCalendar, FiTag } from 'react-icons/fi'
+import { FiArrowRight, FiCalendar, FiMapPin, FiTag } from 'react-icons/fi'
 
 function formatDate(iso) {
   try {
@@ -27,10 +27,26 @@ export default function NewsCard({ item, compact = false }) {
           <FiCalendar className="h-3.5 w-3.5 text-brand-blue" aria-hidden="true" />
           {formatDate(item.date)}
         </span>
+        {item.location ? (
+          <span className="inline-flex items-center gap-1">
+            <FiMapPin className="h-3.5 w-3.5 text-brand-blue" aria-hidden="true" />
+            {item.location}
+          </span>
+        ) : null}
       </div>
 
       <h3 className="mt-3 text-base font-extrabold text-brand-goldText">{item.title}</h3>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{item.excerpt}</p>
+
+      {Array.isArray(item.tags) && item.tags.length ? (
+        <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wide text-brand-blue">
+          {item.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="rounded-full bg-brand-sky px-2 py-1 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-brand-goldText">
         <span>Read update</span>

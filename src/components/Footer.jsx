@@ -18,6 +18,8 @@ export default function Footer() {
                   alt="Divine Mercy School of Bukidnon, Inc. logo"
                   className="h-full w-full object-contain"
                   loading="lazy"
+                  width="40"
+                  height="40"
                   onError={() => setLogoOk(false)}
                 />
               ) : (
@@ -34,21 +36,21 @@ export default function Footer() {
           <p className="mt-2 text-sm font-semibold text-brand-goldText">We bring education closer to every child.</p>
           <div className="mt-4 flex items-center gap-3">
             <a
-              href="#"
+              href="https://www.facebook.com/dmsb"
               className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
               aria-label="Facebook"
             >
               <FaFacebookF className="h-4 w-4" aria-hidden="true" />
             </a>
             <a
-              href="#"
+              href="https://www.youtube.com/"
               className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
               aria-label="YouTube"
             >
               <FaYoutube className="h-4 w-4" aria-hidden="true" />
             </a>
             <a
-              href="#"
+              href="https://www.instagram.com/"
               className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
               aria-label="Instagram"
             >

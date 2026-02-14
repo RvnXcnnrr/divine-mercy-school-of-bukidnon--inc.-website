@@ -7,19 +7,28 @@ export const site = {
 
 export const highlights = [
   {
-    title: 'Quality Education',
-    description:
-      'Strong instruction and student-centered learning that builds mastery, character, and confidence.',
+    title: 'Licensure & Certification',
+    stat: '98% pass rate',
+    description: 'Consistent success in board exams and certifications across programs.',
+    meta: 'Outcome',
   },
   {
-    title: 'Faith-Based Values',
-    description:
-      'Christian values, compassion, discipline, and moral formation guiding everyday learning.',
+    title: 'Student–Teacher Ratio',
+    stat: '18 : 1',
+    description: 'Small classes for closer guidance, feedback, and formation.',
+    meta: 'Care',
   },
   {
-    title: 'Student Excellence',
-    description:
-      'Opportunities that grow leadership, responsibility, and a spirit of service.',
+    title: 'Transport Assistance',
+    stat: '6 routes',
+    description: 'Free daily pick-up and drop-off for eligible learners.',
+    meta: 'Access',
+  },
+  {
+    title: 'Scholarships & Aid',
+    stat: 'Tuition support',
+    description: 'Need-based assistance plus discounts to keep learners enrolled.',
+    meta: 'Support',
   },
 ]
 
@@ -134,27 +143,30 @@ export const facilities = [
   },
 ]
 
+export const partners = [
+  { name: 'DepEd Recognized', note: 'Compliance & standards' },
+  { name: 'Local Parish', note: 'Campus ministry' },
+  { name: 'LGU & Community', note: 'Scholarship coordination' },
+  { name: 'Parent Council', note: 'Family engagement' },
+]
+
 export const admissions = {
   steps: [
     {
-      title: 'Inquiry & Guidance',
-      description:
-        'Reach out to the admissions office to confirm grade level availability and timelines.',
+      title: 'Inquiry',
+      description: 'Call, message, or visit to confirm grade availability and timelines.',
     },
     {
-      title: 'Submit Requirements',
-      description:
-        'Prepare and submit the required documents for evaluation and screening.',
+      title: 'Campus Visit',
+      description: 'Tour the campus, meet staff, and discuss learner needs.',
     },
     {
-      title: 'Assessment / Interview',
-      description:
-        'As applicable, complete assessments or an interview to support student placement.',
+      title: 'Submit Documents',
+      description: 'Provide forms and requirements for evaluation and placement.',
     },
     {
-      title: 'Enrollment & Confirmation',
-      description:
-        'Finalize enrollment, settle fees, and receive your student’s schedule and orientation details.',
+      title: 'Decision & Enrollment',
+      description: 'Receive the admission decision and finalize enrollment.',
     },
   ],
   requirements: [

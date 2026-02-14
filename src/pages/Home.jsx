@@ -1,4 +1,5 @@
-import { FiAward, FiBookOpen, FiHeart } from 'react-icons/fi'
+import { useEffect, useState } from 'react'
+import { FiAward, FiBookOpen, FiCalendar, FiHeart, FiUsers } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
 import { NavLink } from 'react-router-dom'
 import Hero from '../components/Hero.jsx'
@@ -6,7 +7,8 @@ import SectionCard from '../components/SectionCard.jsx'
 import Testimonial from '../components/Testimonial.jsx'
 import NewsCard from '../components/NewsCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
-import { highlights, newsItems, testimonials, transportProgram } from '../data/siteContent.js'
+import { boardMembers, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
+import BoardMemberCard from '../components/BoardMemberCard.jsx'
 
 export default function Home() {
   usePageMeta({
@@ -15,31 +17,66 @@ export default function Home() {
       'Divine Mercy School of Bukidnon, Inc. — a private Catholic school committed to faith-based education, discipline, service, and compassionate support for learners.',
   })
 
-  const highlightIcons = [FiBookOpen, FiHeart, FiAward]
-  const previewNews = newsItems.slice(0, 3)
+  const highlightIcons = [FiAward, FiUsers, FiHeart, FiBookOpen]
+  const [previewNews, setPreviewNews] = useState(newsItems.slice(0, 3))
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch('/news.json')
+        if (!res.ok) throw new Error('Failed to fetch news')
+        const data = await res.json()
+        if (!cancelled && Array.isArray(data)) {
+          setPreviewNews(data.slice(0, 3))
+        }
+      } catch {
+        if (!cancelled) setPreviewNews(newsItems.slice(0, 3))
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div>
       <Hero />
 
+      <section className="mx-auto max-w-6xl px-4 pb-6 pt-4" data-reveal>
+        <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:ring-slate-800 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Visit us</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">See classrooms, talk to staff, and plan your learner's path.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <NavLink
+              to="/contact#visit"
+              className="gold-gradient-bg inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+            >
+              <FiCalendar className="h-4 w-4" aria-hidden="true" />
+              Book a Visit
+            </NavLink>
+            <NavLink
+              to="/admissions"
+              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900"
+            >
+              Admissions Guide
+            </NavLink>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 py-14">
         <div className="max-w-2xl" data-reveal>
-          <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">
-            Why families choose DMSB
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            A supportive Catholic learning community where learners grow in faith, discipline, and excellence.
-          </p>
+          <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Why choose us</h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Four quick proof points families care about.</p>
         </div>
 
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {highlights.map((h, idx) => (
-            <SectionCard
-              key={h.title}
-              icon={highlightIcons[idx]}
-              title={h.title}
-              description={h.description}
-            />
+            <SectionCard key={h.title} icon={highlightIcons[idx % highlightIcons.length]} title={h.title} stat={h.stat} description={h.description} meta={h.meta} />
           ))}
         </div>
       </section>
@@ -105,6 +142,32 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
+        <div className="rounded-2xl bg-brand-sky p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Campus visit</p>
+              <h3 className="text-xl font-black text-brand-goldText">Schedule a guided visit with our team</h3>
+              <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">Walk the campus, meet teachers, and discuss support options.</p>
+            </div>
+            <div className="flex gap-2">
+              <NavLink
+                to="/contact#visit"
+                className="gold-gradient-bg inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              >
+                Book a Visit
+              </NavLink>
+              <NavLink
+                to="/admissions"
+                className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900"
+              >
+                Admissions
+              </NavLink>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
         <svg
           className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
@@ -155,6 +218,32 @@ export default function Home() {
       <section className="bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="max-w-2xl" data-reveal>
+            <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Meet the Board</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Leadership guiding our mission of faith, discipline, and service.</p>
+          </div>
+
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {boardMembers.slice(0, 3).map((member) => (
+              <BoardMemberCard key={member.id} member={member} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
+        <svg
+          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
+          viewBox="0 0 1440 80"
+          preserveAspectRatio="none"
+          focusable="false"
+        >
+          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
+        </svg>
+      </div>
+
+      <section className="bg-white dark:bg-slate-900">
+        <div className="mx-auto max-w-6xl px-4 py-14">
+          <div className="max-w-2xl" data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">
               Testimonials
             </h2>
@@ -165,6 +254,25 @@ export default function Home() {
             {testimonials.map((t, idx) => (
               <Testimonial key={idx} quote={t.quote} name={t.name} role={t.role} />
             ))}
+          </div>
+
+          <div className="mt-10 rounded-2xl bg-brand-sky p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Partners & Community</p>
+            <h3 className="mt-1 text-xl font-black text-brand-goldText">Trusted by families and local partners</h3>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {partners.map((p) => (
+                <span
+                  key={p.name}
+                  className="inline-flex flex-col rounded-lg bg-white px-3 py-2 text-xs font-semibold text-brand-navy ring-1 ring-slate-200 shadow-sm dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-700"
+                >
+                  {p.name}
+                  <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">{p.note}</span>
+                </span>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
+              Want partner logos or deeper faculty highlights? We can add optimized assets and profiles anytime.
+            </p>
           </div>
         </div>
       </section>

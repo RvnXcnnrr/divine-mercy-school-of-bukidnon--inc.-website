@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { FiDownload, FiFileText, FiList, FiUserPlus } from 'react-icons/fi'
+import { FiClock, FiDownload, FiFileText, FiList, FiMail, FiPhone, FiUserPlus } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { admissions } from '../data/siteContent.js'
@@ -31,11 +31,28 @@ export default function Admissions() {
     <div>
       <section>
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <div className="max-w-2xl" data-reveal>
-            <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">Admissions</h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Here’s a clear guide to help you complete enrollment smoothly.
-            </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" data-reveal>
+            <div className="max-w-2xl">
+              <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">Admissions</h1>
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                Here’s a clear guide to help you complete enrollment smoothly.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <a
+                href="/forms/Admissions-Form.pdf"
+                className="gold-gradient-bg inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              >
+                <FiDownload className="h-4 w-4" aria-hidden="true" />
+                Download Enroll Form
+              </a>
+              <NavLink
+                to="/contact#visit"
+                className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
+              >
+                Book a Visit
+              </NavLink>
+            </div>
           </div>
         </div>
       </section>
@@ -58,10 +75,48 @@ export default function Admissions() {
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Follow these steps to enroll.</p>
           </div>
 
-          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          <div className="mt-8 grid gap-5 lg:grid-cols-3">
             {admissions.steps.map((s, idx) => (
               <Step key={s.title} number={idx + 1} title={s.title} description={s.description} />
             ))}
+
+            <div className="rounded-xl bg-brand-sky p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Need help?</p>
+              <h3 className="mt-2 text-base font-extrabold text-brand-goldText">Admissions contact</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                <li className="flex items-center gap-2">
+                  <FiPhone className="h-4 w-4 text-brand-blue" aria-hidden="true" />
+                  <a className="hover:text-brand-goldText" href="tel:+630000000000">+63 000 000 0000</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <FiMail className="h-4 w-4 text-brand-blue" aria-hidden="true" />
+                  <a className="hover:text-brand-goldText" href="mailto:admissions@dmsb.example">admissions@dmsb.example</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <FiUserPlus className="h-4 w-4 text-brand-blue" aria-hidden="true" />
+                  <a className="hover:text-brand-goldText" href="https://m.me/dmsb">Message us on Messenger</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <FiClock className="h-4 w-4 text-brand-blue" aria-hidden="true" />
+                  <span>Mon–Fri, 8:00 AM – 5:00 PM</span>
+                </li>
+              </ul>
+              <div className="mt-4 space-y-2">
+                <a
+                  href="/forms/Admissions-Form.pdf"
+                  className="gold-gradient-bg inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                >
+                  <FiDownload className="h-4 w-4" aria-hidden="true" />
+                  Open enrollment form
+                </a>
+                <NavLink
+                  to="/contact#visit"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-white px-4 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900"
+                >
+                  Schedule a visit
+                </NavLink>
+              </div>
+            </div>
           </div>
         </div>
       </section>

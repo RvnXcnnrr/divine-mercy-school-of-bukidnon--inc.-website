@@ -45,11 +45,14 @@ export default function usePageMeta({ title, description } = {}) {
       ensureProperty('og:description').setAttribute('content', description)
     }
 
+    ensureProperty('og:site_name').setAttribute('content', SITE_NAME)
+    ensureProperty('og:type').setAttribute('content', 'website')
     ensureProperty('og:title').setAttribute('content', fullTitle)
 
     try {
       const canonical = ensureCanonical()
       canonical.setAttribute('href', `${window.location.origin}${pathname}`)
+      ensureProperty('og:url').setAttribute('content', `${window.location.origin}${pathname}`)
     } catch {
       // noop (e.g., non-browser environments)
     }

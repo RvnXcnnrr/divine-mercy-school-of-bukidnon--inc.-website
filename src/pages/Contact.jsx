@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FiMail, FiMapPin, FiPhone, FiSend } from 'react-icons/fi'
+import { FiClock, FiMail, FiMapPin, FiPhone, FiSend } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 
 export default function Contact() {
@@ -22,11 +22,27 @@ export default function Contact() {
     <div>
       <section>
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <div className="max-w-2xl" data-reveal>
-            <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">Contact Us</h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              We’re here to help. Send a message or reach us through the contact details below.
-            </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" data-reveal>
+            <div className="max-w-2xl">
+              <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">Contact Us</h1>
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                We’re here to help. Send a message or reach us through the contact details below.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <a
+                href="https://m.me/dmsb"
+                className="gold-gradient-bg inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              >
+                Message on Messenger
+              </a>
+              <a
+                href="/forms/Admissions-Form.pdf"
+                className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
+              >
+                Open Enroll Form
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -45,7 +61,7 @@ export default function Contact() {
       <section className="bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="grid gap-8 lg:grid-cols-2">
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal id="visit">
               <h2 className="gold-gradient-text text-xl font-black tracking-tight">Send a Message</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">We’ll respond as soon as we can.</p>
 
@@ -132,7 +148,25 @@ export default function Contact() {
                       info@dmsb.example
                     </a>
                   </li>
+                  <li className="flex items-center gap-2">
+                    <FiClock className="h-4 w-4 text-brand-blue" aria-hidden="true" />
+                    <span>Mon–Fri, 8:00 AM – 5:00 PM</span>
+                  </li>
                 </ul>
+                <div className="mt-4 flex flex-col gap-2">
+                  <a
+                    href="https://m.me/dmsb"
+                    className="gold-gradient-bg inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                  >
+                    Message on Messenger
+                  </a>
+                  <a
+                    href="/forms/Admissions-Form.pdf"
+                    className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
+                  >
+                    Open enrollment form
+                  </a>
+                </div>
               </div>
 
               <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
