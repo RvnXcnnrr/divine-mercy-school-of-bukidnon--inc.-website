@@ -7,8 +7,47 @@ import SectionCard from '../components/SectionCard.jsx'
 import Testimonial from '../components/Testimonial.jsx'
 import NewsCard from '../components/NewsCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
-import { boardMembers, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
+import useFloatParallax from '../hooks/useFloatParallax.js'
+import { boardMembers, buildings, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
+
+function HighlightCard({ item, icon }) {
+  const { ref, style } = useFloatParallax({ factor: 0.12, max: 12 })
+  return (
+    <div ref={ref} style={style}>
+      <SectionCard icon={icon} title={item.title} stat={item.stat} description={item.description} meta={item.meta} />
+    </div>
+  )
+}
+
+function BuildingCard({ building }) {
+  const { ref, style } = useFloatParallax({ factor: 0.12, max: 14 })
+  return (
+    <figure
+      ref={ref}
+      style={style}
+      className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800"
+    >
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <img
+          src={building.image}
+          alt={`${building.name} mockup`}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-black/55 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white backdrop-blur">
+          Mockup
+        </span>
+      </div>
+      <figcaption className="p-4">
+        <p className="text-base font-extrabold text-brand-goldText">{building.name}</p>
+        {building.description ? (
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{building.description}</p>
+        ) : null}
+      </figcaption>
+    </figure>
+  )
+}
 
 export default function Home() {
   usePageMeta({
@@ -76,7 +115,7 @@ export default function Home() {
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {highlights.map((h, idx) => (
-            <SectionCard key={h.title} icon={highlightIcons[idx % highlightIcons.length]} title={h.title} stat={h.stat} description={h.description} meta={h.meta} />
+            <HighlightCard key={h.title} item={h} icon={highlightIcons[idx % highlightIcons.length]} />
           ))}
         </div>
       </section>
@@ -168,45 +207,24 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
+      <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
+        <div className="max-w-2xl">
+          <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Campus Building</h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Mockup photo and name shown below - swap in your real building image and official name anytime.
+          </p>
+        </div>
 
-      <section className="bg-brand-sky dark:bg-slate-950">
-        <div className="mx-auto max-w-6xl px-4 py-14">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-reveal>
-            <div>
-              <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">
-                News & Announcements
-              </h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">School activities and important updates.</p>
-            </div>
-            <NavLink
-              to="/news"
-              className="inline-flex w-full items-center justify-center rounded-md bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
-            >
-              View all
-            </NavLink>
-          </div>
-
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {previewNews.map((item) => (
-              <NewsCard key={item.id} item={item} compact />
-            ))}
-          </div>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          {buildings.map((b) => (
+            <BuildingCard key={b.name} building={b} />
+          ))}
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
+          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"

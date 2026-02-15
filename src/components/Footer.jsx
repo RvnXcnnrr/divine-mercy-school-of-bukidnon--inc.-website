@@ -36,7 +36,7 @@ export default function Footer() {
           <p className="mt-2 text-sm font-semibold text-brand-goldText">We bring education closer to every child.</p>
           <div className="mt-4 flex items-center gap-3">
             <a
-              href="https://www.facebook.com/dmsb"
+              href="https://www.facebook.com/dmsbherald"
               className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
               aria-label="Facebook"
             >

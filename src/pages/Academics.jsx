@@ -2,6 +2,7 @@ import { FiActivity, FiBook, FiBookOpen, FiCpu, FiMonitor, FiUsers } from 'react
 import SectionCard from '../components/SectionCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { facilities, programs } from '../data/siteContent.js'
+import useFloatParallax from '../hooks/useFloatParallax.js'
 
 export default function Academics() {
   usePageMeta({
@@ -11,6 +12,15 @@ export default function Academics() {
   })
 
   const facilityIcons = [FiActivity, FiMonitor, FiBookOpen, FiUsers]
+
+  function FacilityCard({ facility, icon }) {
+    const { ref, style } = useFloatParallax({ factor: 0.14, max: 14 })
+    return (
+      <div ref={ref} style={style}>
+        <SectionCard icon={icon} title={facility.title} description={facility.description} />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -125,12 +135,7 @@ export default function Academics() {
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {facilities.map((f, idx) => (
-              <SectionCard
-                key={f.title}
-                icon={facilityIcons[idx]}
-                title={f.title}
-                description={f.description}
-              />
+              <FacilityCard key={f.title} facility={f} icon={facilityIcons[idx]} />
             ))}
           </div>
         </div>

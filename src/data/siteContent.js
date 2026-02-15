@@ -122,6 +122,11 @@ export const programs = [
     description:
       'Preparation for college and careers with specialized learning pathways and practical competencies.',
   },
+  {
+    title: 'TVL Track (Senior High)',
+    description:
+      'Technical-Vocational-Livelihood track with specializations in Agri-Fisheries, Arts, Agri Crop Production, and Food Processing.',
+  },
 ]
 
 export const facilities = [
@@ -140,6 +145,14 @@ export const facilities = [
   {
     title: 'Activity Areas',
     description: 'Spaces for performance, collaboration, and student development activities.',
+  },
+]
+
+export const buildings = [
+  {
+    name: 'Main Academic Building',
+    image: '/building-mock.png',
+    description: 'Mockup image - replace with your actual campus photo and building name.',
   },
 ]
 

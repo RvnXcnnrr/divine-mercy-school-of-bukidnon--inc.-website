@@ -1,14 +1,37 @@
 import { NavLink } from 'react-router-dom'
 import { FiArrowRight, FiMail, FiUserPlus } from 'react-icons/fi'
 import { FaBus, FaChurch, FaHandHoldingHeart, FaUserGraduate } from 'react-icons/fa6'
+import useParallax from '../hooks/useParallax.js'
 
 export default function Hero() {
+  const parallaxRef = useParallax({ factorY: 0.12, factorX: 0.06 })
+
   return (
-    <section className="hero-animated hero-light relative overflow-hidden bg-brand-sky dark:bg-slate-950">
+    <section
+      ref={parallaxRef}
+      className="hero-animated hero-light relative overflow-hidden bg-brand-sky dark:bg-slate-950"
+      style={{ backgroundPositionY: 'calc(var(--parallax-bg, 0px))' }}
+    >
       <div className="pointer-events-none absolute inset-0">
         <div className="hero-sweep absolute inset-0" />
         <div className="hero-orb absolute -left-28 -top-28 h-80 w-80 rounded-full bg-gradient-to-br from-brand-goldPale/60 via-brand-goldBright/45 to-brand-gold/45 blur-3xl opacity-40" />
         <div className="hero-orb hero-orb--delay absolute -bottom-28 -right-28 h-80 w-80 rounded-full bg-brand-blue/60 blur-3xl opacity-20" />
+
+        <div
+          className="absolute left-[6%] top-8 h-32 w-32 rounded-full bg-gradient-to-br from-white/70 to-brand-gold/35 blur-2xl"
+          style={{ transform: 'translate3d(calc(var(--parallax-x, 0px) * 0.25), calc(var(--parallax-y, 0px) * 0.32), 0)' }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute right-[8%] top-14 h-28 w-44 rounded-full bg-gradient-to-br from-brand-blue/35 to-brand-goldPale/25 blur-2xl"
+          style={{ transform: 'translate3d(calc(var(--parallax-x, 0px) * -0.2), calc(var(--parallax-y, 0px) * 0.24), 0)' }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute left-[18%] bottom-6 h-24 w-24 rounded-full bg-white/25 blur-xl"
+          style={{ transform: 'translate3d(calc(var(--parallax-x, 0px) * 0.18), calc(var(--parallax-y, 0px) * -0.18), 0)' }}
+          aria-hidden="true"
+        />
       </div>
 
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center lg:py-20">
