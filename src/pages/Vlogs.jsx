@@ -13,9 +13,10 @@ export default function Vlogs() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const { data: categories = [] } = useCategoriesQuery()
+  const categorySlug = category === 'All' ? undefined : category
   const { data, isLoading, isError, refetch } = usePostsQuery({
     hasVideo: true,
-    categoryId: category === 'All' ? undefined : category,
+    categorySlug,
     search: search || undefined,
     status: 'published',
     limit: 12,
@@ -23,7 +24,39 @@ export default function Vlogs() {
 
   const items = data?.items || []
 
-  const categoryOptions = useMemo(() => [{ id: 'All', name: 'All' }, ...categories.map((c) => ({ id: c.id, name: c.name }))], [categories])
+  const categoryOptions = useMemo(() => {
+    const seen = new Set()
+    const slugify = (val) =>
+      (val || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+
+    const derived = items
+      .map((item) => {
+        const slug = item.category_slug || item.category_id || slugify(item.category) || 'uncategorized'
+        const name = item.category || item.category_slug || item.category_id || 'Uncategorized'
+        return { id: slug, name }
+      })
+      .filter((opt) => {
+        if (!opt.id) return false
+        if (seen.has(opt.id)) return false
+        seen.add(opt.id)
+        return true
+      })
+
+    categories.forEach((c) => {
+      const id = c.slug || c.id
+      if (id && !seen.has(id)) {
+        seen.add(id)
+        derived.push({ id, name: c.name })
+      }
+    })
+
+    return [{ id: 'All', name: 'All' }, ...derived]
+  }, [categories, items])
 
   return (
     <div>

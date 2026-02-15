@@ -18,6 +18,7 @@ function getYoutubeThumb(url) {
 export default function VlogCard({ item }) {
   const thumb = item.thumbnail_url || getYoutubeThumb(item.video_url)
   const shareUrl = item.share_url || item.video_url
+  const categoryLabel = item.category || item.category_slug || item.category_id
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition-transform hover:-translate-y-0.5 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
@@ -37,10 +38,10 @@ export default function VlogCard({ item }) {
 
       <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-brand-blue">
-          {item.category ? (
+          {categoryLabel ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-sky px-2 py-1 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
               <FiTag className="h-3.5 w-3.5" aria-hidden="true" />
-              {item.category}
+              {categoryLabel}
             </span>
           ) : null}
           {item.date ? (

@@ -68,14 +68,14 @@ export default function Home() {
   })
 
   const highlightIcons = [FiAward, FiUsers, FiHeart, FiBookOpen]
-  const { data: highlightMediaData } = usePostsQuery({ status: 'published', limit: 20 })
+  const { data: highlightMediaData } = usePostsQuery({ status: 'published', limit: 30 })
   const { data: recentUpdates } = usePostsQuery({ status: 'published', limit: 6 })
   const [slideIndex, setSlideIndex] = useState(0)
   const [buildings, setBuildings] = useState([])
   const transportCards = transportProgram.cards || []
   const hasTransport = Boolean(transportProgram.title || transportProgram.subtitle || transportCards.length)
   const campusSlides = useMemo(() => {
-    const items = (highlightMediaData?.items || []).filter((item) => item.featured_image_url)
+    const items = (highlightMediaData?.items || []).filter((item) => item.featured_image_url || item.gallery_images || item.images)
     if (!items.length) {
       return [
         {
@@ -85,11 +85,16 @@ export default function Home() {
         },
       ]
     }
-    return items.map((item, idx) => ({
-      image: item.featured_image_url,
-      title: item.title || `Campus highlight ${idx + 1}`,
-      description: item.excerpt || 'Captured during our campus events.',
-    }))
+    return items.flatMap((item, idx) => {
+      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])].filter(Boolean)
+      if (!images.length) return []
+      return images.map((imageUrl, imgIdx) => ({
+        image: imageUrl,
+        title: item.title || `Campus highlight ${idx + 1}`,
+        description: item.excerpt || 'Captured during our campus events.',
+        key: `${item.id || item.slug || idx}-${imgIdx}`,
+      }))
+    })
   }, [highlightMediaData])
   const hasMultipleSlides = campusSlides.length > 1
   const currentSlide = campusSlides[slideIndex] || campusSlides[0]
@@ -393,23 +398,26 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Latest updates</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Fresh news, events, and announcements.</p>
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-sky/70 via-white to-brand-sky/40 p-6 ring-1 ring-slate-200 shadow-sm dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 dark:ring-slate-800">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">What’s new</p>
+              <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Latest updates</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Fresh news, events, and annual field trips.</p>
+            </div>
+            <NavLink
+              to="/news"
+              className="inline-flex items-center justify-center rounded-full bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+            >
+              View all updates
+            </NavLink>
           </div>
-          <NavLink
-            to="/news"
-            className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
-          >
-            View all updates
-          </NavLink>
-        </div>
 
-        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {previewNews.map((item) => (
-            <NewsCard key={item.id || item.slug || item.title} item={item} />
-          ))}
+          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {previewNews.map((item) => (
+              <NewsCard key={item.id || item.slug || item.title} item={item} />
+            ))}
+          </div>
         </div>
       </section>
 

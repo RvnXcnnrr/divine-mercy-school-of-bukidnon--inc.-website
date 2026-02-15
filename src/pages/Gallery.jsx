@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { FiMaximize2, FiSearch } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
@@ -9,8 +9,18 @@ export default function Gallery() {
     description: 'Image albums and highlights optimized with Cloudinary.',
   })
   const [search, setSearch] = useState('')
-  const { data, isLoading, isError } = usePostsQuery({ status: 'published', search: search || undefined, limit: 30 })
-  const items = (data?.items || []).filter((p) => p.featured_image_url)
+  const { data, isLoading, isError } = usePostsQuery({ status: 'published', search: search || undefined, limit: 50 })
+  const items = data?.items || []
+  const galleryItems = useMemo(() => {
+    return items.flatMap((item) => {
+      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])].filter(Boolean)
+      return images.map((src, idx) => ({
+        src,
+        title: item.title,
+        key: `${item.id || item.slug || 'item'}-${idx}`,
+      }))
+    })
+  }, [items])
   const [active, setActive] = useState(null)
 
   return (
@@ -48,15 +58,15 @@ export default function Gallery() {
           {isLoading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading images…</p> : null}
 
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {items.length ? (
-              items.map((item) => (
+            {galleryItems.length ? (
+              galleryItems.map((item) => (
                 <button
                   type="button"
-                  key={item.id || item.slug}
-                  onClick={() => setActive(item.featured_image_url)}
+                  key={item.key}
+                  onClick={() => setActive(item.src)}
                   className="group relative overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold dark:bg-slate-800 dark:ring-slate-700"
                 >
-                  <img src={item.featured_image_url} alt={item.title} className="h-40 w-full object-cover" loading="lazy" />
+                  <img src={item.src} alt={item.title || 'Gallery image'} className="h-40 w-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                     <FiMaximize2 className="h-6 w-6 text-white" aria-hidden="true" />
                   </div>
