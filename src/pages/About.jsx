@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import usePageMeta from '../hooks/usePageMeta.js'
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
-import { boardMembers } from '../data/siteContent.js'
+import { facultyMembers as facultyFallback, missionVision as missionVisionFallback } from '../data/siteContent.js'
+import { fetchFaculty, fetchSiteContent, cacheFaculty, readFacultyCache } from '../services/siteInfoService.js'
 
 export default function About() {
   usePageMeta({
@@ -8,6 +10,31 @@ export default function About() {
     description:
       'Learn about Divine Mercy School of Bukidnon, Inc.: our history, vision and mission, core values, and leadership.',
   })
+
+  const [missionVision, setMissionVision] = useState(missionVisionFallback)
+  const [faculty, setFaculty] = useState(() => readFacultyCache() || facultyFallback)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const [{ data: content }, { data: facultyData }] = await Promise.all([fetchSiteContent(), fetchFaculty()])
+        if (!mounted) return
+        if (content) setMissionVision(content)
+        if (facultyData) {
+          setFaculty(facultyData)
+          cacheFaculty(facultyData)
+        }
+      } catch (err) {
+        const cached = readFacultyCache()
+        if (cached) setFaculty(cached)
+        console.warn('[About] Using fallback content', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const values = ['Faith', 'Excellence', 'Compassion', 'Integrity', 'Service', 'Respect']
 
@@ -42,8 +69,7 @@ export default function About() {
             <div data-reveal>
               <h2 className="gold-gradient-text text-2xl font-black tracking-tight">School History</h2>
               <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                Our story is rooted in the desire to provide quality education that develops the whole person—mind,
-                character, and faith. (Replace this text with your official school history for accuracy.)
+                {missionVision.history}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                 Through dedicated educators and supportive families, we continue to strengthen programs that help students
@@ -54,17 +80,11 @@ export default function About() {
             <div className="grid gap-5" data-reveal>
               <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
                 <h3 className="text-base font-extrabold text-brand-goldText">Vision</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  A Christ-centered learning community that forms disciplined, compassionate, and excellent learners who
-                  serve with faith and integrity.
-                </p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{missionVision.vision}</p>
               </div>
               <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
                 <h3 className="text-base font-extrabold text-brand-goldText">Mission</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  To provide quality education rooted in Christian values—strengthening academic growth, moral formation,
-                  discipline, and community service while supporting learners who face barriers to attendance.
-                </p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{missionVision.mission}</p>
               </div>
             </div>
           </div>
@@ -124,16 +144,28 @@ export default function About() {
           </div>
 
           <div className="mt-12" data-reveal>
-            <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Board Members</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Meet the people who help steward the school’s mission of faith, discipline, and compassionate service.
-              Replace the placeholder names and photos anytime.
-            </p>
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-brand-sky/35 to-white p-6 shadow-sm ring-1 ring-white/70 dark:border-slate-800/80 dark:from-slate-900 dark:via-slate-900/70 dark:to-slate-950">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(247,215,111,0.18),transparent_35%),radial-gradient(circle_at_90%_10%,rgba(82,143,255,0.14),transparent_30%)]" aria-hidden="true" />
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-blue">Meet the Team</p>
+                  <h2 className="mt-1 text-2xl font-black text-brand-goldText">Faculty & Staff</h2>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
+                    Keep your team profile updated—names, roles, and photos are managed from the admin panel. Profiles
+                    update instantly for families and students browsing this page.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                  Live sync with Admin
+                </div>
+              </div>
 
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {boardMembers.map((m) => (
-                <BoardMemberCard key={m.id} member={m} />
-              ))}
+              <div className="relative mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {faculty.map((m) => (
+                  <BoardMemberCard key={m.id} member={m} />
+                ))}
+              </div>
             </div>
           </div>
         </div>

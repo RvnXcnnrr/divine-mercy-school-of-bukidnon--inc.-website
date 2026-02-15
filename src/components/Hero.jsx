@@ -9,7 +9,7 @@ export default function Hero() {
   return (
     <section
       ref={parallaxRef}
-      className="hero-animated hero-light relative overflow-hidden bg-brand-sky dark:bg-slate-950"
+      className="hero-animated hero-light relative flex min-h-[520px] items-center overflow-hidden bg-gradient-to-br from-brand-sky via-white to-brand-sand/40 py-12 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
       style={{ backgroundPositionY: 'calc(var(--parallax-bg, 0px))' }}
     >
       <div className="pointer-events-none absolute inset-0">
@@ -35,7 +35,7 @@ export default function Hero() {
       </div>
 
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center lg:py-20">
-        <div data-reveal>
+        <div data-reveal className="relative z-10">
           <p className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800">
             Divine Mercy School of Bukidnon, Inc.
           </p>

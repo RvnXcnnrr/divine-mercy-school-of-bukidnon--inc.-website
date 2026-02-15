@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { FiAward, FiBookOpen, FiCalendar, FiHeart, FiUsers } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
 import { NavLink } from 'react-router-dom'
@@ -8,9 +9,19 @@ import NewsCard from '../components/NewsCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
 import useFloatParallax from '../hooks/useFloatParallax.js'
 import { boardMembers, buildings, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
+import { fetchFaculty, cacheFaculty, readFacultyCache } from '../services/siteInfoService.js'
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
 import VlogCard from '../components/VlogCard.jsx'
+
+function sortFaculty(list = []) {
+  return [...list].sort((a, b) => {
+    const orderA = a.sort_order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.sort_order ?? Number.MAX_SAFE_INTEGER
+    if (orderA !== orderB) return orderA - orderB
+    return (a.name || '').localeCompare(b.name || '')
+  })
+}
 
 function HighlightCard({ item, icon }) {
   const { ref, style } = useFloatParallax({ factor: 0.12, max: 12 })
@@ -61,14 +72,34 @@ export default function Home() {
   const { data: featuredVlogData } = usePostsQuery({ hasVideo: true, isFeatured: true, status: 'published', limit: 1 })
   const { data: recentUpdates } = usePostsQuery({ status: 'published', limit: 6 })
   const featuredVlog = featuredVlogData?.items?.[0]
+  const hasFeatured = Boolean(featuredVlog)
   const previewNews = recentUpdates?.items?.slice(0, 3) || newsItems.slice(0, 3)
+  const [faculty, setFaculty] = useState(() => sortFaculty(readFacultyCache() || boardMembers))
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchFaculty()
+        if (!mounted || !data) return
+        const sorted = sortFaculty(data)
+        setFaculty(sorted)
+        cacheFaculty(sorted)
+      } catch (err) {
+        console.warn('[Home] using cached board list', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <div>
       <Hero />
 
-      {featuredVlog ? (
-        <section className="mx-auto max-w-6xl px-4 pb-6 pt-10" data-reveal>
+      {hasFeatured ? (
+        <section className="mx-auto max-w-6xl px-4 pb-6 pt-10 is-visible">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Featured vlog</p>
@@ -78,9 +109,24 @@ export default function Home() {
             <VlogCard item={featuredVlog} />
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="mx-auto max-w-6xl px-4 pb-4 pt-6 is-visible">
+          <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:ring-slate-800 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Featured story</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">No featured post yet. Check the latest updates instead.</p>
+            </div>
+            <NavLink
+              to="/news"
+              className="inline-flex items-center justify-center rounded-md bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+            >
+              View updates
+            </NavLink>
+          </div>
+        </section>
+      )}
 
-      <section className="mx-auto max-w-6xl px-4 pb-6 pt-4" data-reveal>
+      <section className="mx-auto max-w-6xl px-4 pb-6 pt-4 is-visible">
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:ring-slate-800 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Visit us</p>
@@ -259,7 +305,7 @@ export default function Home() {
           </div>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {boardMembers.slice(0, 3).map((member) => (
+            {faculty.slice(0, 3).map((member) => (
               <BoardMemberCard key={member.id} member={member} />
             ))}
           </div>

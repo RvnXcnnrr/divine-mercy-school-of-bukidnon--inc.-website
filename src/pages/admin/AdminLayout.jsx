@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { FiGrid, FiLogOut, FiPenTool, FiPlusCircle, FiSettings } from 'react-icons/fi'
+import { FiBookOpen, FiGrid, FiLogOut, FiPenTool, FiPlusCircle, FiSettings } from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
 
 export default function AdminLayout() {
@@ -40,20 +40,14 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-          <NavLink to="/admin" className="text-xs font-black uppercase tracking-[0.16em] text-brand-goldText">
-            Admin Panel
-          </NavLink>
-        </div>
-      </header>
-
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[14rem_1fr]">
         <aside className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+          <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-brand-goldText">Admin Panel</div>
           <nav className="space-y-2" aria-label="Admin">
             <NavItem to="/admin" label="Dashboard" icon={FiGrid} end />
             <NavItem to="/admin/posts" label="Posts" icon={FiPenTool} />
             <NavItem to="/admin/posts/new" label="New Post" icon={FiPlusCircle} />
+            <NavItem to="/admin/content" label="Site Content" icon={FiBookOpen} />
             <NavItem to="/admin/settings" label="Settings" icon={FiSettings} />
           </nav>
 

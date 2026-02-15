@@ -17,6 +17,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminPosts from './pages/admin/AdminPosts.jsx'
 import AdminPostEditor from './pages/admin/AdminPostEditor.jsx'
 import AdminSettings from './pages/admin/AdminSettings.jsx'
+import AdminSiteContent from './pages/admin/AdminSiteContent.jsx'
 import ProtectedRoute from './routes/ProtectedRoute.jsx'
 
 function ScrollToTop() {
@@ -84,6 +85,7 @@ function App() {
               <Route path="posts" element={<AdminPosts />} />
               <Route path="posts/new" element={<AdminPostEditor />} />
               <Route path="posts/:postId" element={<AdminPostEditor />} />
+              <Route path="content" element={<AdminSiteContent />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>

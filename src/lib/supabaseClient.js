@@ -19,4 +19,6 @@ export const supabaseTables = {
   posts: 'posts',
   categories: 'categories',
   subscribers: 'subscribers',
+  siteContent: 'site_content',
+  faculty: 'faculty',
 }

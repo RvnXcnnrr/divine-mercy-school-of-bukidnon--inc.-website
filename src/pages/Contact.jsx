@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FiClock, FiMail, FiMapPin, FiPhone, FiSend } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
+import { fetchSiteContent } from '../services/siteInfoService.js'
 
 export default function Contact() {
   usePageMeta({
@@ -9,6 +10,27 @@ export default function Contact() {
   })
 
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const [contact, setContact] = useState({ contact_email: 'info@dmsb.example', contact_phone: '+63 000 000 0000' })
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchSiteContent()
+        if (mounted && data) {
+          setContact({
+            contact_email: data.contact_email || 'info@dmsb.example',
+            contact_phone: data.contact_phone || '+63 000 000 0000',
+          })
+        }
+      } catch (err) {
+        console.warn('[Contact] Using fallback contact info', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   function onSubmit(e) {
     e.preventDefault()
@@ -138,14 +160,14 @@ export default function Contact() {
                   </li>
                   <li className="flex items-center gap-2">
                     <FiPhone className="h-4 w-4 text-brand-blue" aria-hidden="true" />
-                    <a className="hover:text-brand-goldText" href="tel:+630000000000">
-                      +63 000 000 0000
+                    <a className="hover:text-brand-goldText" href={`tel:${contact.contact_phone || ''}`}>
+                      {contact.contact_phone || '+63 000 000 0000'}
                     </a>
                   </li>
                   <li className="flex items-center gap-2">
                     <FiMail className="h-4 w-4 text-brand-blue" aria-hidden="true" />
-                    <a className="hover:text-brand-goldText" href="mailto:info@dmsb.example">
-                      info@dmsb.example
+                    <a className="hover:text-brand-goldText" href={`mailto:${contact.contact_email || 'info@dmsb.example'}`}>
+                      {contact.contact_email || 'info@dmsb.example'}
                     </a>
                   </li>
                   <li className="flex items-center gap-2">

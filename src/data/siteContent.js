@@ -5,6 +5,20 @@ export const site = {
     'A private Catholic school committed to faith-based education, discipline, and service—offering quality learning rooted in Christian values, compassion, and moral formation.',
 }
 
+export const missionVision = {
+  vision:
+    'A Christ-centered learning community that forms disciplined, compassionate, and excellent learners who serve with faith and integrity.',
+  mission:
+    'To provide quality education rooted in Christian values—strengthening academic growth, moral formation, discipline, and community service while supporting learners who face barriers to attendance.',
+  history:
+    'Our story is rooted in the desire to provide quality education that develops the whole person—mind, character, and faith. Replace this text with your official school history for accuracy.',
+}
+
+export const contactInfo = {
+  contact_email: 'info@dmsb.example',
+  contact_phone: '+63 000 000 0000',
+}
+
 export const highlights = [
   {
     title: 'Licensure & Certification',
@@ -229,3 +243,5 @@ export const boardMembers = [
     photo: '/people/board-6.jpg',
   },
 ]
+
+export const facultyMembers = []
