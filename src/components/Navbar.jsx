@@ -46,7 +46,6 @@ export default function Navbar() {
       { to: '/about', label: 'About' },
       { to: '/academics', label: 'Academics' },
       { to: '/admissions', label: 'Admissions' },
-      { to: '/vlogs', label: 'Vlogs' },
       { to: '/news', label: 'Updates' },
       { to: '/events', label: 'Events' },
       { to: '/gallery', label: 'Gallery' },

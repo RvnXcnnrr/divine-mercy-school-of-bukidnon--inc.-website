@@ -57,8 +57,11 @@ export default function AdminSiteContent() {
   const [facultyPage, setFacultyPage] = useState(1)
   const [programPage, setProgramPage] = useState(1)
   const [facilityPage, setFacilityPage] = useState(1)
+  const [buildingPage, setBuildingPage] = useState(1)
   const [admissionsStepPage, setAdmissionsStepPage] = useState(1)
   const [admissionsFormPage, setAdmissionsFormPage] = useState(1)
+  const [buildingUploading, setBuildingUploading] = useState(false)
+  const [buildingUploadProgress, setBuildingUploadProgress] = useState(0)
 
   const missionRef = useRef(null)
   const contactRef = useRef(null)
@@ -210,6 +213,31 @@ export default function AdminSiteContent() {
     setUploadProgress(0)
   }
 
+  async function handleBuildingFileChange(e, globalIdx) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError('')
+    setBuildingUploading(true)
+    setBuildingUploadProgress(0)
+    try {
+      const result = await uploadImageToCloudinary(file, {
+        folder: 'campus-buildings',
+        onProgress: setBuildingUploadProgress,
+      })
+      updateExtra((ex) => {
+        const items = [...(ex.buildings || [])]
+        items[globalIdx] = { ...items[globalIdx], image: result.secureUrl }
+        return { ...ex, buildings: items }
+      })
+    } catch (err) {
+      setError(err.message || 'Failed to upload building image')
+    } finally {
+      setBuildingUploading(false)
+      setBuildingUploadProgress(0)
+      e.target.value = ''
+    }
+  }
+
   function rememberSection(id) {
     setLastSection(id)
     localStorage.setItem('adminSiteContentLastSection', id)
@@ -225,6 +253,7 @@ export default function AdminSiteContent() {
     // Reset pagination to first page when lists change to keep UX predictable.
     setProgramPage(1)
     setFacilityPage(1)
+    setBuildingPage(1)
     setAdmissionsStepPage(1)
     setAdmissionsFormPage(1)
   }
@@ -241,6 +270,7 @@ export default function AdminSiteContent() {
   const facultyPageData = paginate(faculty, facultyPage)
   const programPageData = paginate(extra.programs || [], programPage)
   const facilityPageData = paginate(extra.facilities || [], facilityPage)
+  const buildingPageData = paginate(extra.buildings || [], buildingPage)
   const admissionsStepPageData = paginate(extra.admissions_steps || [], admissionsStepPage)
   const admissionsFormPageData = paginate(extra.admissions_forms || [], admissionsFormPage)
 
@@ -599,6 +629,132 @@ export default function AdminSiteContent() {
                     type="button"
                     disabled={facilityPage >= facilityPageData.totalPages}
                     onClick={() => setFacilityPage((p) => Math.min(facilityPageData.totalPages, p + 1))}
+                    className="rounded-full px-3 py-1 font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50 dark:ring-slate-700 dark:hover:bg-slate-800"
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Campus Buildings</label>
+              <button
+                type="button"
+                onClick={() => updateExtra((ex) => ({ ...ex, buildings: [...(ex.buildings || []), { title: '', department: '', image: '' }] }))}
+                className="text-xs font-semibold text-brand-blue hover:text-brand-goldText"
+              >
+                Add building
+              </button>
+            </div>
+            <div className="space-y-3">
+              {buildingPageData.items.map((b, idx) => {
+                const globalIdx = (buildingPageData.page - 1) * PAGE_SIZE + idx
+                return (
+                  <div key={globalIdx} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        Building title
+                        <input
+                          type="text"
+                          value={b.title || ''}
+                          onChange={(e) =>
+                            updateExtra((ex) => {
+                              const items = [...(ex.buildings || [])]
+                              items[globalIdx] = { ...items[globalIdx], title: e.target.value }
+                              return { ...ex, buildings: items }
+                            })
+                          }
+                          className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        Department / area
+                        <input
+                          type="text"
+                          value={b.department || ''}
+                          onChange={(e) =>
+                            updateExtra((ex) => {
+                              const items = [...(ex.buildings || [])]
+                              items[globalIdx] = { ...items[globalIdx], department: e.target.value }
+                              return { ...ex, buildings: items }
+                            })
+                          }
+                          className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-[2fr_1fr] sm:items-center">
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        Image URL
+                        <input
+                          type="url"
+                          value={b.image || ''}
+                          placeholder="https://..."
+                          onChange={(e) =>
+                            updateExtra((ex) => {
+                              const items = [...(ex.buildings || [])]
+                              items[globalIdx] = { ...items[globalIdx], image: e.target.value }
+                              return { ...ex, buildings: items }
+                            })
+                          }
+                          className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                      <div className="flex flex-col gap-2 text-xs">
+                        <label className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-gold focus-within:ring-offset-2 dark:bg-slate-900 dark:ring-slate-700 dark:hover:bg-slate-800">
+                          <FiImage className="h-4 w-4" aria-hidden="true" />
+                          Upload image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={(e) => handleBuildingFileChange(e, globalIdx)}
+                            disabled={buildingUploading}
+                          />
+                        </label>
+                        {buildingUploading ? (
+                          <span className="text-slate-500 dark:text-slate-400">Uploading… {buildingUploadProgress}%</span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateExtra((ex) => {
+                            const items = [...(ex.buildings || [])]
+                            items.splice(globalIdx, 1)
+                            return { ...ex, buildings: items }
+                          })
+                        }
+                        className="text-xs font-semibold text-rose-600 hover:text-rose-500"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+              {extra.buildings?.length > PAGE_SIZE ? (
+                <div className="flex items-center justify-between pt-1 text-xs text-slate-600 dark:text-slate-300">
+                  <button
+                    type="button"
+                    disabled={buildingPage <= 1}
+                    onClick={() => setBuildingPage((p) => Math.max(1, p - 1))}
+                    className="rounded-full px-3 py-1 font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50 dark:ring-slate-700 dark:hover:bg-slate-800"
+                  >
+                    Previous
+                  </button>
+                  <span>
+                    Page {buildingPageData.page} of {buildingPageData.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={buildingPage >= buildingPageData.totalPages}
+                    onClick={() => setBuildingPage((p) => Math.min(buildingPageData.totalPages, p + 1))}
                     className="rounded-full px-3 py-1 font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50 dark:ring-slate-700 dark:hover:bg-slate-800"
                   >
                     Next

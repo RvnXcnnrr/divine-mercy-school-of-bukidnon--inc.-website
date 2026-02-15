@@ -8,7 +8,6 @@ import Academics from './pages/Academics.jsx'
 import Admissions from './pages/Admissions.jsx'
 import News from './pages/News.jsx'
 import Contact from './pages/Contact.jsx'
-import Vlogs from './pages/Vlogs.jsx'
 import Events from './pages/Events.jsx'
 import Gallery from './pages/Gallery.jsx'
 import AdminLogin from './pages/admin/AdminLogin.jsx'
@@ -73,7 +72,6 @@ function App() {
           <Route path="/academics" element={<Academics />} />
           <Route path="/admissions" element={<Admissions />} />
           <Route path="/news" element={<News />} />
-          <Route path="/vlogs" element={<Vlogs />} />
           <Route path="/events" element={<Events />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
