@@ -7,7 +7,7 @@ import AdminLoginModal from './AdminLoginModal.jsx'
 import { useAuth } from '../providers/AppProviders.jsx'
 
 const baseLinkClass =
-  'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950'
+  'inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950'
 
 function NavItem({ to, children, onClick, className }) {
   return (
@@ -19,7 +19,7 @@ function NavItem({ to, children, onClick, className }) {
           baseLinkClass,
           className,
           isActive
-            ? 'gold-gradient-bg text-white ring-1 ring-brand-gold/30 font-extrabold'
+            ? 'bg-brand-sky text-brand-goldText ring-1 ring-brand-gold/30 font-extrabold'
             : 'text-slate-700 hover:bg-slate-50 hover:text-brand-goldText dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-brand-goldBright',
         ].join(' ')
       }
@@ -56,11 +56,11 @@ export default function Navbar() {
   )
 
   const actionCtas = (
-    <div className="ml-3 flex items-center">
+    <div className="ml-4 flex items-center gap-2">
       <button
         type="button"
         onClick={toggleTheme}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
@@ -69,7 +69,7 @@ export default function Navbar() {
       {user ? (
         <NavLink
           to="/admin"
-          className="ml-2 inline-flex items-center justify-center rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-goldText px-4 text-xs font-bold uppercase tracking-wide text-white shadow-none ring-1 ring-brand-goldText/20 transition hover:-translate-y-[1px] hover:bg-brand-goldText/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
         >
           Dashboard
         </NavLink>
@@ -77,7 +77,7 @@ export default function Navbar() {
         <button
           type="button"
           onClick={() => setLoginOpen(true)}
-          className="ml-2 inline-flex items-center justify-center rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-goldText px-4 text-xs font-bold uppercase tracking-wide text-white shadow-none ring-1 ring-brand-goldText/20 transition hover:-translate-y-[1px] hover:bg-brand-goldText/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
         >
           <FiLogIn className="mr-1 h-4 w-4" aria-hidden="true" />
           Admin
@@ -126,32 +126,38 @@ export default function Navbar() {
           'fixed inset-x-0 top-0 z-[120] border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80',
         ].join(' ')}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4">
           <NavLink
             to="/"
-            className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-extrabold tracking-tight text-brand-goldText focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+            className="inline-flex min-w-[220px] items-center gap-3 rounded-lg px-2 py-2 text-base font-black tracking-tight text-brand-goldText focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
           >
-            <span className="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-md bg-brand-navy ring-1 ring-brand-navy/20">
+            <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-brand-navy/25 shadow-sm">
               {logoOk ? (
                 <img
                   src="/logo.png"
                   alt="Divine Mercy School of Bukidnon, Inc. logo"
-                  className="h-full w-full object-contain bg-white dark:bg-slate-900"
+                  className="h-full w-full object-contain"
                   loading="eager"
-                  width="36"
-                  height="36"
+                  width="48"
+                  height="48"
                   onError={() => setLogoOk(false)}
                 />
               ) : (
-                <FaSchool className="h-4 w-4 text-white" aria-hidden="true" />
+                <FaSchool className="h-5 w-5 text-brand-navy" aria-hidden="true" />
               )}
             </span>
-            <span className="hidden lg:inline">Divine Mercy School of Bukidnon, Inc.</span>
-            <span className="hidden sm:inline lg:hidden">Divine Mercy School</span>
-            <span className="sm:hidden">DMSB</span>
+            <div className="flex flex-col leading-tight">
+              <span className="hidden sm:inline whitespace-nowrap text-xl leading-[1.05] lg:text-2xl font-black text-brand-goldText dark:text-brand-goldBright">
+                Divine Mercy School
+              </span>
+              <span className="hidden sm:inline text-[11px] lg:text-xs font-semibold tracking-[0.16em] text-brand-navy/80 dark:text-slate-300">
+                of Bukidnon, Inc.
+              </span>
+              <span className="sm:hidden text-base font-black text-brand-goldText dark:text-brand-goldBright">DMSB</span>
+            </div>
           </NavLink>
 
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary">
             {links.map((l) => (
               <NavItem key={l.to} to={l.to}>
                 {l.label}

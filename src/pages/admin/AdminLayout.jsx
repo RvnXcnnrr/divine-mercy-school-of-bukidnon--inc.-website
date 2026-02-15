@@ -40,31 +40,15 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <NavLink to="/admin" className="text-sm font-extrabold text-brand-goldText">
+      <header className="border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+          <NavLink to="/admin" className="text-xs font-black uppercase tracking-[0.16em] text-brand-goldText">
             Admin Panel
           </NavLink>
-          <div className="flex items-center gap-2">
-            <NavLink
-              to="/"
-              className="rounded-md px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800"
-            >
-              View site
-            </NavLink>
-            <button
-              type="button"
-              onClick={requestSignOut}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-            >
-              <FiLogOut className="h-4 w-4" aria-hidden="true" />
-              Sign out
-            </button>
-          </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[14rem_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[14rem_1fr]">
         <aside className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
           <nav className="space-y-2" aria-label="Admin">
             <NavItem to="/admin" label="Dashboard" icon={FiGrid} end />
@@ -72,6 +56,23 @@ export default function AdminLayout() {
             <NavItem to="/admin/posts/new" label="New Post" icon={FiPlusCircle} />
             <NavItem to="/admin/settings" label="Settings" icon={FiSettings} />
           </nav>
+
+          <div className="mt-6 space-y-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <NavLink
+              to="/"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800"
+            >
+              View site
+            </NavLink>
+            <button
+              type="button"
+              onClick={requestSignOut}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand-goldText px-4 py-2 text-sm font-bold uppercase tracking-wide text-white shadow-none ring-1 ring-brand-goldText/30 transition hover:-translate-y-[1px] hover:bg-brand-goldText/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+            >
+              <FiLogOut className="h-4 w-4" aria-hidden="true" />
+              Sign out
+            </button>
+          </div>
         </aside>
         <main className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
           <Outlet />
