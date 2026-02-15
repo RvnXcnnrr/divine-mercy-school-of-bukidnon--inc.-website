@@ -1,9 +1,42 @@
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { FiGrid, FiLogOut, FiPenTool, FiPlusCircle, FiSettings } from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
 
 export default function AdminLayout() {
   const { signOut } = useAuth()
+  const [showConfirm, setShowConfirm] = useState(false)
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    const INACTIVITY_LIMIT = 5 * 60 * 1000 // 5 minutes
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
+
+    const resetTimer = () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        setShowConfirm(false)
+        signOut()
+      }, INACTIVITY_LIMIT)
+    }
+
+    resetTimer()
+    events.forEach((ev) => window.addEventListener(ev, resetTimer, { passive: true }))
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer))
+    }
+  }, [signOut])
+
+  function requestSignOut() {
+    setShowConfirm(true)
+  }
+
+  function confirmSignOut() {
+    setShowConfirm(false)
+    signOut()
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -21,7 +54,7 @@ export default function AdminLayout() {
             </NavLink>
             <button
               type="button"
-              onClick={() => signOut()}
+              onClick={requestSignOut}
               className="inline-flex items-center gap-2 rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
             >
               <FiLogOut className="h-4 w-4" aria-hidden="true" />
@@ -44,6 +77,31 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {showConfirm ? (
+        <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/60 px-4 backdrop-blur" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+            <h2 className="text-lg font-black text-brand-goldText">Sign out?</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">You will need to log in again to manage posts.</p>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmSignOut}
+                className="rounded-md bg-rose-600 px-4 py-2 text-sm font-extrabold text-white transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

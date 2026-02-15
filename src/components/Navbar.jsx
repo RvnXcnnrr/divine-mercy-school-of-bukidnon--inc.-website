@@ -4,6 +4,7 @@ import { FiLogIn, FiMenu, FiMoon, FiSun, FiX } from 'react-icons/fi'
 import { FaSchool } from 'react-icons/fa6'
 import useTheme from '../hooks/useTheme.js'
 import AdminLoginModal from './AdminLoginModal.jsx'
+import { useAuth } from '../providers/AppProviders.jsx'
 
 const baseLinkClass =
   'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950'
@@ -35,6 +36,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { resolvedTheme, toggleTheme } = useTheme()
   const [loginOpen, setLoginOpen] = useState(false)
+  const { user } = useAuth()
   const isDark = resolvedTheme === 'dark'
   const mobilePanelId = useId()
 
@@ -64,14 +66,23 @@ export default function Navbar() {
       >
         {isDark ? <FiSun className="h-5 w-5" aria-hidden="true" /> : <FiMoon className="h-5 w-5" aria-hidden="true" />}
       </button>
-      <button
-        type="button"
-        onClick={() => setLoginOpen(true)}
-        className="ml-2 inline-flex items-center justify-center rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-      >
-        <FiLogIn className="mr-1 h-4 w-4" aria-hidden="true" />
-        Admin
-      </button>
+      {user ? (
+        <NavLink
+          to="/admin"
+          className="ml-2 inline-flex items-center justify-center rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+        >
+          Dashboard
+        </NavLink>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setLoginOpen(true)}
+          className="ml-2 inline-flex items-center justify-center rounded-md bg-brand-goldText px-3 py-2 text-xs font-extrabold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+        >
+          <FiLogIn className="mr-1 h-4 w-4" aria-hidden="true" />
+          Admin
+        </button>
+      )}
     </div>
   )
 
@@ -197,13 +208,23 @@ export default function Navbar() {
                 {isDark ? <FiSun className="h-5 w-5" aria-hidden="true" /> : <FiMoon className="h-5 w-5" aria-hidden="true" />}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setLoginOpen(true)}
-                className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
-              >
-                <FiLogIn className="h-5 w-5" aria-hidden="true" />
-              </button>
+              {user ? (
+                <NavLink
+                  to="/admin"
+                  className="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-extrabold text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Dashboard
+                </NavLink>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setLoginOpen(true)}
+                  className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                >
+                  <FiLogIn className="h-5 w-5" aria-hidden="true" />
+                </button>
+              )}
 
               <button
                 type="button"
