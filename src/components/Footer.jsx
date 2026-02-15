@@ -2,9 +2,26 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { FiMail, FiMapPin, FiPhone } from 'react-icons/fi'
 import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa6'
+import { subscribeEmail } from '../services/subscriberService.js'
 
 export default function Footer() {
   const [logoOk, setLogoOk] = useState(true)
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState('idle')
+
+  async function onSubmit(e) {
+    e.preventDefault()
+    if (!email) return
+    try {
+      setStatus('loading')
+      await subscribeEmail(email)
+      setStatus('success')
+      setEmail('')
+    } catch (err) {
+      console.error(err)
+      setStatus('error')
+    }
+  }
 
   return (
     <footer className="border-t border-slate-200 bg-brand-sky dark:border-slate-800 dark:bg-slate-950">
@@ -57,6 +74,36 @@ export default function Footer() {
               <FaInstagram className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
+
+          <form className="mt-5 space-y-2" onSubmit={onSubmit}>
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">
+              Newsletter
+              <span className="block text-[11px] font-normal text-slate-500 dark:text-slate-400">Get updates via email.</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                required
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="inline-flex items-center justify-center rounded-md bg-brand-goldText px-3 py-2 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-70"
+              >
+                Subscribe
+              </button>
+            </div>
+            {status === 'success' ? (
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">Subscribed. Check your inbox.</p>
+            ) : null}
+            {status === 'error' ? (
+              <p className="text-[11px] text-rose-600 dark:text-rose-400">Failed to subscribe. Try again.</p>
+            ) : null}
+          </form>
         </div>
 
         <div>
@@ -78,8 +125,23 @@ export default function Footer() {
               </NavLink>
             </li>
             <li>
+              <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/vlogs">
+                Vlogs
+              </NavLink>
+            </li>
+            <li>
               <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/news">
-                News & Events
+                Updates
+              </NavLink>
+            </li>
+            <li>
+              <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/events">
+                Events
+              </NavLink>
+            </li>
+            <li>
+              <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/gallery">
+                Gallery
               </NavLink>
             </li>
             <li>

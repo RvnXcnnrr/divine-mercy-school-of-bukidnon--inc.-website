@@ -8,6 +8,16 @@ import Academics from './pages/Academics.jsx'
 import Admissions from './pages/Admissions.jsx'
 import News from './pages/News.jsx'
 import Contact from './pages/Contact.jsx'
+import Vlogs from './pages/Vlogs.jsx'
+import Events from './pages/Events.jsx'
+import Gallery from './pages/Gallery.jsx'
+import AdminLogin from './pages/admin/AdminLogin.jsx'
+import AdminLayout from './pages/admin/AdminLayout.jsx'
+import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import AdminPosts from './pages/admin/AdminPosts.jsx'
+import AdminPostEditor from './pages/admin/AdminPostEditor.jsx'
+import AdminSettings from './pages/admin/AdminSettings.jsx'
+import ProtectedRoute from './routes/ProtectedRoute.jsx'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -62,7 +72,22 @@ function App() {
           <Route path="/academics" element={<Academics />} />
           <Route path="/admissions" element={<Admissions />} />
           <Route path="/news" element={<News />} />
+          <Route path="/vlogs" element={<Vlogs />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          <Route element={<ProtectedRoute roles={['admin', 'editor']} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="posts" element={<AdminPosts />} />
+              <Route path="posts/new" element={<AdminPostEditor />} />
+              <Route path="posts/:postId" element={<AdminPostEditor />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+          </Route>
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

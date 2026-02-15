@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { FiSearch } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 import NewsCard from '../components/NewsCard.jsx'
-import { newsItems as fallbackNews } from '../data/siteContent.js'
+import { usePostsQuery } from '../hooks/usePostsQuery.js'
+import { useCategoriesQuery } from '../hooks/useCategoriesQuery.js'
 
 export default function News() {
   usePageMeta({
@@ -9,54 +11,22 @@ export default function News() {
     description: 'School news, events, and announcements from Divine Mercy School of Bukidnon, Inc.',
   })
 
-  const [items, setItems] = useState([])
-  const [selectedTag, setSelectedTag] = useState('All')
+  const [category, setCategory] = useState('All')
+  const [search, setSearch] = useState('')
+  const { data: categories = [] } = useCategoriesQuery()
+  const { data, isLoading, isError } = usePostsQuery({
+    status: 'published',
+    categoryId: category === 'All' ? undefined : category,
+    search: search || undefined,
+    limit: 40,
+  })
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const res = await fetch('/news.json')
-        if (!res.ok) throw new Error('Failed to load news.json')
-        const data = await res.json()
-        if (!cancelled) setItems(Array.isArray(data) ? data : [])
-      } catch (err) {
-        if (cancelled) return
-        setItems(
-          fallbackNews.map((n) => ({
-            ...n,
-            location: n.location || 'Campus',
-            tags: n.tags || [n.category],
-          }))
-        )
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const tags = useMemo(() => {
-    const set = new Set(['All'])
-    items.forEach((item) => {
-      if (item.category) set.add(item.category)
-      if (Array.isArray(item.tags)) item.tags.forEach((t) => set.add(t))
-    })
-    return Array.from(set)
-  }, [items])
-
+  const items = data?.items || []
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
-
-  function matchesTag(item) {
-    if (selectedTag === 'All') return true
-    const set = new Set([item.category, ...(item.tags || [])].filter(Boolean))
-    return set.has(selectedTag)
-  }
 
   const [activeItems, pastItems] = useMemo(() => {
     const upcoming = []
@@ -67,8 +37,13 @@ export default function News() {
       const bucket = isPast || item.status === 'past' ? past : upcoming
       bucket.push(item)
     })
-    return [upcoming.filter(matchesTag), past.filter(matchesTag)]
-  }, [items, today, selectedTag])
+    return [upcoming, past]
+  }, [items, today])
+
+  const tagOptions = useMemo(
+    () => [{ id: 'All', name: 'All' }, ...categories.map((c) => ({ id: c.id, name: c.name }))],
+    [categories]
+  )
 
   return (
     <div>
@@ -81,22 +56,34 @@ export default function News() {
                 Updates on school activities, announcements, and community highlights.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2" aria-label="Filter news by tag">
-              {tags.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => setSelectedTag(tag)}
-                  className={[
-                    'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-extrabold transition-colors ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2',
-                    selectedTag === tag
-                      ? 'gold-gradient-bg text-white ring-brand-gold/60'
-                      : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700',
-                  ].join(' ')}
-                >
-                  {tag}
-                </button>
-              ))}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <label className="relative block">
+                <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search posts"
+                  className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                />
+              </label>
+              <div className="flex flex-wrap gap-2" aria-label="Filter news by category">
+                {tagOptions.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setCategory(tag.id)}
+                    className={[
+                      'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-extrabold transition-colors ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2',
+                      category === tag.id
+                        ? 'gold-gradient-bg text-white ring-brand-gold/60'
+                        : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700',
+                    ].join(' ')}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -115,6 +102,9 @@ export default function News() {
 
       <section className="bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-14">
+          {isError ? <p className="text-sm text-rose-600 dark:text-rose-400">Failed to load posts.</p> : null}
+          {isLoading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading posts…</p> : null}
+
           <div className="max-w-2xl" data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Latest & Upcoming</h2>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Events and announcements you can act on now.</p>
@@ -122,10 +112,10 @@ export default function News() {
 
           <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {activeItems.length ? (
-              activeItems.map((item) => <NewsCard key={item.id} item={item} />)
+              activeItems.map((item) => <NewsCard key={item.id || item.slug} item={item} />)
             ) : (
-              <p className="text-sm text-slate-600 dark:text-slate-300" data-reveal>No items for this filter.</p>)
-            }
+              <p className="text-sm text-slate-600 dark:text-slate-300" data-reveal>No items for this filter.</p>
+            )}
           </div>
 
           <div className="mt-12" data-reveal>
@@ -134,10 +124,10 @@ export default function News() {
           </div>
           <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {pastItems.length ? (
-              pastItems.map((item) => <NewsCard key={`${item.id}-past`} item={item} />)
+              pastItems.map((item) => <NewsCard key={`${item.id || item.slug}-past`} item={item} />)
             ) : (
-              <p className="text-sm text-slate-600 dark:text-slate-300" data-reveal>No past events for this filter.</p>)
-            }
+              <p className="text-sm text-slate-600 dark:text-slate-300" data-reveal>No past events for this filter.</p>
+            )}
           </div>
         </div>
       </section>

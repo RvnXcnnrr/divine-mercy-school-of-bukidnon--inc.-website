@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { FiAward, FiBookOpen, FiCalendar, FiHeart, FiUsers } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
 import { NavLink } from 'react-router-dom'
@@ -10,6 +9,8 @@ import usePageMeta from '../hooks/usePageMeta.js'
 import useFloatParallax from '../hooks/useFloatParallax.js'
 import { boardMembers, buildings, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
+import { usePostsQuery } from '../hooks/usePostsQuery.js'
+import VlogCard from '../components/VlogCard.jsx'
 
 function HighlightCard({ item, icon }) {
   const { ref, style } = useFloatParallax({ factor: 0.12, max: 12 })
@@ -57,31 +58,27 @@ export default function Home() {
   })
 
   const highlightIcons = [FiAward, FiUsers, FiHeart, FiBookOpen]
-  const [previewNews, setPreviewNews] = useState(newsItems.slice(0, 3))
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const res = await fetch('/news.json')
-        if (!res.ok) throw new Error('Failed to fetch news')
-        const data = await res.json()
-        if (!cancelled && Array.isArray(data)) {
-          setPreviewNews(data.slice(0, 3))
-        }
-      } catch {
-        if (!cancelled) setPreviewNews(newsItems.slice(0, 3))
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { data: featuredVlogData } = usePostsQuery({ hasVideo: true, isFeatured: true, status: 'published', limit: 1 })
+  const { data: recentUpdates } = usePostsQuery({ status: 'published', limit: 6 })
+  const featuredVlog = featuredVlogData?.items?.[0]
+  const previewNews = recentUpdates?.items?.slice(0, 3) || newsItems.slice(0, 3)
 
   return (
     <div>
       <Hero />
+
+      {featuredVlog ? (
+        <section className="mx-auto max-w-6xl px-4 pb-6 pt-10" data-reveal>
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Featured vlog</p>
+              <h2 className="mt-2 text-2xl font-black text-brand-goldText sm:text-3xl">{featuredVlog.title}</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{featuredVlog.excerpt || 'Latest highlight video.'}</p>
+            </div>
+            <VlogCard item={featuredVlog} />
+          </div>
+        </section>
+      ) : null}
 
       <section className="mx-auto max-w-6xl px-4 pb-6 pt-4" data-reveal>
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:ring-slate-800 sm:flex-row sm:items-center sm:justify-between">
@@ -222,9 +219,30 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
+      <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Latest updates</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Fresh news, events, and announcements.</p>
+          </div>
+          <NavLink
+            to="/news"
+            className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
+          >
+            View all updates
+          </NavLink>
+        </div>
+
+        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {previewNews.map((item) => (
+            <NewsCard key={item.id || item.slug || item.title} item={item} />
+          ))}
+        </div>
+      </section>
+
+      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
+          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -250,10 +268,11 @@ export default function Home() {
 
       <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
+          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
+          aria-hidden="true"
         >
           <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
         </svg>
