@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import usePageMeta from '../hooks/usePageMeta.js'
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
-import { facultyMembers as facultyFallback, missionVision as missionVisionFallback } from '../data/siteContent.js'
+import { facultyMembers as facultyFallback, missionVision as missionVisionFallback, extraContent as extraFallback } from '../data/siteContent.js'
 import { fetchFaculty, fetchSiteContent, cacheFaculty, readFacultyCache } from '../services/siteInfoService.js'
 
 export default function About() {
@@ -12,6 +12,7 @@ export default function About() {
   })
 
   const [missionVision, setMissionVision] = useState(missionVisionFallback)
+  const [extraContent, setExtraContent] = useState(extraFallback)
   const [faculty, setFaculty] = useState(() => readFacultyCache() || facultyFallback)
 
   useEffect(() => {
@@ -20,7 +21,10 @@ export default function About() {
       try {
         const [{ data: content }, { data: facultyData }] = await Promise.all([fetchSiteContent(), fetchFaculty()])
         if (!mounted) return
-        if (content) setMissionVision(content)
+        if (content) {
+          setMissionVision(content)
+          setExtraContent(content.extra_content || extraFallback)
+        }
         if (facultyData) {
           setFaculty(facultyData)
           cacheFaculty(facultyData)
@@ -28,6 +32,7 @@ export default function About() {
       } catch (err) {
         const cached = readFacultyCache()
         if (cached) setFaculty(cached)
+        setExtraContent(extraFallback)
         console.warn('[About] Using fallback content', err)
       }
     })()
@@ -36,18 +41,13 @@ export default function About() {
     }
   }, [])
 
-  const values = ['Faith', 'Excellence', 'Compassion', 'Integrity', 'Service', 'Respect']
-
   return (
     <div>
       <section>
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="max-w-2xl" data-reveal>
             <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">About Us</h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Divine Mercy School of Bukidnon, Inc. is a private Catholic school committed to faith-based education,
-              discipline, and service—forming learners through Christian values, compassion, and moral formation.
-            </p>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{extraContent.about_intro}</p>
           </div>
         </div>
       </section>
@@ -110,7 +110,7 @@ export default function About() {
                 society.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {values.map((v) => (
+                {(extraContent.core_values || []).map((v) => (
                   <span
                     key={v}
                     className="inline-flex items-center rounded-full bg-brand-sky px-3 py-1 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700"
@@ -133,11 +133,7 @@ export default function About() {
               </div>
               <div>
                 <p className="text-sm font-extrabold text-brand-goldText">Principal’s Message</p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  Welcome to Divine Mercy School of Bukidnon, Inc. We are committed to forming learners who are
-                  competent, compassionate, disciplined, and grounded in faith. We also believe that distance and
-                  financial hardship should not keep a child from learning.
-                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{extraContent.principal_message}</p>
                 <p className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">— School Principal</p>
               </div>
             </div>

@@ -1,5 +1,10 @@
 import { supabase, supabaseReady, supabaseTables } from '../lib/supabaseClient.js'
-import { missionVision as fallbackMissionVision, facultyMembers as fallbackFaculty, contactInfo as fallbackContact } from '../data/siteContent.js'
+import {
+  missionVision as fallbackMissionVision,
+  facultyMembers as fallbackFaculty,
+  contactInfo as fallbackContact,
+  extraContent as fallbackExtraContent,
+} from '../data/siteContent.js'
 
 const SINGLETON_ID = 'site-singleton'
 export const FACULTY_CACHE_KEY = 'dmsb-faculty-cache'
@@ -22,9 +27,16 @@ export function cacheFaculty(list) {
   }
 }
 
+function withExtraContent(row = {}) {
+  return {
+    ...row,
+    extra_content: { ...fallbackExtraContent, ...(row.extra_content || {}) },
+  }
+}
+
 export async function fetchSiteContent() {
   if (!supabaseReady) {
-    return { data: { id: SINGLETON_ID, ...fallbackMissionVision, ...fallbackContact } }
+    return { data: { id: SINGLETON_ID, ...fallbackMissionVision, ...fallbackContact, extra_content: fallbackExtraContent } }
   }
 
   // First try to load the canonical singleton row.
@@ -36,7 +48,7 @@ export async function fetchSiteContent() {
 
   if (error && error.code !== 'PGRST116') throw error
 
-  if (singleton) return { data: singleton }
+  if (singleton) return { data: withExtraContent(singleton) }
 
   // If there is already a row but with a different id (older saves), fetch the latest one instead of falling back.
   const { data: latest, error: latestError } = await supabase
@@ -48,11 +60,13 @@ export async function fetchSiteContent() {
 
   if (latestError && latestError.code !== 'PGRST116') throw latestError
 
-  return { data: latest ?? { id: SINGLETON_ID, ...fallbackMissionVision, ...fallbackContact } }
+  const fallback = { id: SINGLETON_ID, ...fallbackMissionVision, ...fallbackContact, extra_content: fallbackExtraContent }
+  return { data: latest ? withExtraContent(latest) : fallback }
 }
 
 export async function saveSiteContent(payload) {
   if (!supabaseReady) throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+  const mergedExtra = { ...fallbackExtraContent, ...(payload.extra_content || {}) }
   const record = {
     id: payload.id || SINGLETON_ID,
     vision: payload.vision?.trim() || '',
@@ -60,6 +74,7 @@ export async function saveSiteContent(payload) {
     history: payload.history?.trim() || '',
     contact_email: payload.contact_email?.trim() || '',
     contact_phone: payload.contact_phone?.trim() || '',
+    extra_content: mergedExtra,
     updated_at: new Date().toISOString(),
   }
 

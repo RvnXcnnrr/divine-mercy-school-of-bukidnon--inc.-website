@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react'
 import { FiActivity, FiBook, FiBookOpen, FiCpu, FiMonitor, FiUsers } from 'react-icons/fi'
 import SectionCard from '../components/SectionCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
-import { facilities, programs } from '../data/siteContent.js'
+import { extraContent as extraFallback } from '../data/siteContent.js'
 import useFloatParallax from '../hooks/useFloatParallax.js'
+import { fetchSiteContent } from '../services/siteInfoService.js'
 
 export default function Academics() {
   usePageMeta({
@@ -12,6 +14,28 @@ export default function Academics() {
   })
 
   const facilityIcons = [FiActivity, FiMonitor, FiBookOpen, FiUsers]
+  const [programList, setProgramList] = useState(extraFallback.programs)
+  const [curriculum, setCurriculum] = useState(extraFallback.curriculum_overview)
+  const [facilityList, setFacilityList] = useState(extraFallback.facilities)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchSiteContent()
+        if (!mounted || !data) return
+        const extra = data.extra_content || extraFallback
+        setProgramList(extra.programs || extraFallback.programs)
+        setCurriculum(extra.curriculum_overview || extraFallback.curriculum_overview)
+        setFacilityList(extra.facilities || extraFallback.facilities)
+      } catch (err) {
+        console.warn('[Academics] Using fallback content', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   function FacilityCard({ facility, icon }) {
     const { ref, style } = useFloatParallax({ factor: 0.14, max: 14 })
@@ -54,8 +78,8 @@ export default function Academics() {
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Junior High and Senior High.</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-2">
-            {programs.map((p) => (
-              <SectionCard key={p.title} icon={FiBook} title={p.title} description={p.description} />
+            {programList.map((p, idx) => (
+              <SectionCard key={p.title || idx} icon={FiBook} title={p.title} description={p.description} />
             ))}
           </div>
         </div>
@@ -81,18 +105,12 @@ export default function Academics() {
                 We emphasize mastery of core subjects, values formation, and practical skills for real-world readiness.
               </p>
               <ul className="mt-5 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-                <li className="flex gap-2">
-                  <FiBook className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  Strong focus on literacy, numeracy, and scientific thinking
-                </li>
-                <li className="flex gap-2">
-                  <FiCpu className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  Digital literacy and responsible technology use
-                </li>
-                <li className="flex gap-2">
-                  <FiUsers className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  Collaboration, communication, and leadership development
-                </li>
+                {curriculum.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <FiBook className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -134,8 +152,8 @@ export default function Academics() {
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Spaces that support hands-on learning and student growth.</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {facilities.map((f, idx) => (
-              <FacilityCard key={f.title} facility={f} icon={facilityIcons[idx]} />
+            {facilityList.map((f, idx) => (
+              <FacilityCard key={f.title || idx} facility={f} icon={facilityIcons[idx % facilityIcons.length]} />
             ))}
           </div>
         </div>

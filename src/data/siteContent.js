@@ -14,6 +14,7 @@ export const missionVision = {
     'Our story is rooted in the desire to provide quality education that develops the whole person—mind, character, and faith. Replace this text with your official school history for accuracy.',
 }
 
+
 export const contactInfo = {
   contact_email: 'info@dmsb.example',
   contact_phone: '+63 000 000 0000',
@@ -202,6 +203,27 @@ export const admissions = {
     'Report card / academic records (as applicable)',
     'Good moral certificate (as applicable)',
     '2x2 ID photo (recent)',
+  ],
+}
+
+export const extraContent = {
+  about_intro:
+    'Divine Mercy School of Bukidnon, Inc. is a private Catholic school committed to faith-based education, discipline, and service—forming learners through Christian values, compassion, and moral formation.',
+  principal_message:
+    'Welcome to Divine Mercy School of Bukidnon, Inc. We are committed to forming learners who are competent, compassionate, disciplined, and grounded in faith. We also believe that distance and financial hardship should not keep a child from learning.',
+  core_values: ['Faith', 'Excellence', 'Compassion', 'Integrity', 'Service', 'Respect'],
+  programs,
+  curriculum_overview: [
+    'Strong focus on literacy, numeracy, and scientific thinking',
+    'Digital literacy and responsible technology use',
+    'Collaboration, communication, and leadership development',
+  ],
+  facilities,
+  admissions_steps: admissions.steps,
+  admissions_requirements: admissions.requirements,
+  admissions_forms: [
+    { label: 'Admissions Form (PDF)', url: '/forms/Admissions-Form.pdf' },
+    { label: 'Requirements Checklist (PDF)', url: '/forms/Requirements-Checklist.pdf' },
   ],
 }
 

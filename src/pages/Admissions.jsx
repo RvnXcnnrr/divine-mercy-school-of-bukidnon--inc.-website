@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { FiClock, FiDownload, FiFileText, FiList, FiMail, FiPhone, FiUserPlus } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { admissions } from '../data/siteContent.js'
+import { fetchSiteContent } from '../services/siteInfoService.js'
+import { extraContent as extraFallback, contactInfo as contactFallback } from '../data/siteContent.js'
 
 function Step({ number, title, description }) {
   return (
@@ -26,6 +29,34 @@ export default function Admissions() {
     description:
       'Admissions at Divine Mercy School of Bukidnon, Inc.: process steps, requirements, and downloadable forms.',
   })
+
+  const [steps, setSteps] = useState(admissions.steps)
+  const [requirements, setRequirements] = useState(admissions.requirements)
+  const [forms, setForms] = useState(extraFallback.admissions_forms)
+  const [contact, setContact] = useState(contactFallback)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchSiteContent()
+        if (!mounted || !data) return
+        const extra = data.extra_content || extraFallback
+        setSteps(extra.admissions_steps || admissions.steps)
+        setRequirements(extra.admissions_requirements || admissions.requirements)
+        setForms(extra.admissions_forms || extraFallback.admissions_forms)
+        setContact({
+          contact_email: data.contact_email || contactFallback.contact_email,
+          contact_phone: data.contact_phone || contactFallback.contact_phone,
+        })
+      } catch (err) {
+        console.warn('[Admissions] Using fallback content', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <div>
@@ -76,8 +107,8 @@ export default function Admissions() {
           </div>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {admissions.steps.map((s, idx) => (
-              <Step key={s.title} number={idx + 1} title={s.title} description={s.description} />
+            {steps.map((s, idx) => (
+              <Step key={`${s.title}-${idx}`} number={idx + 1} title={s.title} description={s.description} />
             ))}
 
             <div className="rounded-xl bg-brand-sky p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
@@ -86,11 +117,15 @@ export default function Admissions() {
               <ul className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
                 <li className="flex items-center gap-2">
                   <FiPhone className="h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  <a className="hover:text-brand-goldText" href="tel:+630000000000">+63 000 000 0000</a>
+                  <a className="hover:text-brand-goldText" href={`tel:${contact.contact_phone || ''}`}>
+                    {contact.contact_phone || contactFallback.contact_phone}
+                  </a>
                 </li>
                 <li className="flex items-center gap-2">
                   <FiMail className="h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  <a className="hover:text-brand-goldText" href="mailto:admissions@dmsb.example">admissions@dmsb.example</a>
+                  <a className="hover:text-brand-goldText" href={`mailto:${contact.contact_email || ''}`}>
+                    {contact.contact_email || contactFallback.contact_email}
+                  </a>
                 </li>
                 <li className="flex items-center gap-2">
                   <FiUserPlus className="h-4 w-4 text-brand-blue" aria-hidden="true" />
@@ -202,8 +237,8 @@ export default function Admissions() {
               Requirements may vary by grade level. Confirm with the admissions office for the latest list.
             </p>
             <ul className="mt-5 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-              {admissions.requirements.map((r) => (
-                <li key={r} className="flex gap-2">
+              {requirements.map((r, idx) => (
+                <li key={`${r}-${idx}`} className="flex gap-2">
                   <FiList className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
                   {r}
                 </li>
@@ -225,28 +260,20 @@ export default function Admissions() {
             </div>
 
             <div className="mt-5 grid gap-3">
-              <a
-                className="inline-flex w-full items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
-                href="/forms/Admissions-Form.pdf"
-                download
-              >
-                <span className="inline-flex items-center gap-2">
-                  <FiDownload className="h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  Admissions Form (PDF)
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Download</span>
-              </a>
-              <a
-                className="inline-flex w-full items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
-                href="/forms/Requirements-Checklist.pdf"
-                download
-              >
-                <span className="inline-flex items-center gap-2">
-                  <FiDownload className="h-4 w-4 text-brand-blue" aria-hidden="true" />
-                  Requirements Checklist (PDF)
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">Download</span>
-              </a>
+              {forms.map((form, idx) => (
+                <a
+                  key={`${form.label}-${idx}`}
+                  className="inline-flex w-full items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition-colors hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800"
+                  href={form.url}
+                  download
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <FiDownload className="h-4 w-4 text-brand-blue" aria-hidden="true" />
+                    {form.label}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Download</span>
+                </a>
+              ))}
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
