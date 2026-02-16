@@ -18,7 +18,7 @@ const schema = z.object({
   images: z.array(z.string().url()).optional(),
   video_url: z.string().url().optional().or(z.literal('')),
   category_id: z.string().optional(),
-  status: z.enum(['draft', 'published']).default('draft'),
+  status: z.enum(['draft', 'published']).default('published'),
   is_featured: z.boolean().default(false),
 })
 
@@ -40,7 +40,7 @@ export default function AdminPostEditor() {
     setValue,
     watch,
     formState: { isSubmitting },
-  } = useForm({ resolver: zodResolver(schema), defaultValues: { status: 'draft', is_featured: false, gallery_images: [] } })
+  } = useForm({ resolver: zodResolver(schema), defaultValues: { status: 'published', is_featured: false, gallery_images: [] } })
 
   const featuredUrlValue = watch('featured_image_url')
 
@@ -106,6 +106,7 @@ export default function AdminPostEditor() {
 
       const payload = {
         ...values,
+        status: values.status || 'published',
         featured_image_url: featuredUrl,
         video_url: values.video_url || null,
         category_id: values.category_id || null,

@@ -55,7 +55,7 @@ export default function AdminPosts() {
       category_id: post.category_id || post.category || post.category_slug || '',
       featured_image_url: post.featured_image_url || '',
       video_url: post.video_url || '',
-      status: post.status || 'draft',
+      status: post.status || 'published',
       is_featured: Boolean(post.is_featured),
     })
   }
@@ -71,6 +71,7 @@ export default function AdminPosts() {
       const payload = {
         id,
         ...editForm,
+        status: editForm.status || 'published',
         category_id: editForm.category_id || null,
         featured_image_url: editForm.featured_image_url || null,
         video_url: editForm.video_url || null,
