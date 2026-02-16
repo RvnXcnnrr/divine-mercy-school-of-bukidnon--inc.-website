@@ -151,10 +151,6 @@ export default function About() {
                     update instantly for families and students browsing this page.
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                  Live sync with Admin
-                </div>
               </div>
 
               <div className="relative mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
