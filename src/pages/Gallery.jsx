@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FiMaximize2, FiSearch } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
@@ -22,6 +22,25 @@ export default function Gallery() {
     })
   }, [items])
   const [active, setActive] = useState(null)
+
+  useEffect(() => {
+    if (!active) return undefined
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setActive(null)
+    }
+    const prevBody = document.body.style.overflow
+    const prevHtml = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevBody
+      document.documentElement.style.overflow = prevHtml
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [active])
 
   return (
     <div>
@@ -80,8 +99,22 @@ export default function Gallery() {
       </section>
 
       {active ? (
-        <div className="fixed inset-0 z-[200] bg-black/70 p-6 backdrop-blur" onClick={() => setActive(null)} aria-modal="true" role="dialog">
-          <div className="flex h-full items-center justify-center">
+        <div
+          className="fixed inset-0 z-[200] bg-black/70 p-6 backdrop-blur"
+          onClick={() => setActive(null)}
+          aria-modal="true"
+          role="dialog"
+          aria-label="Image preview"
+        >
+          <div className="relative flex h-full items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setActive(null)}
+              className="absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white ring-1 ring-white/20 transition hover:bg-black/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Close preview"
+            >
+              X
+            </button>
             <img src={active} alt="Preview" className="max-h-full max-w-full rounded-xl shadow-2xl" loading="lazy" />
           </div>
         </div>

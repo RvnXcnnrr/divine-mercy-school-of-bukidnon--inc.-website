@@ -4,7 +4,7 @@
 
 @layer components {
   .gold-gradient-bg {
-    @apply bg-gradient-to-r from-brand-gold via-brand-goldBright to-brand-goldPale;
+    @apply bg-gradient-to-r from-brand-goldText via-brand-gold to-brand-goldBright;
   }
 
   .gold-gradient-text {

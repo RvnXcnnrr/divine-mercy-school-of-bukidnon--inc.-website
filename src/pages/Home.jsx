@@ -6,6 +6,7 @@ import Hero from '../components/Hero.jsx'
 import SectionCard from '../components/SectionCard.jsx'
 import Testimonial from '../components/Testimonial.jsx'
 import NewsCard from '../components/NewsCard.jsx'
+import WaveDivider from '../components/WaveDivider.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
 import useFloatParallax from '../hooks/useFloatParallax.js'
 import { boardMembers, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
@@ -297,19 +298,11 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
+      <WaveDivider />
 
       {hasTransport ? (
-        <section className="bg-white dark:bg-slate-900">
+        <>
+          <section className="bg-white dark:bg-slate-900">
           <div className="mx-auto max-w-6xl px-4 py-14">
             <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
               <div data-reveal>
@@ -352,9 +345,12 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <WaveDivider from="bg-white dark:bg-slate-900" to="text-brand-sky dark:text-slate-950" />
+        </>
       ) : null}
 
-      <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
+      <section className="mx-auto max-w-6xl px-4 pb-14 pt-10" data-reveal>
         <div className="rounded-2xl bg-brand-sky p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -421,17 +417,6 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
-
       <section className="bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="max-w-2xl" data-reveal>
@@ -446,18 +431,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-          aria-hidden="true"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
 
       <section className="bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-14">
@@ -495,16 +468,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-brand-goldText sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
+      <WaveDivider from="bg-white dark:bg-slate-900" to="text-brand-goldText" />
 
       <section className="bg-brand-goldText">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-2 lg:items-center">
@@ -532,17 +496,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <div className="w-full overflow-hidden bg-brand-goldText leading-none" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
     </div>
   )
 }

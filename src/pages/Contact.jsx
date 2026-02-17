@@ -194,15 +194,26 @@ export default function Contact() {
               <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
                 <div className="px-6 py-4">
                   <p className="text-sm font-extrabold text-brand-goldText">Map</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Embedded map (update query to your exact address).</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Google Maps location for the campus.</p>
                 </div>
                 <iframe
                   title="School location map"
                   className="h-72 w-full"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  src="https://www.google.com/maps?q=Bukidnon%20Philippines&output=embed"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0589883963135!2d125.3919950747659!3d7.783570792236212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32fec2d955555555%3A0x5e4a52a129c2ee46!2sDivine%20Mercy%20School%20of%20Buikidnon%2C%20Inc.!5e0!3m2!1sen!2sph!4v1771298618796!5m2!1sen!2sph"
+                  allowFullScreen
                 />
+                <div className="px-6 pb-5 pt-3">
+                  <a
+                    className="inline-flex items-center justify-center rounded-md bg-brand-goldText px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                    href="https://maps.app.goo.gl/UDxpY95KhLdhDWeQ8"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open in Google Maps
+                  </a>
+                </div>
               </div>
             </div>
           </div>

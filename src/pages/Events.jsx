@@ -40,7 +40,7 @@ export default function Events() {
             {items.length ? (
               items.map((item) => <EventCard key={item.id || item.slug} item={item} />)
             ) : (
-              <p className="text-sm text-slate-600 dark:text-slate-300">No events yet. Publish one from the admin panel.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300">No events yet. New schedules will appear here.</p>
             )}
           </div>
         </div>

@@ -14,6 +14,7 @@ export default function About() {
   const [missionVision, setMissionVision] = useState(missionVisionFallback)
   const [extraContent, setExtraContent] = useState(extraFallback)
   const [faculty, setFaculty] = useState(() => readFacultyCache() || facultyFallback)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -34,12 +35,23 @@ export default function About() {
         if (cached) setFaculty(cached)
         setExtraContent(extraFallback)
         console.warn('[About] Using fallback content', err)
+      } finally {
+        if (mounted) setLoading(false)
       }
     })()
     return () => {
       mounted = false
     }
   }, [])
+
+  function LoadingIndicator({ label }) {
+    return (
+      <div className="mt-4 inline-flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 shadow-sm backdrop-blur dark:bg-slate-900/70 dark:text-slate-200 dark:ring-slate-700">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-goldText border-t-transparent" aria-hidden="true" />
+        <span>{label}</span>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -65,6 +77,7 @@ export default function About() {
 
       <section className="bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-14">
+          {loading ? <LoadingIndicator label="Loading site content…" /> : null}
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
             <div data-reveal>
               <h2 className="gold-gradient-text text-2xl font-black tracking-tight">School History</h2>
@@ -153,11 +166,18 @@ export default function About() {
                 </div>
               </div>
 
-              <div className="relative mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {faculty.map((m) => (
-                  <BoardMemberCard key={m.id} member={m} />
-                ))}
-              </div>
+              {loading ? (
+                <div className="relative mt-6 flex items-center gap-3 rounded-xl border border-dashed border-slate-200/80 bg-white/70 p-4 text-sm font-semibold text-slate-600 shadow-sm dark:border-slate-800/70 dark:bg-slate-900/70 dark:text-slate-200">
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-goldText border-t-transparent" aria-hidden="true" />
+                  Loading faculty & staff…
+                </div>
+              ) : (
+                <div className="relative mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {faculty.map((m) => (
+                    <BoardMemberCard key={m.id} member={m} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
