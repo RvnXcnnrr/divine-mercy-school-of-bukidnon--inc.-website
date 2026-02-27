@@ -1,6 +1,7 @@
 import slugify from 'slugify'
 import { supabase, supabaseReady, supabaseTables } from '../lib/supabaseClient.js'
 import { newsItems as fallbackNews } from '../data/siteContent.js'
+import { deleteImageFromSupabase, extractPathFromUrl } from '../lib/supabaseStorage.js'
 
 const slugOptions = { lower: true, strict: true, trim: true }
 
@@ -100,6 +101,32 @@ export async function deletePost(id) {
     console.warn('[Supabase] Not configured. Skipping deletePost.')
     return { data: null }
   }
+
+  // Fetch the post to get the featured_image_url
+  const { data: post } = await supabase
+    .from(supabaseTables.posts)
+    .select('featured_image_url')
+    .eq('id', id)
+    .maybeSingle()
+
+  // Delete the associated image from Supabase Storage if it exists
+  if (post?.featured_image_url && post.featured_image_url.includes('supabase.co/storage')) {
+    try {
+      const imagePath = extractPathFromUrl(post.featured_image_url)
+      if (imagePath) {
+        // Determine bucket from URL
+        const bucketMatch = post.featured_image_url.match(/\/object\/public\/([^/]+)\//)
+        const bucket = bucketMatch ? bucketMatch[1] : 'posts'
+        await deleteImageFromSupabase(imagePath, bucket)
+        console.log(`[Post Service] Deleted associated image: ${imagePath}`)
+      }
+    } catch (error) {
+      console.error('[Post Service] Failed to delete image:', error)
+      // Continue with post deletion even if image deletion fails
+    }
+  }
+
+  // Delete the post from database
   const { error } = await supabase.from(supabaseTables.posts).delete().eq('id', id)
   if (error) throw error
   return { data: true }

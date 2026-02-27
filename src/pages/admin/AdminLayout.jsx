@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { FiBookOpen, FiGrid, FiLogOut, FiPenTool, FiPlusCircle, FiSettings } from 'react-icons/fi'
+import { FiBookOpen, FiGrid, FiLogOut, FiMessageSquare, FiPenTool, FiPlusCircle, FiUsers } from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
 
 export default function AdminLayout() {
@@ -39,22 +39,23 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[14rem_1fr]">
-        <aside className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+        <aside className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
           <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-brand-goldText">Admin Panel</div>
           <nav className="space-y-2" aria-label="Admin">
             <NavItem to="/admin" label="Dashboard" icon={FiGrid} end />
             <NavItem to="/admin/posts" label="Posts" icon={FiPenTool} />
             <NavItem to="/admin/posts/new" label="New Post" icon={FiPlusCircle} />
+            <NavItem to="/admin/testimonials" label="Testimonials" icon={FiMessageSquare} />
             <NavItem to="/admin/content" label="Site Content" icon={FiBookOpen} />
-            <NavItem to="/admin/settings" label="Settings" icon={FiSettings} />
+            <NavItem to="/admin/settings" label="Subscribers" icon={FiUsers} />
           </nav>
 
-          <div className="mt-6 space-y-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
             <NavLink
               to="/"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
             >
               View site
             </NavLink>
@@ -68,21 +69,21 @@ export default function AdminLayout() {
             </button>
           </div>
         </aside>
-        <main className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+        <main className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <Outlet />
         </main>
       </div>
 
       {showConfirm ? (
         <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/60 px-4 backdrop-blur" role="dialog" aria-modal="true">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
             <h2 className="text-lg font-black text-brand-goldText">Sign out?</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">You will need to log in again to manage posts.</p>
+            <p className="mt-2 text-sm text-slate-600">You will need to log in again to manage posts.</p>
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-700"
+                className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
               >
                 Cancel
               </button>
@@ -109,7 +110,7 @@ function NavItem({ to, label, icon: Icon, end }) {
       className={({ isActive }) =>
         [
           'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
-          isActive ? 'bg-brand-sky text-brand-goldText' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+          isActive ? 'bg-brand-sky text-brand-goldText' : 'text-slate-700 hover:bg-slate-100',
         ].join(' ')
       }
     >

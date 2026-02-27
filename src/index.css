@@ -17,7 +17,7 @@ html {
 }
 
 body {
-  @apply bg-brand-sky text-brand-ink antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-brand-sky text-brand-ink antialiased;
 }
 
 /* Hero motion accents (respect reduced motion) */

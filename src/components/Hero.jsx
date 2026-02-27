@@ -9,7 +9,7 @@ export default function Hero() {
   return (
     <section
       ref={parallaxRef}
-      className="hero-animated hero-light relative flex min-h-[520px] items-center overflow-hidden bg-gradient-to-br from-brand-sky via-white to-brand-sand/40 py-12 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+      className="hero-animated hero-light relative flex min-h-[520px] items-center overflow-hidden bg-gradient-to-br from-brand-sky via-white to-brand-sand/40 py-12"
       style={{ backgroundPositionY: 'calc(var(--parallax-bg, 0px))' }}
     >
       <div className="pointer-events-none absolute inset-0">
@@ -36,19 +36,19 @@ export default function Hero() {
 
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center lg:py-20">
         <div data-reveal className="relative z-10">
-          <p className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800">
+          <p className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
             Divine Mercy School of Bukidnon, Inc.
           </p>
-          <h1 className="mt-4 text-balance text-4xl font-black leading-tight tracking-tight text-brand-navy dark:text-slate-100 sm:text-5xl">
+          <h1 className="mt-4 text-balance text-4xl font-black leading-tight tracking-tight text-brand-navy sm:text-5xl">
             Faith-centered learning, disciplined formation, and service.
           </h1>
-          <p className="mt-4 max-w-xl text-pretty text-base text-slate-700 dark:text-slate-300 sm:text-lg">
+          <p className="mt-4 max-w-xl text-pretty text-base text-slate-700 sm:text-lg">
             A private Catholic school committed to Christian values, compassion, and moral formation—supporting every learner with dignity and hope.
           </p>
 
-          <div className="mt-5 rounded-xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
+          <div className="mt-5 rounded-xl bg-white p-4 ring-1 ring-slate-200" data-reveal>
             <p className="text-sm font-extrabold text-brand-goldText">Free Student Transport Program</p>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-1 text-sm text-slate-600">
               FREE pick-up and drop-off support for learners who live far, cannot afford daily transport, or are at risk of dropping out due to distance or financial hardship.
             </p>
           </div>
@@ -64,7 +64,7 @@ export default function Hero() {
             </NavLink>
             <NavLink
               to="/contact"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-navy ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-navy ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
             >
               <FiMail className="h-4 w-4" aria-hidden="true" />
               Contact Us
@@ -74,7 +74,7 @@ export default function Hero() {
 
         <div className="lg:pl-10" data-reveal>
           <div
-            className="hero-parallax hero-shimmer relative rounded-2xl bg-white p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800"
+            className="hero-parallax hero-shimmer relative rounded-2xl bg-white p-6 ring-1 ring-slate-200"
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect()
               const x = (e.clientX - rect.left) / rect.width - 0.5
@@ -87,27 +87,27 @@ export default function Hero() {
               e.currentTarget.style.setProperty('--hy', '0')
             }}
           >
-            <p className="text-sm font-extrabold text-brand-navy dark:text-slate-100">Quick Overview</p>
+            <p className="text-sm font-extrabold text-brand-navy">Quick Overview</p>
             <dl className="mt-4 grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                <dt className="text-xs font-semibold text-slate-600 dark:text-slate-300">Departments</dt>
-                <dd className="mt-1 text-2xl font-black text-brand-navy dark:text-slate-100">2</dd>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Junior High • Senior High</p>
+              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200">
+                <dt className="text-xs font-semibold text-slate-600">Departments</dt>
+                <dd className="mt-1 text-2xl font-black text-brand-navy">2</dd>
+                <p className="mt-1 text-xs text-slate-600">Junior High • Senior High</p>
               </div>
-              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                <dt className="text-xs font-semibold text-slate-600 dark:text-slate-300">Learning</dt>
-                <dd className="mt-1 text-2xl font-black text-brand-navy dark:text-slate-100">Modern</dd>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Skills + character</p>
+              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200">
+                <dt className="text-xs font-semibold text-slate-600">Learning</dt>
+                <dd className="mt-1 text-2xl font-black text-brand-navy">Modern</dd>
+                <p className="mt-1 text-xs text-slate-600">Skills + character</p>
               </div>
-              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                <dt className="text-xs font-semibold text-slate-600 dark:text-slate-300">Values</dt>
-                <dd className="mt-1 text-2xl font-black text-brand-navy dark:text-slate-100">Faith</dd>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Compassion • service</p>
+              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200">
+                <dt className="text-xs font-semibold text-slate-600">Values</dt>
+                <dd className="mt-1 text-2xl font-black text-brand-navy">Faith</dd>
+                <p className="mt-1 text-xs text-slate-600">Compassion • service</p>
               </div>
-              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                <dt className="text-xs font-semibold text-slate-600 dark:text-slate-300">Support</dt>
-                <dd className="mt-1 text-2xl font-black text-brand-navy dark:text-slate-100">Transport</dd>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Free daily commute</p>
+              <div className="rounded-xl bg-brand-sky p-4 ring-1 ring-slate-200">
+                <dt className="text-xs font-semibold text-slate-600">Support</dt>
+                <dd className="mt-1 text-2xl font-black text-brand-navy">Transport</dd>
+                <p className="mt-1 text-xs text-slate-600">Free daily commute</p>
               </div>
             </dl>
           </div>

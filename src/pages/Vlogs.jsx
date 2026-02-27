@@ -65,14 +65,14 @@ export default function Vlogs() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" data-reveal>
             <div className="max-w-2xl">
               <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">School Vlogs</h1>
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-3 text-sm text-slate-600">
                 Latest highlights from events, sports, academics, and campus life.
               </p>
             </div>
             <button
               type="button"
               onClick={() => refetch()}
-              className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
             >
               <FiFilter className="h-4 w-4" aria-hidden="true" />
               Refresh feed
@@ -87,7 +87,7 @@ export default function Vlogs() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search vlogs"
-                className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
               />
             </label>
             <div className="flex flex-wrap gap-2" aria-label="Filter vlogs by category">
@@ -100,7 +100,7 @@ export default function Vlogs() {
                     'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-extrabold transition-colors ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2',
                     category === cat.id
                       ? 'gold-gradient-bg text-white ring-brand-gold/60'
-                      : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700',
+                      : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky',
                   ].join(' ')}
                 >
                   {cat.name}
@@ -111,9 +111,9 @@ export default function Vlogs() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-brand-sky leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
+          className="block h-8 w-full fill-current text-white sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -122,20 +122,20 @@ export default function Vlogs() {
         </svg>
       </div>
 
-      <section className="bg-white dark:bg-slate-900">
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
           {isError ? (
-            <p className="text-sm text-rose-600 dark:text-rose-400">Failed to load vlogs. Please check Supabase configuration.</p>
+            <p className="text-sm text-rose-600">Failed to load vlogs. Please check Supabase configuration.</p>
           ) : null}
           {isLoading ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300">Loading vlogs…</p>
+            <p className="text-sm text-slate-600">Loading vlogs…</p>
           ) : null}
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {items.length ? (
               items.map((item) => <VlogCard key={item.id || item.slug} item={item} />)
             ) : (
-              <p className="text-sm text-slate-600 dark:text-slate-300">No vlogs yet. Add one from the admin panel.</p>
+              <p className="text-sm text-slate-600">No vlogs yet. Add one from the admin panel.</p>
             )}
           </div>
         </div>

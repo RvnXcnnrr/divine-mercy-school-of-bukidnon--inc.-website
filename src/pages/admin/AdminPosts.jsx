@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiFilter, FiPlus, FiSearch, FiStar, FiTrash } from 'react-icons/fi'
 import { usePostsQuery } from '../../hooks/usePostsQuery.js'
 import { deletePost, savePost, toggleFeatured } from '../../services/postService.js'
+import ConfirmModal from '../../components/ConfirmModal.jsx'
+import LoadingOverlay from '../../components/LoadingOverlay.jsx'
 
 export default function AdminPosts() {
   const navigate = useNavigate()
@@ -14,6 +16,8 @@ export default function AdminPosts() {
   const [editForm, setEditForm] = useState({})
   const [savingId, setSavingId] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
+  const [confirmModal, setConfirmModal] = useState({ open: false, action: null, message: '' })
+  const [acting, setActing] = useState(false)
 
   const limit = 12
 
@@ -37,9 +41,14 @@ export default function AdminPosts() {
   const hasPrev = page > 1
 
   async function onDelete(id) {
-    if (!window.confirm('Delete this post?')) return
-    await deletePost(id)
-    refetch()
+    setConfirmModal({
+      open: true,
+      action: async () => {
+        await deletePost(id)
+        refetch()
+      },
+      message: 'Delete this post?'
+    })
   }
 
   async function onToggleFeatured(id, current) {
@@ -98,10 +107,15 @@ export default function AdminPosts() {
 
   async function bulkDelete() {
     if (!selectedIds.length) return
-    if (!window.confirm(`Delete ${selectedIds.length} item(s)?`)) return
-    await Promise.all(selectedIds.map((id) => deletePost(id)))
-    setSelectedIds([])
-    refetch()
+    setConfirmModal({
+      open: true,
+      action: async () => {
+        await Promise.all(selectedIds.map((id) => deletePost(id)))
+        setSelectedIds([])
+        refetch()
+      },
+      message: `Delete ${selectedIds.length} item(s)?`
+    })
   }
 
   async function bulkStatus(nextStatus) {
@@ -116,12 +130,39 @@ export default function AdminPosts() {
     refetch()
   }
 
+  async function deleteCloudinaryPosts() {
+    const cloudinaryPosts = items.filter(
+      (post) =>
+        post.featured_image_url?.includes('cloudinary') ||
+        post.gallery_images?.some((img) => img?.includes('cloudinary')) ||
+        post.images?.some((img) => img?.includes('cloudinary'))
+    )
+    
+    if (cloudinaryPosts.length === 0) {
+      alert('No posts with Cloudinary images found on this page.')
+      return
+    }
+
+    setConfirmModal({
+      open: true,
+      action: async () => {
+        await Promise.all(cloudinaryPosts.map((post) => deletePost(post.id)))
+        refetch()
+      },
+      message: `Found ${cloudinaryPosts.length} post(s) with old Cloudinary images. Delete them?`
+    })
+  }
+
   return (
+    <>
+    {(savingId !== null || acting) && (
+      <LoadingOverlay message={acting ? 'Deleting…' : 'Saving…'} />
+    )}
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black text-brand-goldText">Posts</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">Create, edit, and manage posts.</p>
+          <p className="text-sm text-slate-600">Create, edit, and manage posts.</p>
         </div>
         <button
           type="button"
@@ -133,7 +174,7 @@ export default function AdminPosts() {
         </button>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
@@ -145,7 +186,7 @@ export default function AdminPosts() {
                 setPage(1)
               }}
               placeholder="Search posts"
-              className="w-60 rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="w-60 rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
             />
           </div>
 
@@ -159,7 +200,7 @@ export default function AdminPosts() {
                 setStatusFilter(e.target.value)
                 setPage(1)
               }}
-              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
             >
               <option value="all">All statuses</option>
               <option value="published">Published</option>
@@ -172,7 +213,7 @@ export default function AdminPosts() {
                 setTypeFilter(e.target.value)
                 setPage(1)
               }}
-              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
             >
               <option value="all">All content</option>
               <option value="video">Video / Media</option>
@@ -201,20 +242,29 @@ export default function AdminPosts() {
               type="button"
               onClick={() => bulkStatus('draft')}
               disabled={!selectedIds.length}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-2 text-slate-800 transition hover:bg-slate-300 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-2 text-slate-800 transition hover:bg-slate-300 disabled:opacity-50"
             >
               Mark draft
+            </button>
+            <button
+              type="button"
+              onClick={deleteCloudinaryPosts}
+              className="inline-flex items-center gap-2 rounded-full bg-orange-600 px-3 py-2 text-white transition hover:opacity-90"
+              title="Delete posts with old Cloudinary images"
+            >
+              <FiTrash className="h-3 w-3" />
+              Clean Cloudinary
             </button>
           </div>
         </div>
       </div>
 
-      {isLoading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading…</p> : null}
+      {(isLoading || acting) && <LoadingOverlay message={acting ? 'Deleting…' : 'Loading posts…'} />}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-          <thead className="bg-slate-50 dark:bg-slate-900">
-            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+      <div className="overflow-hidden rounded-xl border border-slate-200">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
+            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
               <th className="px-4 py-3">
                 <input
                   type="checkbox"
@@ -232,10 +282,10 @@ export default function AdminPosts() {
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
+          <tbody className="divide-y divide-slate-200 bg-white">
             {items.map((post) => (
               <Fragment key={post.id}>
-                <tr className="text-sm text-slate-700 dark:text-slate-200">
+                <tr className="text-sm text-slate-700">
                   <td className="px-4 py-3 align-top">
                     <input
                       type="checkbox"
@@ -245,7 +295,7 @@ export default function AdminPosts() {
                     />
                   </td>
                   <td className="px-4 py-3 font-semibold">{post.title}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{post.category || post.category_slug || post.category_id || '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{post.category || post.category_slug || post.category_id || '—'}</td>
                   <td className="px-4 py-3">
                     <span
                       className={[
@@ -273,8 +323,8 @@ export default function AdminPosts() {
                       {post.is_featured ? 'Featured' : 'Standard'}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{new Date(post.updated_at || post.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                  <td className="px-4 py-3 text-slate-500">{new Date(post.updated_at || post.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-slate-500">
                     {post.featured_image_url ? (
                       <img
                         src={post.featured_image_url}
@@ -283,7 +333,7 @@ export default function AdminPosts() {
                         loading="lazy"
                       />
                     ) : (
-                      <span className="text-xs text-slate-500 dark:text-slate-400">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -301,7 +351,7 @@ export default function AdminPosts() {
                           <button
                             type="button"
                             onClick={cancelEdit}
-                            className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+                            className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
                           >
                             Cancel
                           </button>
@@ -311,7 +361,7 @@ export default function AdminPosts() {
                           <button
                             type="button"
                             onClick={() => startEdit(post)}
-                            className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-800 dark:ring-slate-700"
+                            className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
                           >
                             <FiEdit2 className="h-4 w-4" aria-hidden="true" />
                             Edit
@@ -330,40 +380,40 @@ export default function AdminPosts() {
                   </td>
                 </tr>
                 {editingId === post.id ? (
-                  <tr className="bg-slate-50 dark:bg-slate-900/70">
+                  <tr className="bg-slate-50">
                     <td colSpan={8} className="px-4 py-4">
                       <div className="grid gap-3 lg:grid-cols-2">
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <label className="text-xs font-semibold text-slate-600">
                           Title
                           <input
                             type="text"
                             value={editForm.title || ''}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
                           />
                         </label>
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <label className="text-xs font-semibold text-slate-600">
                           Category
                           <input
                             type="text"
                             value={editForm.category_id || ''}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, category_id: e.target.value }))}
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
                             placeholder="Category or slug"
                           />
                         </label>
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <label className="text-xs font-semibold text-slate-600">
                           Status
                           <select
                             value={editForm.status || 'draft'}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, status: e.target.value }))}
-                            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
                           >
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
                           </select>
                         </label>
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
                           <input
                             type="checkbox"
                             checked={Boolean(editForm.is_featured)}
@@ -372,33 +422,33 @@ export default function AdminPosts() {
                           />
                           Featured on homepage
                         </label>
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 lg:col-span-2">
+                        <label className="text-xs font-semibold text-slate-600 lg:col-span-2">
                           Content
                           <textarea
                             value={editForm.content || ''}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, content: e.target.value }))}
                             rows={4}
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
                           />
                         </label>
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                          Image URL (Cloudinary)
+                        <label className="text-xs font-semibold text-slate-600">
+                          Image URL (Supabase Storage)
                           <input
                             type="url"
                             value={editForm.featured_image_url || ''}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, featured_image_url: e.target.value }))}
-                            placeholder="https://res.cloudinary.com/..."
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            placeholder="https://your-project.supabase.co/storage/v1/object/public/posts/..."
+                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
                           />
                         </label>
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <label className="text-xs font-semibold text-slate-600">
                           Video URL
                           <input
                             type="url"
                             value={editForm.video_url || ''}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, video_url: e.target.value }))}
                             placeholder="https://youtube.com/watch?v=..."
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
                           />
                         </label>
                       </div>
@@ -411,11 +461,11 @@ export default function AdminPosts() {
           </tbody>
         </table>
         {items.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-slate-600 dark:text-slate-300">No posts yet.</p>
+          <p className="px-4 py-6 text-sm text-slate-600">No posts yet.</p>
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
         <div>
           Page {page} of {totalPages} • Showing {items.length} of {total} items
           {isFetching ? <span className="ml-2 text-xs">Loading…</span> : null}
@@ -425,7 +475,7 @@ export default function AdminPosts() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={!hasPrev}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50 dark:ring-slate-700 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
           >
             <FiChevronLeft className="h-4 w-4" aria-hidden="true" /> Prev
           </button>
@@ -433,7 +483,7 @@ export default function AdminPosts() {
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={!hasNext}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50 dark:ring-slate-700 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
           >
             Next <FiChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -447,8 +497,8 @@ export default function AdminPosts() {
                     type="button"
                     onClick={() => setPage(num)}
                     className={[
-                      'h-8 w-8 rounded-full ring-1 ring-slate-200 transition dark:ring-slate-700',
-                      page === num ? 'bg-brand-goldText text-white' : 'bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-200',
+                      'h-8 w-8 rounded-full ring-1 ring-slate-200 transition',
+                      page === num ? 'bg-brand-goldText text-white' : 'bg-white text-slate-700',
                     ].join(' ')}
                   >
                     {num}
@@ -460,6 +510,28 @@ export default function AdminPosts() {
           ) : null}
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, action: null, message: '' })}
+        onConfirm={async () => {
+          if (confirmModal.action) {
+            setConfirmModal({ open: false, action: null, message: '' })
+            setActing(true)
+            try {
+              await confirmModal.action()
+            } finally {
+              setActing(false)
+            }
+          }
+        }}
+        title="Confirm Delete"
+        message={confirmModal.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
+    </>
   )
 }

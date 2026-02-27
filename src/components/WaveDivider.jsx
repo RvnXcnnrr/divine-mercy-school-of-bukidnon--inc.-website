@@ -1,6 +1,6 @@
 export default function WaveDivider({
-  from = 'bg-brand-sky dark:bg-slate-950',
-  to = 'text-white dark:text-slate-900',
+  from = 'bg-brand-sky',
+  to = 'text-white',
   className = '',
 }) {
   return (

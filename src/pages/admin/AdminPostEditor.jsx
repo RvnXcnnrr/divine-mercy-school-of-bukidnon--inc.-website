@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { FiImage, FiSave, FiUpload, FiX } from 'react-icons/fi'
 import { useCategoriesQuery } from '../../hooks/useCategoriesQuery.js'
 import { fetchPostById, savePost } from '../../services/postService.js'
-import { uploadImageToCloudinary } from '../../lib/cloudinary.js'
+import { uploadImageToSupabase } from '../../lib/supabaseStorage.js'
 
 const schema = z.object({
   title: z.string().min(3),
@@ -92,14 +92,14 @@ export default function AdminPostEditor() {
 
     try {
       if (featuredFile) {
-        const uploaded = await uploadImageToCloudinary(featuredFile, { folder: 'posts' })
-        featuredUrl = uploaded.secureUrl
+        const uploaded = await uploadImageToSupabase(featuredFile, { bucket: 'posts' })
+        featuredUrl = uploaded.publicUrl
       }
 
       const newGalleryUrls = []
       for (const file of galleryFiles) {
-        const uploaded = await uploadImageToCloudinary(file, { folder: 'posts' })
-        newGalleryUrls.push(uploaded.secureUrl)
+        const uploaded = await uploadImageToSupabase(file, { bucket: 'posts' })
+        newGalleryUrls.push(uploaded.publicUrl)
       }
 
       const galleryImages = [...existingGallery, ...newGalleryUrls]
@@ -137,7 +137,7 @@ export default function AdminPostEditor() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black text-brand-goldText">{postId ? 'Edit Post' : 'New Post'}</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">Create, schedule, or draft posts.</p>
+          <p className="text-sm text-slate-600">Create, schedule, or draft posts.</p>
         </div>
         <button
           type="submit"
@@ -152,30 +152,30 @@ export default function AdminPostEditor() {
 
       <form id="post-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="block text-sm font-semibold text-slate-700">
             Title
             <input
               {...register('title')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
               placeholder="Post title"
             />
           </label>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="block text-sm font-semibold text-slate-700">
             Slug
             <input
               {...register('slug')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
               placeholder="auto-generated if blank"
             />
           </label>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="block text-sm font-semibold text-slate-700">
             Category
             <select
               {...register('category_id')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
             >
               <option value="">Unassigned</option>
               {categories.map((cat) => (
@@ -184,72 +184,55 @@ export default function AdminPostEditor() {
                 </option>
               ))}
             </select>
-            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-              <span className="text-xs text-slate-500">Quick set:</span>
-              <button
-                type="button"
-                onClick={() => setValue('category_id', 'field-trip')}
-                className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-amber-800 ring-1 ring-amber-200 transition hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-800"
-              >
-                Field Trip
-              </button>
-              <button
-                type="button"
-                onClick={() => setValue('category_id', 'event')}
-                className="inline-flex items-center gap-2 rounded-full bg-brand-sky px-3 py-1 text-brand-goldText ring-1 ring-slate-200 transition hover:bg-brand-sky/80 dark:bg-slate-800 dark:ring-slate-700"
-              >
-                Event
-              </button>
-            </div>
           </label>
 
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="block text-sm font-semibold text-slate-700">
             Status
             <select
               {...register('status')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
             </select>
           </label>
 
-          <label className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
             <input type="checkbox" {...register('is_featured')} className="h-4 w-4" />
             Featured on homepage
           </label>
         </div>
 
-        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <label className="block text-sm font-semibold text-slate-700">
           Excerpt
           <textarea
             {...register('excerpt')}
             rows={2}
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
             placeholder="Short summary"
           />
         </label>
 
-        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <label className="block text-sm font-semibold text-slate-700">
           Content
           <textarea
             {...register('content')}
             rows={8}
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
             placeholder="Use Markdown or rich text content"
           />
         </label>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="block text-sm font-semibold text-slate-700">
             Featured image URL
             <div className="mt-1 flex items-center gap-2">
               <input
                 {...register('featured_image_url')}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                placeholder="https://res.cloudinary.com/..."
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
+                placeholder="https://your-project.supabase.co/storage/v1/object/public/posts/..."
               />
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-800 dark:ring-slate-700">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2">
                 <FiUpload className="h-4 w-4" aria-hidden="true" />
                 Choose file
                 <input type="file" accept="image/*" className="sr-only" onChange={handleFeaturedSelect} disabled={uploading} />
@@ -258,37 +241,37 @@ export default function AdminPostEditor() {
                 <button
                   type="button"
                   onClick={clearFeatured}
-                  className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700"
+                  className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-200"
                 >
                   <FiX className="h-4 w-4" aria-hidden="true" />
                   Clear
                 </button>
               ) : null}
             </div>
-            <div className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+            <div className="mt-2 space-y-1 text-xs text-slate-600">
               {featuredFile ? <p>Queued: {featuredFile.name}</p> : null}
               {!featuredFile && (featuredUrlValue || '').length > 0 ? <p>Using existing URL.</p> : null}
             </div>
           </label>
 
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="block text-sm font-semibold text-slate-700">
             Video URL (YouTube / Facebook)
             <input
               {...register('video_url')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
               placeholder="https://youtube.com/watch?v=..."
             />
           </label>
         </div>
 
-        <div className="space-y-2 rounded-lg border border-dashed border-slate-300 p-4 dark:border-slate-700">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <div className="space-y-2 rounded-lg border border-dashed border-slate-300 p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
             <FiImage className="h-4 w-4 text-brand-goldText" aria-hidden="true" />
             Gallery images (optional)
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-300">Select multiple images; they upload only after you click Save.</p>
+          <p className="text-xs text-slate-600">Select multiple images; they upload only after you click Save.</p>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-800 dark:ring-slate-700">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2">
               <FiUpload className="h-4 w-4" aria-hidden="true" />
               Add images
               <input type="file" accept="image/*" multiple className="sr-only" onChange={handleGallerySelect} disabled={uploading} />
@@ -297,12 +280,12 @@ export default function AdminPostEditor() {
 
           <div className="grid gap-3 md:grid-cols-3">
             {galleryUrls.map((url) => (
-              <div key={url} className="relative overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
+              <div key={url} className="relative overflow-hidden rounded-md border border-slate-200">
                 <img src={url} alt="Gallery" className="h-32 w-full object-cover" loading="lazy" />
                 <button
                   type="button"
                   onClick={() => removeGalleryUrl(url)}
-                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 text-slate-700 shadow ring-1 ring-slate-200 transition hover:bg-white dark:bg-slate-900/90 dark:text-slate-200 dark:ring-slate-700"
+                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 text-slate-700 shadow ring-1 ring-slate-200 transition hover:bg-white"
                   aria-label="Remove image"
                 >
                   <FiX className="h-4 w-4" aria-hidden="true" />
@@ -311,14 +294,14 @@ export default function AdminPostEditor() {
             ))}
 
             {galleryFiles.map((file) => (
-              <div key={file.name} className="relative overflow-hidden rounded-md border border-amber-200 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30">
-                <div className="flex h-32 items-center justify-center p-3 text-center text-xs text-amber-800 dark:text-amber-100">
+              <div key={file.name} className="relative overflow-hidden rounded-md border border-amber-200 bg-amber-50">
+                <div className="flex h-32 items-center justify-center p-3 text-center text-xs text-amber-800">
                   {file.name}
                 </div>
                 <button
                   type="button"
                   onClick={() => removeGalleryFile(file.name)}
-                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 text-amber-800 shadow ring-1 ring-amber-200 transition hover:bg-white dark:bg-slate-900/90 dark:text-amber-100 dark:ring-amber-700"
+                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 text-amber-800 shadow ring-1 ring-amber-200 transition hover:bg-white"
                   aria-label="Remove queued image"
                 >
                   <FiX className="h-4 w-4" aria-hidden="true" />
@@ -328,13 +311,13 @@ export default function AdminPostEditor() {
           </div>
         </div>
 
-        <div className="rounded-lg bg-brand-sky/60 p-4 text-xs text-slate-700 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
+        <div className="rounded-lg bg-brand-sky/60 p-4 text-xs text-slate-700 ring-1 ring-slate-200">
           <div className="flex items-center gap-2 font-semibold">
             <FiImage className="h-4 w-4 text-brand-goldText" aria-hidden="true" />
             Media guidelines
           </div>
           <ul className="mt-2 list-disc space-y-1 pl-4">
-            <li>Images are uploaded via Cloudinary with auto format + compression.</li>
+            <li>Images are uploaded to Supabase Storage with auto-compression (2MB limit).</li>
             <li>Use landscape 16:9 images for vlogs; square/4:5 for news.</li>
             <li>Uploads happen only after you click Save.</li>
           </ul>

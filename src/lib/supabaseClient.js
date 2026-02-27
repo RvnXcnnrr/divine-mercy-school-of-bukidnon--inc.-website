@@ -21,4 +21,5 @@ export const supabaseTables = {
   subscribers: 'subscribers',
   siteContent: 'site_content',
   faculty: 'faculty',
+  testimonials: 'testimonials',
 }

@@ -15,7 +15,7 @@ export default function NewsCard({ item, compact = false }) {
   const hasImage = Boolean(image)
   return (
     <article
-      className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-900 dark:ring-slate-800"
+      className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md"
       data-reveal
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-brand-sky via-white to-brand-sky">
@@ -41,8 +41,8 @@ export default function NewsCard({ item, compact = false }) {
 
       <div className="flex flex-1 flex-col p-5">
         {!hasImage ? (
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-sky px-3 py-1 font-semibold text-brand-goldText ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-sky px-3 py-1 font-semibold text-brand-goldText ring-1 ring-slate-200">
               <FiTag className="h-3.5 w-3.5" aria-hidden="true" />
               {categoryLabel}
             </span>
@@ -62,12 +62,12 @@ export default function NewsCard({ item, compact = false }) {
         ) : null}
 
         <h3 className="mt-3 text-base font-extrabold text-brand-goldText">{item.title}</h3>
-        {item.excerpt ? <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-3">{item.excerpt}</p> : null}
+        {item.excerpt ? <p className="mt-2 text-sm text-slate-600 line-clamp-3">{item.excerpt}</p> : null}
 
         {Array.isArray(item.tags) && item.tags.length ? (
           <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wide text-brand-blue">
             {item.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="rounded-full bg-brand-sky px-2 py-1 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+              <span key={tag} className="rounded-full bg-brand-sky px-2 py-1 ring-1 ring-slate-200">
                 {tag}
               </span>
             ))}

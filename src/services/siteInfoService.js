@@ -80,9 +80,8 @@ export async function saveSiteContent(payload) {
 
   const { data, error } = await supabase
     .from(supabaseTables.siteContent)
-    .upsert(record)
+    .upsert(record, { onConflict: 'id' })
     .select('*')
-    .eq('id', record.id)
     .maybeSingle()
 
   if (error) throw error

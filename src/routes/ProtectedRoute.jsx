@@ -8,7 +8,7 @@ export default function ProtectedRoute({ roles = [] }) {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-slate-600 dark:text-slate-300">Checking access…</p>
+        <p className="text-sm text-slate-600">Checking access…</p>
       </div>
     )
   }

@@ -1,13 +1,12 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { FiLogIn, FiMenu, FiMoon, FiSun, FiX } from 'react-icons/fi'
+import { FiLogIn, FiMenu, FiX } from 'react-icons/fi'
 import { FaSchool } from 'react-icons/fa6'
-import useTheme from '../hooks/useTheme.js'
 import AdminLoginModal from './AdminLoginModal.jsx'
 import { useAuth } from '../providers/AppProviders.jsx'
 
 const baseLinkClass =
-  'inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950'
+  'inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white'
 
 function NavItem({ to, children, onClick, className }) {
   return (
@@ -20,7 +19,7 @@ function NavItem({ to, children, onClick, className }) {
           className,
           isActive
             ? 'bg-brand-sky text-brand-goldText ring-1 ring-brand-gold/30 font-extrabold'
-            : 'text-slate-700 hover:bg-slate-50 hover:text-brand-goldText dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-brand-goldBright',
+            : 'text-slate-700 hover:bg-slate-50 hover:text-brand-goldText',
         ].join(' ')
       }
       end={to === '/'}
@@ -34,10 +33,8 @@ export default function Navbar() {
   const { pathname } = useLocation()
   const [logoOk, setLogoOk] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { resolvedTheme, toggleTheme } = useTheme()
   const [loginOpen, setLoginOpen] = useState(false)
   const { user } = useAuth()
-  const isDark = resolvedTheme === 'dark'
   const mobilePanelId = useId()
 
   const links = useMemo(
@@ -56,15 +53,6 @@ export default function Navbar() {
 
   const actionCtas = (
     <div className="ml-4 flex items-center gap-2">
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {isDark ? <FiSun className="h-5 w-5" aria-hidden="true" /> : <FiMoon className="h-5 w-5" aria-hidden="true" />}
-      </button>
       {user ? (
         <NavLink
           to="/admin"
@@ -122,7 +110,7 @@ export default function Navbar() {
     <>
       <header
         className={[
-          'fixed inset-x-0 top-0 z-[120] border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80',
+          'fixed inset-x-0 top-0 z-[120] border-b border-slate-200 bg-white/90 backdrop-blur',
         ].join(' ')}
       >
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4">
@@ -146,13 +134,13 @@ export default function Navbar() {
               )}
             </span>
             <div className="flex flex-col leading-tight">
-              <span className="hidden sm:inline whitespace-nowrap text-xl leading-[1.05] lg:text-2xl font-black text-brand-goldText dark:text-brand-goldBright">
+              <span className="hidden sm:inline whitespace-nowrap text-xl leading-[1.05] lg:text-2xl font-black text-brand-goldText">
                 Divine Mercy School
               </span>
-              <span className="hidden sm:inline text-[11px] lg:text-xs font-semibold tracking-[0.16em] text-brand-navy/80 dark:text-slate-300">
+              <span className="hidden sm:inline text-[11px] lg:text-xs font-semibold tracking-[0.16em] text-brand-navy/80">
                 of Bukidnon, Inc.
               </span>
-              <span className="sm:hidden text-base font-black text-brand-goldText dark:text-brand-goldBright">DMSB</span>
+              <span className="sm:hidden text-base font-black text-brand-goldText">DMSB</span>
             </div>
           </NavLink>
 
@@ -168,7 +156,7 @@ export default function Navbar() {
 
           <button
             type="button"
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950 lg:hidden"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
             aria-label="Toggle navigation"
             aria-expanded={mobileOpen}
             aria-controls={mobilePanelId}
@@ -182,7 +170,7 @@ export default function Navbar() {
       <div className="lg:hidden" aria-live="polite">
         <div
           className={[
-            'fixed inset-0 z-[130] bg-slate-900/40 transition-opacity duration-300 ease-out dark:bg-slate-900/60',
+            'fixed inset-0 z-[130] bg-slate-900/40 transition-opacity duration-300 ease-out',
             mobileOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
           ].join(' ')}
           aria-hidden="true"
@@ -193,30 +181,20 @@ export default function Navbar() {
           id={mobilePanelId}
           aria-hidden={!mobileOpen}
           className={[
-            'fixed inset-y-0 right-0 z-[140] flex w-[min(18rem,78vw)] flex-col overflow-hidden border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-950 sm:w-[min(20rem,72vw)]',
+            'fixed inset-y-0 right-0 z-[140] flex w-[min(18rem,78vw)] flex-col overflow-hidden border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-[min(20rem,72vw)]',
             mobileOpen ? 'translate-x-0' : 'translate-x-full',
           ].join(' ')}
           role="dialog"
           aria-modal="true"
         >
-          <div className="flex w-full shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-950">
-            <span className="text-base font-extrabold tracking-tight text-brand-goldText dark:text-brand-goldBright">Menu</span>
+          <div className="flex w-full shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-4">
+            <span className="text-base font-extrabold tracking-tight text-brand-goldText">Menu</span>
 
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {isDark ? <FiSun className="h-5 w-5" aria-hidden="true" /> : <FiMoon className="h-5 w-5" aria-hidden="true" />}
-              </button>
-
               {user ? (
                 <NavLink
                   to="/admin"
-                  className="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-extrabold text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                  className="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-extrabold text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   onClick={() => setMobileOpen(false)}
                 >
                   Dashboard
@@ -225,7 +203,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setLoginOpen(true)}
-                  className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                  className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   <FiLogIn className="h-5 w-5" aria-hidden="true" />
                 </button>
@@ -234,7 +212,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+                className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 aria-label="Close menu"
                 title="Close menu"
               >
@@ -243,7 +221,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-white px-4 py-6 dark:bg-slate-950">
+          <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-white px-4 py-6">
             {links.map((link) => (
               <NavLink
                 key={link.to}
@@ -256,7 +234,7 @@ export default function Navbar() {
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2',
                     isActive
                       ? 'gold-gradient-bg text-white shadow-sm'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+                      : 'text-slate-700 hover:bg-slate-100',
                   ].join(' ')
                 }
               >
@@ -264,7 +242,7 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            <div className="mt-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <div className="mt-2 border-t border-slate-200 pt-4">
               <NavLink
                 to="/admissions"
                 onClick={() => setMobileOpen(false)}

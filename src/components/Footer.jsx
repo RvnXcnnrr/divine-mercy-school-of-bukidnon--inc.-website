@@ -49,7 +49,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="relative overflow-hidden border-t border-slate-200 bg-brand-sky/70 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+    <footer className="relative overflow-hidden border-t border-slate-200 bg-brand-sky/70 backdrop-blur">
       <div className="pointer-events-none absolute -left-20 -top-24 h-72 w-72 rounded-full bg-brand-goldText/15 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-brand-blue/15 blur-3xl" aria-hidden="true" />
 
@@ -57,7 +57,7 @@ export default function Footer() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-brand-goldText/60 shadow-sm dark:bg-slate-900">
+              <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-brand-goldText/60 shadow-sm">
                 {logoOk ? (
                   <img
                     src="/logo.png"
@@ -76,30 +76,30 @@ export default function Footer() {
               </span>
               <div>
                 <p className="text-lg font-black text-brand-goldText leading-tight">Divine Mercy School of Bukidnon, Inc.</p>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand-navy/80 dark:text-slate-300">Faith. Discipline. Service.</p>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand-navy/80">Faith. Discipline. Service.</p>
               </div>
             </div>
-            <p className="max-w-2xl text-sm text-slate-700 dark:text-slate-300">
+            <p className="max-w-2xl text-sm text-slate-700">
               A private Catholic school committed to faith-based education, discipline, and service. We bring education closer to every child.
             </p>
             <div className="flex items-center gap-2">
               <a
                 href="https://www.facebook.com/dmsbherald"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 aria-label="Facebook"
               >
                 <FaFacebookF className="h-4 w-4" aria-hidden="true" />
               </a>
               <a
                 href="https://www.youtube.com/"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 aria-label="YouTube"
               >
                 <FaYoutube className="h-4 w-4" aria-hidden="true" />
               </a>
               <a
                 href="https://www.instagram.com/"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 aria-label="Instagram"
               >
                 <FaInstagram className="h-4 w-4" aria-hidden="true" />
@@ -107,10 +107,10 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/90 p-4 shadow-sm ring-1 ring-slate-200 backdrop-blur dark:bg-slate-900/80 dark:ring-slate-800">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">Stay in the loop</p>
+          <div className="rounded-2xl bg-white/90 p-4 shadow-sm ring-1 ring-slate-200 backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Stay in the loop</p>
             <h3 className="mt-1 text-lg font-black text-brand-goldText">Subscribe for school updates</h3>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">News, events, and admissions reminders—no spam.</p>
+            <p className="mt-1 text-sm text-slate-600">News, events, and admissions reminders—no spam.</p>
             <form className="mt-4 space-y-2" onSubmit={onSubmit}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
@@ -118,7 +118,7 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
                   required
                 />
                 <button
@@ -130,36 +130,36 @@ export default function Footer() {
                 </button>
               </div>
               {status === 'success' ? (
-                <p className="text-[11px] text-emerald-700 dark:text-emerald-400">Subscribed. Check your inbox.</p>
+                <p className="text-[11px] text-emerald-700">Subscribed. Check your inbox.</p>
               ) : null}
               {status === 'error' ? (
-                <p className="text-[11px] text-rose-600 dark:text-rose-400">Failed to subscribe. Try again.</p>
+                <p className="text-[11px] text-rose-600">Failed to subscribe. Try again.</p>
               ) : null}
             </form>
           </div>
         </div>
 
-        <div className="grid gap-8 border-t border-white/60 pt-8 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800">
+        <div className="grid gap-8 border-t border-white/60 pt-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-3">
             <p className="text-sm font-extrabold text-brand-goldText">Explore</p>
             <ul className="space-y-2 text-sm">
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/about">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/about">
                   About
                 </NavLink>
               </li>
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/academics">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/academics">
                   Academics
                 </NavLink>
               </li>
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/admissions">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/admissions">
                   Admissions
                 </NavLink>
               </li>
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/news">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/news">
                   Updates
                 </NavLink>
               </li>
@@ -170,22 +170,22 @@ export default function Footer() {
             <p className="text-sm font-extrabold text-brand-goldText">Visit</p>
             <ul className="space-y-2 text-sm">
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/events">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/events">
                   Events
                 </NavLink>
               </li>
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/gallery">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/gallery">
                   Gallery
                 </NavLink>
               </li>
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/contact#visit">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/contact#visit">
                   Book a Visit
                 </NavLink>
               </li>
               <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText dark:text-slate-200" to="/contact">
+                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/contact">
                   Contact
                 </NavLink>
               </li>
@@ -194,12 +194,12 @@ export default function Footer() {
 
           <div className="space-y-3">
             <p className="text-sm font-extrabold text-brand-goldText">Contact</p>
-            <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-200">
+            <ul className="space-y-3 text-sm text-slate-700">
               <li className="flex items-start gap-2">
                 <FiMapPin className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
                 <span>
                   Bukidnon, Philippines
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">(Update with your campus address)</span>
+                  <span className="block text-xs text-slate-500">(Update with your campus address)</span>
                 </span>
               </li>
               <li className="flex items-center gap-2">
@@ -219,15 +219,15 @@ export default function Footer() {
 
           <div className="space-y-3">
             <p className="text-sm font-extrabold text-brand-goldText">Hours</p>
-            <p className="text-sm text-slate-700 dark:text-slate-200">
+            <p className="text-sm text-slate-700">
               Monday – Friday
-              <span className="block text-slate-500 dark:text-slate-400">8:00 AM – 5:00 PM</span>
+              <span className="block text-slate-500">8:00 AM – 5:00 PM</span>
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               © {new Date().getFullYear()} Divine Mercy School of Bukidnon, Inc. All rights reserved.
             </p>
-            <p className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
-              <span aria-hidden="true">©</span>
+            <p className="inline-flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-xs font-bold text-brand-goldText">
+              <span className="opacity-70">Developed by</span>
               Javy M. Rodillon
             </p>
           </div>

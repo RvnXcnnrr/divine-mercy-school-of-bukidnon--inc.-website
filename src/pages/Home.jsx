@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FiAward, FiBookOpen, FiCalendar, FiChevronLeft, FiChevronRight, FiHeart, FiUsers } from 'react-icons/fi'
+import { FiAward, FiBookOpen, FiCalendar, FiChevronLeft, FiChevronRight, FiHeart, FiImage, FiUsers } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
 import { NavLink } from 'react-router-dom'
 import Hero from '../components/Hero.jsx'
@@ -14,6 +14,7 @@ import { fetchFaculty, cacheFaculty, readFacultyCache } from '../services/siteIn
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
 import { fetchSiteContent } from '../services/siteInfoService.js'
+import { fetchApprovedTestimonials, submitTestimonial } from '../services/testimonialService.js'
 
 function sortFaculty(list = []) {
   return [...list].sort((a, b) => {
@@ -42,20 +43,20 @@ function BuildingCard({ building }) {
     <figure
       ref={ref}
       style={style}
-      className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800"
+      className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         {image ? (
           <img src={image} alt={title} className="h-full w-full object-cover" loading="lazy" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+          <div className="flex h-full w-full items-center justify-center bg-slate-100 text-xs font-semibold text-slate-500">
             Add a building image
           </div>
         )}
       </div>
       <figcaption className="p-4">
         <p className="text-base font-extrabold text-brand-goldText">{title}</p>
-        {subtitle ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 text-sm text-slate-600">{subtitle}</p> : null}
       </figcaption>
     </figure>
   )
@@ -77,15 +78,7 @@ export default function Home() {
   const hasTransport = Boolean(transportProgram.title || transportProgram.subtitle || transportCards.length)
   const campusSlides = useMemo(() => {
     const items = (highlightMediaData?.items || []).filter((item) => item.featured_image_url || item.gallery_images || item.images)
-    if (!items.length) {
-      return [
-        {
-          image: '/building-mock.png',
-          title: 'Campus Fair Highlights',
-          description: 'Showcase your campus fair photos and campus images here.',
-        },
-      ]
-    }
+    if (!items.length) return []
     return items.flatMap((item, idx) => {
       const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])].filter(Boolean)
       if (!images.length) return []
@@ -101,6 +94,9 @@ export default function Home() {
   const currentSlide = campusSlides[slideIndex] || campusSlides[0]
   const previewNews = recentUpdates?.items?.slice(0, 3) || newsItems.slice(0, 3)
   const [faculty, setFaculty] = useState(() => sortFaculty(readFacultyCache() || boardMembers))
+  const [testimonialList, setTestimonialList] = useState(testimonials)
+  const [testimonialForm, setTestimonialForm] = useState({ name: '', role: '', quote: '' })
+  const [testimonialStatus, setTestimonialStatus] = useState('idle')
 
   useEffect(() => {
     let mounted = true
@@ -139,6 +135,22 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchApprovedTestimonials({ limit: 30 })
+        if (!mounted || !data) return
+        setTestimonialList(data)
+      } catch (err) {
+        console.warn('[Home] using fallback testimonials', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
     setSlideIndex(0)
   }, [campusSlides.length])
 
@@ -162,12 +174,13 @@ export default function Home() {
     <div>
       <Hero />
 
-      <section className="mx-auto max-w-6xl px-4 pb-8 pt-10 is-visible">
-        <div className="grid gap-6 lg:grid-cols-[1.08fr_1fr] lg:items-center">
+      <section className="bg-brand-sky">
+        <div className="mx-auto max-w-6xl px-4 pb-8 pt-10 is-visible">
+          <div className="grid gap-6 lg:grid-cols-[1.08fr_1fr] lg:items-center">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Campus Fair Highlights</p>
             <h2 className="text-2xl font-black text-brand-goldText sm:text-3xl">Campus Fair Highlights</h2>
-            <p className="text-sm text-slate-700 dark:text-slate-300">
+            <p className="text-sm text-slate-700">
               A rotating slideshow of our campus images and fair moments. Tap through to spotlight every highlight.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -175,7 +188,7 @@ export default function Home() {
                 type="button"
                 onClick={goToPrev}
                 disabled={!hasMultipleSlides}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-brand-goldText ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-800"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-brand-goldText ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-60"
               >
                 <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
                 Previous
@@ -191,14 +204,23 @@ export default function Home() {
               </button>
               <NavLink
                 to="/gallery"
-                className="inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-extrabold text-brand-goldText ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-900"
+                className="inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-extrabold text-brand-goldText ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
               >
                 Open gallery
               </NavLink>
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-200 shadow-lg dark:bg-slate-950 dark:ring-slate-800">
+          {campusSlides.length === 0 ? (
+            <div className="flex aspect-[16/9] items-center justify-center rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
+              <div className="text-center">
+                <FiImage className="mx-auto h-8 w-8 text-slate-300" aria-hidden="true" />
+                <p className="mt-2 text-sm font-semibold text-slate-400">No highlights available</p>
+                <p className="mt-1 text-xs text-slate-400">Add campus photos from the admin panel.</p>
+              </div>
+            </div>
+          ) : (
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-200 shadow-lg">
             <div className="relative aspect-[16/9] overflow-hidden">
               <img
                 src={currentSlide.image}
@@ -258,55 +280,61 @@ export default function Home() {
               ) : null}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 pb-6 pt-4 is-visible">
-        <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm dark:bg-slate-900 dark:ring-slate-800 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Visit us</p>
-            <p className="text-sm text-slate-700 dark:text-slate-300">See classrooms, talk to staff, and plan your learner's path.</p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <NavLink
-              to="/contact#visit"
-              className="gold-gradient-bg inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-            >
-              <FiCalendar className="h-4 w-4" aria-hidden="true" />
-              Book a Visit
-            </NavLink>
-            <NavLink
-              to="/admissions"
-              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900"
-            >
-              Admissions Guide
-            </NavLink>
+          )}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14">
-        <div className="max-w-2xl" data-reveal>
-          <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Why choose us</h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Four quick proof points families care about.</p>
-        </div>
-
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {highlights.map((h, idx) => (
-            <HighlightCard key={h.title} item={h} icon={highlightIcons[idx % highlightIcons.length]} />
-          ))}
+      <section className="bg-brand-sky">
+        <div className="mx-auto max-w-6xl px-4 pb-8">
+          <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Visit us</p>
+              <p className="text-sm text-slate-700">See classrooms, talk to staff, and plan your learner's path.</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <NavLink
+                to="/contact#visit"
+                className="gold-gradient-bg inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              >
+                <FiCalendar className="h-4 w-4" aria-hidden="true" />
+                Book a Visit
+              </NavLink>
+              <NavLink
+                to="/admissions"
+                className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+              >
+                Admissions Guide
+              </NavLink>
+            </div>
+          </div>
         </div>
       </section>
 
-      <WaveDivider />
+      <section className="bg-brand-sky">
+        <div className="mx-auto max-w-6xl px-4 py-14">
+          <div className="max-w-2xl" data-reveal>
+            <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Why choose us</h2>
+            <p className="mt-2 text-sm text-slate-600">Four quick proof points families care about.</p>
+          </div>
+
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {highlights.map((h, idx) => (
+              <HighlightCard key={h.title} item={h} icon={highlightIcons[idx % highlightIcons.length]} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <WaveDivider from="bg-brand-sky" to="text-white" />
 
       {hasTransport ? (
         <>
-          <section className="bg-white dark:bg-slate-900">
+          <section className="bg-white">
           <div className="mx-auto max-w-6xl px-4 py-14">
             <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
               <div data-reveal>
-                <p className="inline-flex items-center gap-2 rounded-full bg-brand-sky px-3 py-1 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                <p className="inline-flex items-center gap-2 rounded-full bg-brand-sky px-3 py-1 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200">
                   <FaBus className="h-3.5 w-3.5" aria-hidden="true" />
                   Community Support
                 </p>
@@ -314,7 +342,7 @@ export default function Home() {
                   {transportProgram.title || 'Transport assistance program'}
                 </h2>
                 {transportProgram.subtitle ? (
-                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{transportProgram.subtitle}</p>
+                  <p className="mt-3 text-sm text-slate-600">{transportProgram.subtitle}</p>
                 ) : null}
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -326,7 +354,7 @@ export default function Home() {
                   </NavLink>
                   <NavLink
                     to="/contact"
-                    className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900 sm:w-auto"
+                    className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 sm:w-auto"
                   >
                     Ask about transport
                   </NavLink>
@@ -346,17 +374,18 @@ export default function Home() {
           </div>
         </section>
 
-        <WaveDivider from="bg-white dark:bg-slate-900" to="text-brand-sky dark:text-slate-950" />
+        <WaveDivider from="bg-white" to="text-brand-sky" />
         </>
       ) : null}
 
-      <section className="mx-auto max-w-6xl px-4 pb-14 pt-10" data-reveal>
-        <div className="rounded-2xl bg-brand-sky p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+      <section className="bg-brand-sky">
+        <div className="mx-auto max-w-6xl px-4 pb-14 pt-10" data-reveal>
+          <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-200 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Campus visit</p>
               <h3 className="text-xl font-black text-brand-goldText">Schedule a guided visit with our team</h3>
-              <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">Walk the campus, meet teachers, and discuss support options.</p>
+              <p className="mt-1 text-sm text-slate-700">Walk the campus, meet teachers, and discuss support options.</p>
             </div>
             <div className="flex gap-2">
               <NavLink
@@ -367,39 +396,43 @@ export default function Home() {
               </NavLink>
               <NavLink
                 to="/admissions"
-                className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-900"
+                className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-extrabold text-brand-goldText ring-1 ring-slate-200 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
               >
                 Admissions
               </NavLink>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
-        <div className="max-w-2xl">
+      <section className="bg-brand-sky">
+        <div className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
+            <div className="max-w-2xl">
           <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Campus Building</h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Photos, titles, and departments managed from the admin dashboard.</p>
-        </div>
+          <p className="mt-2 text-sm text-slate-600">Photos, titles, and departments managed from the admin dashboard.</p>
+          </div>
 
-        {buildings.length ? (
+          {buildings.length ? (
           <div className="mt-6 grid gap-6 sm:grid-cols-2">
             {buildings.map((b, idx) => (
               <BuildingCard key={b.title || b.name || idx} building={b} />
             ))}
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">No campus buildings added yet.</p>
-        )}
+          ) : (
+          <p className="mt-4 text-sm text-slate-600">No campus buildings added yet.</p>
+          )}
+        </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
-        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-sky/70 via-white to-brand-sky/40 p-6 ring-1 ring-slate-200 shadow-sm dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 dark:ring-slate-800">
+      <section className="bg-brand-sky">
+        <div className="mx-auto max-w-6xl px-4 pb-14" data-reveal>
+            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-sky/70 via-white to-brand-sky/40 p-6 ring-1 ring-slate-200 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">What’s new</p>
               <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Latest updates</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Fresh news, events, and annual field trips.</p>
+              <p className="mt-2 text-sm text-slate-600">Fresh news, events, and annual field trips.</p>
             </div>
             <NavLink
               to="/news"
@@ -414,14 +447,17 @@ export default function Home() {
               <NewsCard key={item.id || item.slug || item.title} item={item} />
             ))}
           </div>
+          </div>
         </div>
       </section>
 
-      <section className="bg-white dark:bg-slate-900">
+      <WaveDivider from="bg-brand-sky" to="text-white" />
+
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="max-w-2xl" data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">Meet the Board</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Leadership guiding our mission of faith, discipline, and service.</p>
+            <p className="mt-2 text-sm text-slate-600">Leadership guiding our mission of faith, discipline, and service.</p>
           </div>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -432,43 +468,119 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-slate-900">
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="max-w-2xl" data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight sm:text-3xl">
               Testimonials
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Parent and guardian feedback from our community.</p>
+            <p className="mt-2 text-sm text-slate-600">Parent and guardian feedback from our community.</p>
           </div>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((t, idx) => (
-              <Testimonial key={idx} quote={t.quote} name={t.name} role={t.role} />
-            ))}
+            {testimonialList.length ? (
+              testimonialList.map((t) => <Testimonial key={t.id || t.name} quote={t.quote} name={t.name} role={t.role} />)
+            ) : (
+              <p className="text-sm text-slate-600">No testimonials yet. Be the first to share your experience.</p>
+            )}
           </div>
 
-          <div className="mt-10 rounded-2xl bg-brand-sky p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
+          <div className="mt-10 grid gap-4 rounded-2xl bg-white p-6 ring-1 ring-slate-200 shadow-sm" data-reveal>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Share your story</p>
+              <h3 className="text-lg font-black text-brand-goldText">Submit a testimonial</h3>
+              <p className="mt-1 text-sm text-slate-600">Your message will be reviewed before it appears on the site.</p>
+            </div>
+            <form
+              className="grid gap-3 sm:grid-cols-2"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!testimonialForm.name || !testimonialForm.quote) return
+                try {
+                  setTestimonialStatus('loading')
+                  await submitTestimonial({
+                    name: testimonialForm.name.trim(),
+                    role: testimonialForm.role.trim(),
+                    quote: testimonialForm.quote.trim(),
+                  })
+                  setTestimonialStatus('success')
+                  setTestimonialForm({ name: '', role: '', quote: '' })
+                } catch (err) {
+                  console.error(err)
+                  setTestimonialStatus('error')
+                }
+              }}
+            >
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-700">Name</span>
+                <input
+                  required
+                  value={testimonialForm.name}
+                  onChange={(e) => setTestimonialForm((f) => ({ ...f, name: e.target.value }))}
+                  className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
+                  placeholder="Your name"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-700">Role / relationship</span>
+                <input
+                  value={testimonialForm.role}
+                  onChange={(e) => setTestimonialForm((f) => ({ ...f, role: e.target.value }))}
+                  className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
+                  placeholder="Parent, guardian, alumnus, etc."
+                />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="text-xs font-semibold text-slate-700">Testimonial</span>
+                <textarea
+                  required
+                  value={testimonialForm.quote}
+                  onChange={(e) => setTestimonialForm((f) => ({ ...f, quote: e.target.value }))}
+                  rows={3}
+                  className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
+                  placeholder="Share your experience..."
+                />
+              </label>
+              <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={testimonialStatus === 'loading'}
+                  className="gold-gradient-bg inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-extrabold text-white transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-70"
+                >
+                  Submit for review
+                </button>
+                {testimonialStatus === 'success' ? (
+                  <span className="text-xs font-semibold text-emerald-700">Thanks! We will review your testimonial shortly.</span>
+                ) : null}
+                {testimonialStatus === 'error' ? (
+                  <span className="text-xs font-semibold text-rose-600">Submission failed. Please try again.</span>
+                ) : null}
+              </div>
+            </form>
+          </div>
+
+          <div className="mt-10 rounded-2xl bg-brand-sky p-6 ring-1 ring-slate-200" data-reveal>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Partners & Community</p>
             <h3 className="mt-1 text-xl font-black text-brand-goldText">Trusted by families and local partners</h3>
             <div className="mt-4 flex flex-wrap gap-3">
               {partners.map((p) => (
                 <span
                   key={p.name}
-                  className="inline-flex flex-col rounded-lg bg-white px-3 py-2 text-xs font-semibold text-brand-navy ring-1 ring-slate-200 shadow-sm dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-700"
+                  className="inline-flex flex-col rounded-lg bg-white px-3 py-2 text-xs font-semibold text-brand-navy ring-1 ring-slate-200 shadow-sm"
                 >
                   {p.name}
-                  <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">{p.note}</span>
+                  <span className="text-[11px] font-normal text-slate-500">{p.note}</span>
                 </span>
               ))}
             </div>
-            <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-xs text-slate-600">
               Want partner logos or deeper faculty highlights? We can add optimized assets and profiles anytime.
             </p>
           </div>
         </div>
       </section>
 
-      <WaveDivider from="bg-white dark:bg-slate-900" to="text-brand-goldText" />
+      <WaveDivider from="bg-white" to="text-brand-goldText" />
 
       <section className="bg-brand-goldText">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-2 lg:items-center">

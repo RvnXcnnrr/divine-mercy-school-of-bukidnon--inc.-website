@@ -52,7 +52,7 @@ export default function Academics() {
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="max-w-2xl" data-reveal>
             <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">Academics</h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-sm text-slate-600">
               Programs designed to build strong foundations, deepen understanding, and prepare students for their next
               steps.
             </p>
@@ -60,9 +60,9 @@ export default function Academics() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-brand-sky leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
+          className="block h-8 w-full fill-current text-white sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -71,11 +71,11 @@ export default function Academics() {
         </svg>
       </div>
 
-      <section className="bg-white dark:bg-slate-900">
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Programs Offered</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Junior High and Senior High.</p>
+            <p className="mt-2 text-sm text-slate-600">Junior High and Senior High.</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             {programList.map((p, idx) => (
@@ -85,9 +85,9 @@ export default function Academics() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-white leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
+          className="block h-8 w-full fill-current text-brand-sky sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -101,10 +101,10 @@ export default function Academics() {
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
             <div data-reveal>
               <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Curriculum Overview</h2>
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-3 text-sm text-slate-600">
                 We emphasize mastery of core subjects, values formation, and practical skills for real-world readiness.
               </p>
-              <ul className="mt-5 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+              <ul className="mt-5 space-y-3 text-sm text-slate-700">
                 {curriculum.map((item) => (
                   <li key={item} className="flex gap-2">
                     <FiBook className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
@@ -114,18 +114,18 @@ export default function Academics() {
               </ul>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" data-reveal>
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200" data-reveal>
               <p className="text-sm font-extrabold text-brand-goldText">Learning Support</p>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-2 text-sm text-slate-600">
                 Teachers guide students with clear outcomes, regular feedback, and a safe learning environment.
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-700">
-                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Approach</p>
+                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p className="text-xs font-semibold text-slate-600">Approach</p>
                   <p className="mt-1 text-sm font-extrabold text-brand-goldText">Student-centered</p>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-700">
-                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Focus</p>
+                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <p className="text-xs font-semibold text-slate-600">Focus</p>
                   <p className="mt-1 text-sm font-extrabold text-brand-goldText">Skills + values</p>
                 </div>
               </div>
@@ -134,9 +134,9 @@ export default function Academics() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-brand-sky leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
+          className="block h-8 w-full fill-current text-white sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -145,11 +145,11 @@ export default function Academics() {
         </svg>
       </div>
 
-      <section className="bg-white dark:bg-slate-900">
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Facilities & Labs</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Spaces that support hands-on learning and student growth.</p>
+            <p className="mt-2 text-sm text-slate-600">Spaces that support hands-on learning and student growth.</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {facilityList.map((f, idx) => (
@@ -159,9 +159,9 @@ export default function Academics() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-white leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
+          className="block h-8 w-full fill-current text-brand-sky sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"

@@ -17,6 +17,7 @@ import AdminPosts from './pages/admin/AdminPosts.jsx'
 import AdminPostEditor from './pages/admin/AdminPostEditor.jsx'
 import AdminSettings from './pages/admin/AdminSettings.jsx'
 import AdminSiteContent from './pages/admin/AdminSiteContent.jsx'
+import AdminTestimonials from './pages/admin/AdminTestimonials.jsx'
 import ProtectedRoute from './routes/ProtectedRoute.jsx'
 
 function ScrollToTop() {
@@ -55,7 +56,7 @@ function App() {
   }, [pathname])
 
   return (
-    <div className="min-h-dvh bg-brand-sky text-brand-ink dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-dvh bg-brand-sky text-brand-ink">
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-brand-ink focus:shadow"
@@ -83,6 +84,7 @@ function App() {
               <Route path="posts" element={<AdminPosts />} />
               <Route path="posts/new" element={<AdminPostEditor />} />
               <Route path="posts/:postId" element={<AdminPostEditor />} />
+              <Route path="testimonials" element={<AdminTestimonials />} />
               <Route path="content" element={<AdminSiteContent />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>

@@ -81,7 +81,7 @@ export default function News() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" data-reveal>
             <div className="max-w-2xl">
               <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">News & Events</h1>
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-3 text-sm text-slate-600">
                 Updates on school activities, announcements, and community highlights.
               </p>
             </div>
@@ -93,7 +93,7 @@ export default function News() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search posts"
-                  className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
                 />
               </label>
               <div className="flex flex-wrap gap-2" aria-label="Filter news by category">
@@ -106,7 +106,7 @@ export default function News() {
                       'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-extrabold transition-colors ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2',
                       category === tag.id
                         ? 'gold-gradient-bg text-white ring-brand-gold/60'
-                        : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700',
+                        : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky',
                     ].join(' ')}
                   >
                     {tag.name}
@@ -118,9 +118,9 @@ export default function News() {
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-brand-sky leading-none dark:bg-slate-950" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-brand-sky leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-white dark:text-slate-900 sm:h-10"
+          className="block h-8 w-full fill-current text-white sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"
@@ -129,41 +129,41 @@ export default function News() {
         </svg>
       </div>
 
-      <section className="bg-white dark:bg-slate-900">
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          {isError ? <p className="text-sm text-rose-600 dark:text-rose-400">Failed to load posts.</p> : null}
-          {isLoading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading posts…</p> : null}
+          {isError ? <p className="text-sm text-rose-600">Failed to load posts.</p> : null}
+          {isLoading ? <p className="text-sm text-slate-600">Loading posts…</p> : null}
 
           <div className="max-w-2xl" data-reveal>
             <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Latest & Upcoming</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Events and announcements you can act on now.</p>
+            <p className="mt-2 text-sm text-slate-600">Events and announcements you can act on now.</p>
           </div>
 
           <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {activeItems.length ? (
               activeItems.map((item) => <NewsCard key={item.id || item.slug} item={item} />)
             ) : (
-              <p className="text-sm text-slate-600 dark:text-slate-300" data-reveal>No items for this filter.</p>
+              <p className="text-sm text-slate-600" data-reveal>No items for this filter.</p>
             )}
           </div>
 
           <div className="mt-12" data-reveal>
             <h3 className="text-lg font-extrabold text-brand-goldText">Past events archive</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Recent past events for reference and documentation.</p>
+            <p className="text-sm text-slate-600">Recent past events for reference and documentation.</p>
           </div>
           <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {pastItems.length ? (
               pastItems.map((item) => <NewsCard key={`${item.id || item.slug}-past`} item={item} />)
             ) : (
-              <p className="text-sm text-slate-600 dark:text-slate-300" data-reveal>No past events for this filter.</p>
+              <p className="text-sm text-slate-600" data-reveal>No past events for this filter.</p>
             )}
           </div>
         </div>
       </section>
 
-      <div className="w-full overflow-hidden bg-white leading-none dark:bg-slate-900" aria-hidden="true">
+      <div className="w-full overflow-hidden bg-white leading-none" aria-hidden="true">
         <svg
-          className="block h-8 w-full fill-current text-brand-sky dark:text-slate-950 sm:h-10"
+          className="block h-8 w-full fill-current text-brand-sky sm:h-10"
           viewBox="0 0 1440 80"
           preserveAspectRatio="none"
           focusable="false"

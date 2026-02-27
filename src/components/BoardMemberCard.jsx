@@ -19,7 +19,7 @@ export default function BoardMemberCard({ member }) {
 
   return (
     <article
-      className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm ring-1 ring-white/60 backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/80 dark:ring-slate-800"
+      className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm ring-1 ring-white/60 backdrop-blur"
       data-reveal
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(247,215,111,0.12),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(82,143,255,0.10),transparent_26%)]" aria-hidden="true" />
@@ -47,8 +47,8 @@ export default function BoardMemberCard({ member }) {
         </div>
 
         <div className="flex-1">
-          <p className="text-base font-black text-slate-900 dark:text-white">{member.name}</p>
-          <p className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          <p className="text-base font-black text-slate-900">{member.name}</p>
+          <p className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-slate-600">
             <FaUserTie className="h-4 w-4 text-brand-blue" aria-hidden="true" />
             {member.role}
           </p>
