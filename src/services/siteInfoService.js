@@ -1,3 +1,18 @@
+/**
+ * siteInfoService.js
+ * ──────────────────────────────────────────────────────────
+ * Manages the school's site-wide content stored in Supabase
+ * (vision, mission, contact info, extra page content).
+ * Falls back to siteContent.js defaults when Supabase is not configured.
+ *
+ * Exports:
+ *   fetchSiteContent()              – Load all site content fields
+ *   saveSiteContent(data)           – Upsert site content
+ *   fetchFaculty()                  – List all faculty members
+ *   saveFaculty(data)               – Create or update a faculty record
+ *   deleteFaculty(id)               – Delete a faculty member
+ * ──────────────────────────────────────────────────────────
+ */
 import { supabase, supabaseReady, supabaseTables } from '../lib/supabaseClient.js'
 import {
   missionVision as fallbackMissionVision,

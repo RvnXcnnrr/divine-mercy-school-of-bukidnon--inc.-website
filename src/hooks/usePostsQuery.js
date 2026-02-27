@@ -1,3 +1,8 @@
+/**
+ * usePostsQuery — React Query wrapper for fetchPosts().
+ * Accepts the same filter params as fetchPosts.
+ * Usage: const { data, isLoading } = usePostsQuery({ status: 'published' })
+ */
 import { useQuery } from '@tanstack/react-query'
 import { fetchPosts } from '../services/postService.js'
 

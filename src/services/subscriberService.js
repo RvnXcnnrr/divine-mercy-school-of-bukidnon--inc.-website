@@ -1,3 +1,14 @@
+/**
+ * subscriberService.js
+ * ──────────────────────────────────────────────────────────
+ * Manages newsletter / email subscribers.
+ *
+ * Exports:
+ *   subscribeEmail(email)       – Add a new subscriber
+ *   fetchSubscribers()          – List all subscribers (admin use)
+ *   deleteSubscriber(id)        – Remove a subscriber by id
+ * ──────────────────────────────────────────────────────────
+ */
 import { supabase, supabaseReady } from '../lib/supabaseClient.js'
 
 export async function subscribeEmail(email) {

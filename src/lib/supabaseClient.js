@@ -1,3 +1,12 @@
+/**
+ * supabaseClient.js
+ * ──────────────────────────────────────────────────────────
+ * Initialises and exports the Supabase client.
+ * Reads credentials from .env (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY).
+ * supabaseReady — false when env vars are missing (dev fallback mode).
+ * supabaseTables — single source of truth for all table names.
+ * ──────────────────────────────────────────────────────────
+ */
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL

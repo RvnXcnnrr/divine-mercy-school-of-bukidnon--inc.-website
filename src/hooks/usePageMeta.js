@@ -1,3 +1,7 @@
+/**
+ * usePageMeta — Sets the page <title> and <meta name="description"> on mount/route change.
+ * Usage: usePageMeta({ title: 'About', description: 'Learn about our school.' })
+ */
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 

@@ -1,3 +1,16 @@
+/**
+ * testimonialService.js
+ * ──────────────────────────────────────────────────────────
+ * Manages student/parent testimonials submitted via the public form.
+ *
+ * Exports:
+ *   fetchApprovedTestimonials()         – Public: approved testimonials only
+ *   fetchTestimonials({ status })       – Admin: all testimonials with filter
+ *   submitTestimonial(data)             – Public: submit a new testimonial
+ *   updateTestimonialStatus(id, status) – Admin: approve / reject
+ *   deleteTestimonial(id)               – Admin: permanently remove
+ * ──────────────────────────────────────────────────────────
+ */
 import { supabase, supabaseReady, supabaseTables } from '../lib/supabaseClient.js'
 import { testimonials as fallbackTestimonials } from '../data/siteContent.js'
 

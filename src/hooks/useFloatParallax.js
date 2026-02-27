@@ -1,3 +1,9 @@
+/**
+ * useFloatParallax — Adds a gentle floating animation to an element
+ * based on how far it is from the center of the viewport.
+ * Returns { ref, style } — attach ref to the element, spread style on it.
+ * Options: factor (0–1 intensity), max (px clamp)
+ */
 import { useEffect, useRef, useState } from 'react'
 
 export default function useFloatParallax({ factor = 0.15, max = 14 } = {}) {

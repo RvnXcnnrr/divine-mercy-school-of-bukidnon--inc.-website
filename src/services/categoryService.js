@@ -1,3 +1,15 @@
+/**
+ * categoryService.js
+ * ──────────────────────────────────────────────────────────
+ * Handles CRUD operations for post categories.
+ *
+ * Exports:
+ *   fetchCategories()           – List all categories
+ *   createCategory(name)        – Create a new category (auto-slugified)
+ *   updateCategory(id, name)    – Rename a category
+ *   deleteCategory(id)          – Delete a category by id
+ * ──────────────────────────────────────────────────────────
+ */
 import slugify from 'slugify'
 import { supabase, supabaseReady, supabaseTables } from '../lib/supabaseClient.js'
 

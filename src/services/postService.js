@@ -1,3 +1,16 @@
+/**
+ * postService.js
+ * ──────────────────────────────────────────────────────────
+ * Handles CRUD operations for posts (news, events, vlogs).
+ *
+ * Exports:
+ *   fetchPosts(options)         – Paginated post list with filters
+ *   fetchPost(idOrSlug)         – Single post by id or slug
+ *   savePost(data)              – Create or update a post
+ *   deletePost(id)              – Delete a post and its image
+ *   toggleFeatured(id, value)   – Toggle is_featured flag
+ * ──────────────────────────────────────────────────────────
+ */
 import slugify from 'slugify'
 import { supabase, supabaseReady, supabaseTables } from '../lib/supabaseClient.js'
 import { newsItems as fallbackNews } from '../data/siteContent.js'
