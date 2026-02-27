@@ -223,14 +223,15 @@ export default function Footer() {
               Monday – Friday
               <span className="block text-slate-500">8:00 AM – 5:00 PM</span>
             </p>
-            <p className="text-xs text-slate-500">
-              © {new Date().getFullYear()} Divine Mercy School of Bukidnon, Inc. All rights reserved.
-            </p>
-            <p className="inline-flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-xs font-bold text-brand-goldText">
-              <span className="opacity-70">Developed by</span>
-              Javy M. Rodillon
-            </p>
           </div>
+        </div>
+      </div>
+
+      {/* ── Bottom bar ── */}
+      <div className="border-t border-slate-200 bg-white/60 py-3">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 text-[11px] text-slate-400">
+          <span>© {new Date().getFullYear()} Divine Mercy School of Bukidnon, Inc. All rights reserved.</span>
+          <span>Developed by <span className="font-semibold text-brand-goldText">Javy M. Rodillon</span></span>
         </div>
       </div>
     </footer>
