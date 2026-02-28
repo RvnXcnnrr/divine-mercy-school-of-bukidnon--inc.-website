@@ -16,7 +16,6 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminPosts from './pages/admin/AdminPosts.jsx'
 import AdminPostEditor from './pages/admin/AdminPostEditor.jsx'
 import AdminSettings from './pages/admin/AdminSettings.jsx'
-import AdminSiteContent from './pages/admin/AdminSiteContent.jsx'
 import AdminSiteManagement from './pages/admin/AdminSiteManagement.jsx'
 import AdminTestimonials from './pages/admin/AdminTestimonials.jsx'
 import ProtectedRoute from './routes/ProtectedRoute.jsx'
@@ -161,13 +160,13 @@ function App() {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="posts" element={<AdminPosts />} />
-                  <Route path="posts/new" element={<AdminPostEditor />} />
-                  <Route path="posts/:postId" element={<AdminPostEditor />} />
-                  <Route path="testimonials" element={<AdminTestimonials />} />
-                  <Route path="content" element={<AdminSiteContent />} />
-                  <Route path="site/:section" element={<AdminSiteManagement />} />
-                  <Route path="site" element={<Navigate to="/admin/site/homepage" replace />} />
-                  <Route path="settings" element={<AdminSettings />} />
+                <Route path="posts/new" element={<AdminPostEditor />} />
+                <Route path="posts/:postId" element={<AdminPostEditor />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="content" element={<Navigate to="/admin/site/homepage" replace />} />
+                <Route path="site/:section" element={<AdminSiteManagement />} />
+                <Route path="site" element={<Navigate to="/admin/site/homepage" replace />} />
+                <Route path="settings" element={<AdminSettings />} />
                 </Route>
               </Route>
 

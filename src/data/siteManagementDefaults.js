@@ -17,6 +17,9 @@ export function createSiteManagementDefaults() {
         ctaSecondaryText: 'Book a Visit',
         ctaSecondaryLink: '/contact#visit',
         backgroundImage: '',
+        focusLabel: 'Campus Focus',
+        focusText: 'Faith, Discipline, and Service in every classroom.',
+        focusImage: '',
         enableAnimatedCounters: true,
         enableParallax: true,
         statCards: [

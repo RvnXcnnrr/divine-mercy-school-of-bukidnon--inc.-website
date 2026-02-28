@@ -44,7 +44,7 @@ const NAV_SECTIONS = [
   },
   {
     title: 'Settings',
-    items: [{ to: '/admin/content', label: 'Site Content (Legacy)', icon: FiBookOpen }],
+    items: [{ to: '/admin/site/homepage', label: 'Site Management', icon: FiBookOpen }],
   },
   {
     title: 'Site Management',

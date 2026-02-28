@@ -128,6 +128,7 @@ export default function AdminSiteManagement() {
   const [toast, setToast] = useState({ message: '', type: 'success' })
   const [confirmPublish, setConfirmPublish] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [heroSaving, setHeroSaving] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -245,6 +246,26 @@ export default function AdminSiteManagement() {
       setFailure(publishError.message || 'Failed to publish.')
     } finally {
       setPublishing(false)
+    }
+  }
+
+  async function saveAndPublishHero() {
+    if (!draft) return
+    setHeroSaving(true)
+    setError('')
+    try {
+      const { data } = await publishSiteManagement(draft, 'Hero updated')
+      setDraft(data.draft)
+      setPublished(data.published)
+      setMeta(data.meta)
+      setHistory(data.history || [])
+      setDirty(false)
+      setSuccess('Hero changes are now live.')
+    } catch (heroError) {
+      setError(heroError.message || 'Failed to publish hero changes.')
+      setFailure(heroError.message || 'Failed to publish hero changes.')
+    } finally {
+      setHeroSaving(false)
     }
   }
 
@@ -409,6 +430,45 @@ export default function AdminSiteManagement() {
                   label: 'Upload background image',
                   onPick: (file) => uploadImage(file, (url) => updateHome((home) => ({ ...home, hero: { ...home.hero, backgroundImage: url } }))),
                 })}
+                <InputField
+                  label="Focus panel label"
+                  value={draft.homepage.hero.focusLabel}
+                  onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusLabel: value } }))}
+                />
+                <TextAreaField
+                  label="Focus panel text"
+                  rows={3}
+                  value={draft.homepage.hero.focusText}
+                  onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusText: value } }))}
+                />
+                <InputField
+                  label="Focus panel image URL (this exact center box)"
+                  value={draft.homepage.hero.focusImage}
+                  onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusImage: value } }))}
+                />
+                {uploadButton({
+                  label: 'Upload focus panel image',
+                  onPick: (file) => uploadImage(file, (url) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusImage: url } }))),
+                })}
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Published Hero Background</p>
+                  <p className="mt-1 break-all text-xs text-slate-600">
+                    {published?.homepage?.hero?.backgroundImage || 'Not set yet'}
+                  </p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Published Focus Panel Image</p>
+                  <p className="mt-1 break-all text-xs text-slate-600">
+                    {published?.homepage?.hero?.focusImage || 'Not set yet'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={saveAndPublishHero}
+                    disabled={heroSaving || saving || publishing}
+                    className="admin-button-primary mt-3"
+                  >
+                    <FiSave className="h-4 w-4" aria-hidden="true" />
+                    {heroSaving ? 'Publishing Hero...' : 'Save & Publish Hero'}
+                  </button>
+                </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <ToggleField label="Enable animated counters" checked={draft.homepage.hero.enableAnimatedCounters} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, enableAnimatedCounters: value } }))} />
                   <ToggleField label="Enable parallax" checked={draft.homepage.hero.enableParallax} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, enableParallax: value } }))} />
@@ -868,7 +928,7 @@ export default function AdminSiteManagement() {
 
       <Toast message={toast.message} type={toast.type} />
 
-      {(saving || publishing || uploading) ? <LoadingOverlay message="Processing content changes..." /> : null}
+      {(saving || publishing || uploading || heroSaving) ? <LoadingOverlay message="Processing content changes..." /> : null}
     </div>
   )
 }

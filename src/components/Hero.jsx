@@ -63,6 +63,9 @@ export default function Hero({ settings = null }) {
   const subtitle =
     hero?.subtitle ||
     'A private Catholic school committed to Christian values, compassion, and academic excellence for every learner.'
+  const focusLabel = hero?.focusLabel || 'Campus Focus'
+  const focusText = hero?.focusText || 'Faith, Discipline, and Service in every classroom.'
+  const focusImage = hero?.focusImage || ''
   const statCards = (hero?.statCards || []).filter((item) => item.isVisible !== false).slice(0, 3)
   const animatedCounters = hero?.enableAnimatedCounters !== false
   const enableParallax = hero?.enableParallax !== false
@@ -145,12 +148,19 @@ export default function Hero({ settings = null }) {
               transform: `translate3d(${effectiveMouse.x * 10}px, ${effectiveMouse.y * 10}px, 0)`,
             }}
           >
-            <div className="relative aspect-[5/4] w-full rounded-3xl bg-gradient-to-br from-red-100 via-white to-rose-100">
-              <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_20%_25%,rgba(185,28,28,0.16),transparent_36%),radial-gradient(circle_at_80%_8%,rgba(251,113,133,0.2),transparent_26%)]" aria-hidden="true" />
+            <div className="relative aspect-[5/4] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-red-100 via-white to-rose-100">
+              {focusImage ? (
+                <>
+                  <img src={focusImage} alt={focusText || 'Campus focus'} className="h-full w-full object-cover" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" aria-hidden="true" />
+                </>
+              ) : (
+                <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_20%_25%,rgba(185,28,28,0.16),transparent_36%),radial-gradient(circle_at_80%_8%,rgba(251,113,133,0.2),transparent_26%)]" aria-hidden="true" />
+              )}
               <div className="absolute inset-0 flex items-center justify-center p-8 text-center">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Campus Focus</p>
-                  <p className="mt-2 text-lg font-bold text-brand-ink">Faith, Discipline, and Service in every classroom.</p>
+                  <p className={['text-xs font-semibold uppercase tracking-[0.16em]', focusImage ? 'text-white/85' : 'text-slate-500'].join(' ')}>{focusLabel}</p>
+                  <p className={['mt-2 text-lg font-bold', focusImage ? 'text-white' : 'text-brand-ink'].join(' ')}>{focusText}</p>
                 </div>
               </div>
             </div>
