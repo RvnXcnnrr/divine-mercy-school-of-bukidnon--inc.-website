@@ -50,10 +50,22 @@ function App() {
       { threshold: 0.12 }
     )
 
-    const revealables = document.querySelectorAll('[data-reveal]:not(.is-visible)')
-    revealables.forEach((el) => observer.observe(el))
+    const observeRevealables = () => {
+      const revealables = document.querySelectorAll('[data-reveal]:not(.is-visible)')
+      revealables.forEach((el) => observer.observe(el))
+    }
+    observeRevealables()
 
-    return () => observer.disconnect()
+    const mutationObserver = new MutationObserver(() => {
+      observeRevealables()
+    })
+    const contentRoot = document.getElementById('content') || document.body
+    mutationObserver.observe(contentRoot, { childList: true, subtree: true })
+
+    return () => {
+      mutationObserver.disconnect()
+      observer.disconnect()
+    }
   }, [pathname])
 
   return (
