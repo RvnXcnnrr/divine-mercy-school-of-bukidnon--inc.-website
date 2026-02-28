@@ -112,20 +112,42 @@ export default function Home() {
     const items = (highlightMediaData?.items || []).filter((item) => item.featured_image_url || item.gallery_images || item.images)
     if (!items.length) return []
 
+    const seenImages = new Set()
+
     return items.flatMap((item, idx) => {
-      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])].filter(Boolean)
+      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])]
+        .map((image) => String(image || '').trim())
+        .filter(Boolean)
       if (!images.length) return []
-      return images.map((imageUrl, imgIdx) => ({
+
+      const uniqueImages = images.filter((imageUrl) => {
+        if (seenImages.has(imageUrl)) return false
+        seenImages.add(imageUrl)
+        return true
+      })
+
+      return uniqueImages.map((imageUrl, imgIdx) => ({
         image: imageUrl,
         title: item.title || `Campus highlight ${idx + 1}`,
         description: item.excerpt || 'Captured during our campus events.',
-        key: `${item.id || item.slug || idx}-${imgIdx}`,
+        key: `${item.id || item.slug || idx}-${imgIdx}-${imageUrl}`,
       }))
     })
   }, [highlightMediaData])
 
+  useEffect(() => {
+    if (!campusSlides.length) {
+      setSlideIndex(0)
+      return
+    }
+    if (slideIndex >= campusSlides.length) {
+      setSlideIndex(0)
+    }
+  }, [campusSlides.length, slideIndex])
+
+  const safeSlideIndex = campusSlides.length ? Math.min(slideIndex, campusSlides.length - 1) : 0
   const hasMultipleSlides = campusSlides.length > 1
-  const currentSlide = campusSlides[slideIndex] || campusSlides[0]
+  const currentSlide = campusSlides[safeSlideIndex] || campusSlides[0]
   const newsSettings = siteSettings?.homepage?.featuredNews || {}
   const showNewsSection = newsSettings.showFeatured !== false
   const previewNews = recentUpdates?.items?.slice(0, newsSettings.postsPerPage || 3) || newsItems.slice(0, 3)
@@ -196,10 +218,12 @@ export default function Home() {
   }, [campusSlides.length, hasMultipleSlides])
 
   function goToPrev() {
+    if (!campusSlides.length) return
     setSlideIndex((idx) => (idx - 1 + campusSlides.length) % campusSlides.length)
   }
 
   function goToNext() {
+    if (!campusSlides.length) return
     setSlideIndex((idx) => (idx + 1) % campusSlides.length)
   }
 
@@ -286,7 +310,7 @@ export default function Home() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" aria-hidden="true" />
                     <div className="absolute inset-x-0 bottom-0 p-5 text-white">
                       <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
-                        Slide {slideIndex + 1} of {campusSlides.length}
+                        Slide {safeSlideIndex + 1} of {campusSlides.length}
                       </p>
                       <h3 className="mt-2 text-2xl font-bold">{currentSlide.title}</h3>
                       {currentSlide.description ? (
