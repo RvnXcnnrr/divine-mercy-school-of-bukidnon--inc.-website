@@ -64,7 +64,7 @@ function buildGoogleCalendarUrl(item) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`
 }
 
-export default function EventCard({ item, timeline = false }) {
+export default function EventCard({ item, timeline = false, showAddToCalendar = true, showCountdown = true }) {
   const [now] = useState(() => Date.now())
   const parsedDate = toDate(item.date)
   const badge = dateBadgeParts(item.date)
@@ -84,7 +84,7 @@ export default function EventCard({ item, timeline = false }) {
               <FiCalendar className="h-4 w-4" aria-hidden="true" />
               {formatDate(item.date)}
             </p>
-            {countdown != null ? (
+            {showCountdown && countdown != null ? (
               <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-goldText ring-1 ring-red-100">
                 {countdown >= 0 ? `${countdown} days left` : 'Past event'}
               </span>
@@ -110,7 +110,7 @@ export default function EventCard({ item, timeline = false }) {
 
           {item.excerpt ? <p className="mt-3 text-sm leading-7 text-slate-600">{item.excerpt}</p> : null}
 
-          {calendarUrl ? (
+          {showAddToCalendar && calendarUrl ? (
             <a
               href={calendarUrl}
               target="_blank"
@@ -133,7 +133,7 @@ export default function EventCard({ item, timeline = false }) {
           <span className="text-[10px] font-bold tracking-wide">{badge.month}</span>
           <span className="text-sm font-extrabold leading-none">{badge.day}</span>
         </span>
-        {countdown != null ? (
+        {showCountdown && countdown != null ? (
           <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-goldText ring-1 ring-red-100">
             {countdown >= 0 ? `${countdown} days left` : 'Past'}
           </span>
@@ -164,7 +164,7 @@ export default function EventCard({ item, timeline = false }) {
 
       {item.excerpt ? <p className="mt-3 text-sm leading-7 text-slate-600 line-clamp-3">{item.excerpt}</p> : null}
 
-      {calendarUrl ? (
+      {showAddToCalendar && calendarUrl ? (
         <a
           href={calendarUrl}
           target="_blank"

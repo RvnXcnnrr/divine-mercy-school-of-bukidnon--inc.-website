@@ -20,10 +20,10 @@ import NewsCard from '../components/NewsCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
 import useFloatParallax from '../hooks/useFloatParallax.js'
 import { boardMembers, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
-import { fetchFaculty, cacheFaculty, readFacultyCache } from '../services/siteInfoService.js'
+import { fetchFaculty, cacheFaculty, readFacultyCache, fetchSiteContent } from '../services/siteInfoService.js'
 import BoardMemberCard from '../components/BoardMemberCard.jsx'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
-import { fetchSiteContent } from '../services/siteInfoService.js'
+import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 import { fetchApprovedTestimonials, submitTestimonial } from '../services/testimonialService.js'
 
 function sortFaculty(list = []) {
@@ -77,7 +77,7 @@ export default function Home() {
   })
 
   const highlightIcons = [FiAward, FiUsers, FiHeart, FiBookOpen]
-  const trustItems = [
+  const defaultTrustItems = [
     'Accredited Institution',
     'Faith-based Curriculum',
     'Safe Campus',
@@ -117,8 +117,7 @@ export default function Home() {
   const { data: recentUpdates } = usePostsQuery({ status: 'published', limit: 6 })
   const [slideIndex, setSlideIndex] = useState(0)
   const [buildings, setBuildings] = useState([])
-  const transportCards = transportProgram.cards || []
-  const hasTransport = Boolean(transportProgram.title || transportProgram.subtitle || transportCards.length)
+  const [siteSettings, setSiteSettings] = useState(null)
 
   const campusSlides = useMemo(() => {
     const items = (highlightMediaData?.items || []).filter((item) => item.featured_image_url || item.gallery_images || item.images)
@@ -138,7 +137,25 @@ export default function Home() {
 
   const hasMultipleSlides = campusSlides.length > 1
   const currentSlide = campusSlides[slideIndex] || campusSlides[0]
-  const previewNews = recentUpdates?.items?.slice(0, 3) || newsItems.slice(0, 3)
+  const newsSettings = siteSettings?.homepage?.featuredNews || {}
+  const showNewsSection = newsSettings.showFeatured !== false
+  const previewNews = recentUpdates?.items?.slice(0, newsSettings.postsPerPage || 3) || newsItems.slice(0, 3)
+  const trustItems =
+    siteSettings?.homepage?.trustBadges
+      ?.filter((item) => item.isVisible !== false)
+      .map((item) => item.label)
+      .filter(Boolean) || defaultTrustItems
+  const managedTransport = siteSettings?.admissionsPage?.transportation || null
+  const transportCards =
+    managedTransport?.cards
+      ?.filter((card) => card.isVisible !== false)
+      .map((card) => ({ title: card.title, description: card.description })) || transportProgram.cards || []
+  const transportTitle = managedTransport?.title || transportProgram.title || 'Transport assistance program'
+  const transportSubtitle = managedTransport?.subtitle || transportProgram.subtitle || ''
+  const hasTransport = Boolean(transportTitle || transportSubtitle || transportCards.length)
+  const showTestimonials = siteSettings?.homepage?.testimonials?.isVisible !== false
+  const testimonialTitle = siteSettings?.homepage?.testimonials?.title || 'Parent and guardian testimonials'
+  const testimonialSubtitle = siteSettings?.homepage?.testimonials?.subtitle || 'Feedback from families in our school community.'
 
   const [faculty, setFaculty] = useState(() => sortFaculty(readFacultyCache() || boardMembers))
   const [testimonialList, setTestimonialList] = useState(testimonials)
@@ -171,6 +188,7 @@ export default function Home() {
         const { data } = await fetchSiteContent()
         if (!mounted || !data) return
         setBuildings(data.extra_content?.buildings || [])
+        setSiteSettings(readPublishedSiteManagementFromContent(data))
       } catch (err) {
         console.warn('[Home] using empty buildings', err)
         if (!mounted) return
@@ -218,7 +236,7 @@ export default function Home() {
 
   return (
     <div className="bg-brand-sky">
-      <Hero />
+      <Hero settings={siteSettings} />
 
       <section id="home-trust" className="border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8">
@@ -318,8 +336,8 @@ export default function Home() {
                     <FaBus className="h-3.5 w-3.5" aria-hidden="true" />
                     Community Support
                   </p>
-                  <h3 className="page-h3 mt-4">{transportProgram.title || 'Transport assistance program'}</h3>
-                  {transportProgram.subtitle ? <p className="page-body mt-3 text-base">{transportProgram.subtitle}</p> : null}
+                  <h3 className="page-h3 mt-4">{transportTitle}</h3>
+                  {transportSubtitle ? <p className="page-body mt-3 text-base">{transportSubtitle}</p> : null}
 
                   {transportCards.length ? (
                     <div className="mt-4 grid gap-3">
@@ -384,27 +402,30 @@ export default function Home() {
 
       <section className="section-space bg-brand-sky">
         <div className="mx-auto max-w-7xl space-y-16 px-4">
-          <div data-reveal>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="max-w-2xl">
-                <p className="page-kicker">Social Proof</p>
-                <h2 className="page-h2 mt-3">Latest stories from our community</h2>
+          {showNewsSection ? (
+            <div data-reveal>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="max-w-2xl">
+                  <p className="page-kicker">Social Proof</p>
+                  <h2 className="page-h2 mt-3">Latest stories from our community</h2>
+                </div>
+                <NavLink to="/news" className="btn-primary btn-ripple rounded-xl px-4 py-2 text-xs">
+                  View all updates
+                </NavLink>
               </div>
-              <NavLink to="/news" className="btn-primary btn-ripple rounded-xl px-4 py-2 text-xs">
-                View all updates
-              </NavLink>
+              <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {previewNews.map((item) => (
+                  <NewsCard key={item.id || item.slug || item.title} item={item} />
+                ))}
+              </div>
             </div>
-            <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {previewNews.map((item) => (
-                <NewsCard key={item.id || item.slug || item.title} item={item} />
-              ))}
-            </div>
-          </div>
+          ) : null}
 
+          {showTestimonials ? (
           <div data-reveal>
             <div className="max-w-2xl">
-              <h3 className="page-h3">Parent and guardian testimonials</h3>
-              <p className="page-body mt-3 text-base">Feedback from families in our school community.</p>
+              <h3 className="page-h3">{testimonialTitle}</h3>
+              <p className="page-body mt-3 text-base">{testimonialSubtitle}</p>
             </div>
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {testimonialList.length ? (
@@ -491,6 +512,7 @@ export default function Home() {
               </form>
             </div>
           </div>
+          ) : null}
 
           <div data-reveal>
             <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">

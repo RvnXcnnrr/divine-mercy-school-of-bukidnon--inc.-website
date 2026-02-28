@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FiCalendar, FiClock, FiLayout, FiList, FiStar } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
 import EventCard from '../components/EventCard.jsx'
+import { fetchSiteContent } from '../services/siteInfoService.js'
+import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
 function toDate(value) {
   if (!value) return null
@@ -24,6 +26,13 @@ export default function Events() {
 
   const [view, setView] = useState('timeline')
   const [now] = useState(() => Date.now())
+  const [eventSettings, setEventSettings] = useState({
+    showFeaturedEvent: true,
+    enableCountdown: true,
+    layout: 'timeline',
+    showAddToCalendar: true,
+    featuredEventId: '',
+  })
   const { data, isLoading, isError } = usePostsQuery({ status: 'published', limit: 80 })
 
   const items = useMemo(() => {
@@ -49,6 +58,33 @@ export default function Events() {
   const featuredEvent = upcoming[0] || items[0]
   const nextCountdown = daysTo(featuredEvent?.date)
 
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchSiteContent()
+        if (!mounted || !data) return
+        const settings = readPublishedSiteManagementFromContent(data)
+        const nextSettings = settings.eventsSettings || {}
+        setEventSettings((prev) => ({
+          ...prev,
+          ...nextSettings,
+        }))
+        if (nextSettings.layout) setView(nextSettings.layout === 'grid' ? 'calendar' : 'timeline')
+      } catch (err) {
+        console.warn('[Events] using default settings', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const featuredById = items.find(
+    (item) => String(item.id) === String(eventSettings.featuredEventId) || String(item.slug) === String(eventSettings.featuredEventId)
+  )
+  const resolvedFeaturedEvent = featuredById || featuredEvent
+
   return (
     <div className="bg-brand-sky">
       <section className="section-space bg-gradient-to-br from-white via-red-50/35 to-rose-50/55">
@@ -61,7 +97,7 @@ export default function Events() {
         </div>
       </section>
 
-      {featuredEvent ? (
+      {eventSettings.showFeaturedEvent && resolvedFeaturedEvent ? (
         <section className="pb-10">
           <div className="mx-auto max-w-7xl px-4" data-reveal>
             <div className="surface-card overflow-hidden bg-gradient-to-br from-red-700 to-rose-600 p-8 text-white sm:p-10">
@@ -71,14 +107,16 @@ export default function Events() {
                     <FiStar className="h-3.5 w-3.5" aria-hidden="true" />
                     Featured Event
                   </p>
-                  <h2 className="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl">{featuredEvent.title}</h2>
-                  <p className="mt-3 max-w-2xl text-sm text-white/85">{featuredEvent.excerpt || 'Details and schedule are now available.'}</p>
+                  <h2 className="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl">{resolvedFeaturedEvent.title}</h2>
+                  <p className="mt-3 max-w-2xl text-sm text-white/85">{resolvedFeaturedEvent.excerpt || 'Details and schedule are now available.'}</p>
                 </div>
-                <div className="rounded-2xl bg-white/15 p-5 text-center ring-1 ring-white/20">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Next Event</p>
-                  <p className="mt-2 text-4xl font-extrabold">{nextCountdown != null ? Math.max(0, nextCountdown) : '--'}</p>
-                  <p className="text-xs text-white/80">days remaining</p>
-                </div>
+                {eventSettings.enableCountdown ? (
+                  <div className="rounded-2xl bg-white/15 p-5 text-center ring-1 ring-white/20">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Next Event</p>
+                    <p className="mt-2 text-4xl font-extrabold">{nextCountdown != null ? Math.max(0, nextCountdown) : '--'}</p>
+                    <p className="text-xs text-white/80">days remaining</p>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -126,13 +164,13 @@ export default function Events() {
               <div className="relative mt-8 space-y-6">
                 <span className="absolute left-[1.35rem] top-2 hidden h-[calc(100%-0.75rem)] w-px bg-slate-200 sm:block" aria-hidden="true" />
                 {upcoming.map((item) => (
-                  <EventCard key={item.id || item.slug} item={item} timeline />
+                  <EventCard key={item.id || item.slug} item={item} timeline showAddToCalendar={eventSettings.showAddToCalendar} showCountdown={eventSettings.enableCountdown} />
                 ))}
               </div>
             ) : (
               <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {upcoming.map((item) => (
-                  <EventCard key={item.id || item.slug} item={item} />
+                  <EventCard key={item.id || item.slug} item={item} showAddToCalendar={eventSettings.showAddToCalendar} showCountdown={eventSettings.enableCountdown} />
                 ))}
               </div>
             )
@@ -147,7 +185,9 @@ export default function Events() {
             <p className="page-muted mt-2">Recent schedules and completed activities.</p>
             <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {past.length ? (
-                past.slice(0, 6).map((item) => <EventCard key={`${item.id || item.slug}-past`} item={item} />)
+                past
+                  .slice(0, 6)
+                  .map((item) => <EventCard key={`${item.id || item.slug}-past`} item={item} showAddToCalendar={eventSettings.showAddToCalendar} showCountdown={eventSettings.enableCountdown} />)
               ) : (
                 <p className="text-sm text-slate-600">No past events yet.</p>
               )}

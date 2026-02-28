@@ -1,14 +1,24 @@
 import { createElement, useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
+  FiBook,
   FiBookOpen,
+  FiCalendar,
+  FiClipboard,
+  FiGlobe,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown,
   FiGrid,
+  FiHome,
+  FiImage,
+  FiInfo,
   FiLogOut,
   FiMenu,
   FiMessageSquare,
+  FiMonitor,
   FiPenTool,
+  FiPhoneCall,
   FiPlusCircle,
   FiSettings,
   FiUsers,
@@ -34,7 +44,22 @@ const NAV_SECTIONS = [
   },
   {
     title: 'Settings',
-    items: [{ to: '/admin/content', label: 'Site Content', icon: FiBookOpen }],
+    items: [{ to: '/admin/content', label: 'Site Content (Legacy)', icon: FiBookOpen }],
+  },
+  {
+    title: 'Site Management',
+    collapsible: true,
+    items: [
+      { to: '/admin/site/homepage', label: 'Homepage', icon: FiHome },
+      { to: '/admin/site/about', label: 'About Page', icon: FiInfo },
+      { to: '/admin/site/academics', label: 'Academics Page', icon: FiBook },
+      { to: '/admin/site/admissions', label: 'Admissions Page', icon: FiClipboard },
+      { to: '/admin/site/events', label: 'Events Settings', icon: FiCalendar },
+      { to: '/admin/site/gallery', label: 'Gallery Settings', icon: FiImage },
+      { to: '/admin/site/contact', label: 'Contact Page', icon: FiPhoneCall },
+      { to: '/admin/site/footer', label: 'Footer', icon: FiMonitor },
+      { to: '/admin/site/global', label: 'Global Settings', icon: FiGlobe },
+    ],
   },
 ]
 
@@ -45,11 +70,35 @@ const PAGE_TITLES = {
   '/admin/testimonials': 'Testimonials',
   '/admin/settings': 'Subscribers',
   '/admin/content': 'Site Content',
+  '/admin/site': 'Site Management',
+}
+
+const SITE_PAGE_TITLES = {
+  homepage: 'Homepage Manager',
+  about: 'About Page Manager',
+  academics: 'Academics Page Manager',
+  admissions: 'Admissions Page Manager',
+  events: 'Events Settings',
+  gallery: 'Gallery Settings',
+  contact: 'Contact Page Manager',
+  footer: 'Footer Manager',
+  global: 'Global Settings',
 }
 
 function initialSidebarCollapsed() {
   if (typeof window === 'undefined') return false
   return window.localStorage.getItem('admin-sidebar-collapsed') === 'true'
+}
+
+function initialGroupState() {
+  if (typeof window === 'undefined') return { 'Site Management': true }
+  try {
+    const raw = window.localStorage.getItem('admin-nav-open-groups')
+    if (!raw) return { 'Site Management': true }
+    return JSON.parse(raw)
+  } catch {
+    return { 'Site Management': true }
+  }
 }
 
 export default function AdminLayout() {
@@ -58,10 +107,15 @@ export default function AdminLayout() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(initialSidebarCollapsed)
+  const [openGroups, setOpenGroups] = useState(initialGroupState)
   const timerRef = useRef(null)
 
   const pageTitle = useMemo(() => {
     if (pathname.startsWith('/admin/posts/') && pathname !== '/admin/posts/new') return 'Edit Post'
+    if (pathname.startsWith('/admin/site/')) {
+      const section = pathname.replace('/admin/site/', '').split('/')[0]
+      return SITE_PAGE_TITLES[section] || 'Site Management'
+    }
     return PAGE_TITLES[pathname] || 'Admin Panel'
   }, [pathname])
 
@@ -95,6 +149,10 @@ export default function AdminLayout() {
     window.localStorage.setItem('admin-sidebar-collapsed', String(isCollapsed))
   }, [isCollapsed])
 
+  useEffect(() => {
+    window.localStorage.setItem('admin-nav-open-groups', JSON.stringify(openGroups))
+  }, [openGroups])
+
   function requestSignOut() {
     setShowConfirm(true)
   }
@@ -106,6 +164,13 @@ export default function AdminLayout() {
 
   function closeMobileMenu() {
     setMobileOpen(false)
+  }
+
+  function toggleGroup(groupName) {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupName]: !(prev[groupName] ?? true),
+    }))
   }
 
   return (
@@ -163,27 +228,46 @@ export default function AdminLayout() {
           <nav className="flex-1 space-y-5 overflow-y-auto pr-1" aria-label="Admin navigation">
             {NAV_SECTIONS.map((section) => (
               <section key={section.title}>
-                <p
-                  className={[
-                    'mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400',
-                    isCollapsed ? 'hidden' : 'block',
-                  ].join(' ')}
-                >
-                  {section.title}
-                </p>
-                <div className="space-y-1">
-                  {section.items.map((item) => (
-                    <NavItem
-                      key={item.to}
-                      to={item.to}
-                      label={item.label}
-                      icon={item.icon}
-                      end={item.end}
-                      collapsed={isCollapsed}
-                      onNavigate={closeMobileMenu}
+                {section.collapsible && !isCollapsed ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(section.title)}
+                    className="mb-2 flex w-full items-center justify-between rounded-lg px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 hover:bg-slate-100"
+                  >
+                    <span>{section.title}</span>
+                    <FiChevronDown
+                      className={[
+                        'h-3.5 w-3.5 transition-transform',
+                        openGroups[section.title] === false ? '-rotate-90' : 'rotate-0',
+                      ].join(' ')}
                     />
-                  ))}
-                </div>
+                  </button>
+                ) : (
+                  <p
+                    className={[
+                      'mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400',
+                      isCollapsed ? 'hidden' : 'block',
+                    ].join(' ')}
+                  >
+                    {section.title}
+                  </p>
+                )}
+
+                {isCollapsed || !section.collapsible || openGroups[section.title] !== false ? (
+                  <div className="space-y-1">
+                    {section.items.map((item) => (
+                      <NavItem
+                        key={item.to}
+                        to={item.to}
+                        label={item.label}
+                        icon={item.icon}
+                        end={item.end}
+                        collapsed={isCollapsed}
+                        onNavigate={closeMobileMenu}
+                      />
+                    ))}
+                  </div>
+                ) : null}
               </section>
             ))}
           </nav>

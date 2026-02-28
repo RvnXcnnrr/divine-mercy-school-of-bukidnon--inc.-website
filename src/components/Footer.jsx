@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { FiMail, FiMapPin, FiPhone } from 'react-icons/fi'
 import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa6'
 import { subscribeEmail } from '../services/subscriberService.js'
 import { fetchSiteContent } from '../services/siteInfoService.js'
+import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
 export default function Footer() {
   const [logoOk, setLogoOk] = useState(true)
@@ -12,6 +13,21 @@ export default function Footer() {
   const [contact, setContact] = useState({
     contact_email: 'info@dmsb.example',
     contact_phone: '+63 000 000 0000',
+    address: 'Bukidnon, Philippines',
+    office_hours: 'Mon-Fri, 8:00 AM - 5:00 PM',
+  })
+  const [footerSettings, setFooterSettings] = useState({
+    description:
+      'A private Catholic school committed to faith-based education, discipline, and service. We bring education closer to every child.',
+    socialLinks: [],
+    navLinks: [],
+    copyrightText: 'Divine Mercy School of Bukidnon, Inc. All rights reserved.',
+    showDeveloperCredit: true,
+    developerCredit: 'Developed by Javy M. Rodillon',
+  })
+  const [branding, setBranding] = useState({
+    schoolName: 'Divine Mercy School of Bukidnon, Inc.',
+    logoUrl: '/logo.png',
   })
 
   useEffect(() => {
@@ -20,9 +36,17 @@ export default function Footer() {
       try {
         const { data } = await fetchSiteContent()
         if (mounted && data) {
+          const settings = readPublishedSiteManagementFromContent(data)
+          setFooterSettings(settings.footer || {})
+          setBranding({
+            schoolName: settings.globalSettings?.schoolName || 'Divine Mercy School of Bukidnon, Inc.',
+            logoUrl: settings.globalSettings?.logoUrl || '/logo.png',
+          })
           setContact({
-            contact_email: data.contact_email || 'info@dmsb.example',
-            contact_phone: data.contact_phone || '+63 000 000 0000',
+            contact_email: settings.contactPage?.email || data.contact_email || 'info@dmsb.example',
+            contact_phone: settings.contactPage?.phone || data.contact_phone || '+63 000 000 0000',
+            address: settings.contactPage?.address || 'Bukidnon, Philippines',
+            office_hours: settings.contactPage?.officeHours || 'Mon-Fri, 8:00 AM - 5:00 PM',
           })
         }
       } catch (err) {
@@ -48,6 +72,9 @@ export default function Footer() {
     }
   }
 
+  const socialLinks = (footerSettings.socialLinks || []).filter((item) => item?.isVisible !== false && item?.url)
+  const navLinks = (footerSettings.navLinks || []).filter((item) => item?.isVisible !== false && item?.path)
+
   return (
     <footer className="relative overflow-hidden border-t border-slate-200 bg-brand-sky/70 backdrop-blur">
       <div className="pointer-events-none absolute -left-20 -top-24 h-72 w-72 rounded-full bg-brand-goldText/15 blur-3xl" aria-hidden="true" />
@@ -60,7 +87,7 @@ export default function Footer() {
               <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-brand-goldText/60 shadow-sm">
                 {logoOk ? (
                   <img
-                    src="/logo.png"
+                    src={branding.logoUrl || '/logo.png'}
                     alt="Divine Mercy School of Bukidnon, Inc. logo"
                     className="h-full w-full object-contain"
                     loading="lazy"
@@ -75,42 +102,43 @@ export default function Footer() {
                 )}
               </span>
               <div>
-                <p className="text-lg font-black text-brand-goldText leading-tight">Divine Mercy School of Bukidnon, Inc.</p>
+                <p className="text-lg font-black text-brand-goldText leading-tight">{branding.schoolName || 'Divine Mercy School of Bukidnon, Inc.'}</p>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand-navy/80">Faith. Discipline. Service.</p>
               </div>
             </div>
             <p className="max-w-2xl text-sm text-slate-700">
-              A private Catholic school committed to faith-based education, discipline, and service. We bring education closer to every child.
+              {footerSettings.description || 'A private Catholic school committed to faith-based education, discipline, and service. We bring education closer to every child.'}
             </p>
             <div className="flex items-center gap-2">
-              <a
-                href="https://www.facebook.com/dmsbherald"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                aria-label="Facebook"
-              >
-                <FaFacebookF className="h-4 w-4" aria-hidden="true" />
-              </a>
-              <a
-                href="https://www.youtube.com/"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                aria-label="YouTube"
-              >
-                <FaYoutube className="h-4 w-4" aria-hidden="true" />
-              </a>
-              <a
-                href="https://www.instagram.com/"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="h-4 w-4" aria-hidden="true" />
-              </a>
+              {(socialLinks.length
+                ? socialLinks
+                : [
+                    { platform: 'Facebook', url: 'https://www.facebook.com/dmsbherald' },
+                    { platform: 'YouTube', url: 'https://www.youtube.com/' },
+                    { platform: 'Instagram', url: 'https://www.instagram.com/' },
+                  ]
+              ).map((item) => {
+                const key = `${item.platform}-${item.url}`
+                const platform = String(item.platform || '').toLowerCase()
+                const Icon = platform.includes('youtube') ? FaYoutube : platform.includes('instagram') ? FaInstagram : FaFacebookF
+                return (
+                  <a
+                    key={key}
+                    href={item.url}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-goldText shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-brand-sky focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                    aria-label={item.platform || 'Social'}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                )
+              })}
             </div>
           </div>
 
           <div className="rounded-2xl bg-white/90 p-4 shadow-sm ring-1 ring-slate-200 backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Stay in the loop</p>
             <h3 className="mt-1 text-lg font-black text-brand-goldText">Subscribe for school updates</h3>
-            <p className="mt-1 text-sm text-slate-600">News, events, and admissions reminders—no spam.</p>
+            <p className="mt-1 text-sm text-slate-600">News, events, and admissions remindersâ€”no spam.</p>
             <form className="mt-4 space-y-2" onSubmit={onSubmit}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
@@ -143,26 +171,21 @@ export default function Footer() {
           <div className="space-y-3">
             <p className="text-sm font-extrabold text-brand-goldText">Explore</p>
             <ul className="space-y-2 text-sm">
-              <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/about">
-                  About
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/academics">
-                  Academics
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/admissions">
-                  Admissions
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="text-slate-700 hover:text-brand-goldText" to="/news">
-                  Updates
-                </NavLink>
-              </li>
+              {(navLinks.length
+                ? navLinks
+                : [
+                    { label: 'About', path: '/about' },
+                    { label: 'Academics', path: '/academics' },
+                    { label: 'Admissions', path: '/admissions' },
+                    { label: 'Updates', path: '/news' },
+                  ]
+              ).map((item) => (
+                <li key={`${item.label}-${item.path}`}>
+                  <NavLink className="text-slate-700 hover:text-brand-goldText" to={item.path}>
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -198,7 +221,7 @@ export default function Footer() {
               <li className="flex items-start gap-2">
                 <FiMapPin className="mt-0.5 h-4 w-4 text-brand-blue" aria-hidden="true" />
                 <span>
-                  Bukidnon, Philippines
+                  {contact.address || 'Bukidnon, Philippines'}
                   <span className="block text-xs text-slate-500">(Update with your campus address)</span>
                 </span>
               </li>
@@ -219,21 +242,20 @@ export default function Footer() {
 
           <div className="space-y-3">
             <p className="text-sm font-extrabold text-brand-goldText">Hours</p>
-            <p className="text-sm text-slate-700">
-              Monday – Friday
-              <span className="block text-slate-500">8:00 AM – 5:00 PM</span>
-            </p>
+            <p className="text-sm text-slate-700">{contact.office_hours || 'Mon-Fri, 8:00 AM - 5:00 PM'}</p>
           </div>
         </div>
       </div>
 
-      {/* ── Bottom bar ── */}
       <div className="border-t border-slate-200 bg-white/60 py-3">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 text-[11px] text-slate-400">
-          <span>© {new Date().getFullYear()} Divine Mercy School of Bukidnon, Inc. All rights reserved.</span>
-          <span>Developed by <span className="font-semibold text-brand-goldText">Javy M. Rodillon</span></span>
+          <span>{`© ${new Date().getFullYear()} ${footerSettings.copyrightText || 'Divine Mercy School of Bukidnon, Inc. All rights reserved.'}`}</span>
+          {footerSettings.showDeveloperCredit ? (
+            <span className="font-semibold text-brand-goldText">{footerSettings.developerCredit || 'Developed by Javy M. Rodillon'}</span>
+          ) : null}
         </div>
       </div>
     </footer>
   )
 }
+

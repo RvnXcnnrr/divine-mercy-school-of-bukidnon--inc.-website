@@ -3,6 +3,7 @@ import { FiCheckCircle, FiClock, FiMail, FiMapPin, FiMessageCircle, FiPhone, FiS
 import { FaWhatsapp } from 'react-icons/fa6'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { fetchSiteContent } from '../services/siteInfoService.js'
+import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
 function validateEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -37,8 +38,13 @@ export default function Contact() {
   })
 
   const [contact, setContact] = useState({
+    address: 'Bukidnon, Philippines',
     contact_email: 'info@dmsb.example',
     contact_phone: '+63 000 000 0000',
+    office_hours: 'Mon-Fri, 8:00 AM - 5:00 PM',
+    messenger_link: 'https://m.me/dmsb',
+    map_embed_url:
+      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0589883963135!2d125.3919950747659!3d7.783570792236212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32fec2d955555555%3A0x5e4a52a129c2ee46!2sDivine%20Mercy%20School%20of%20Buikidnon%2C%20Inc.!5e0!3m2!1sen!2sph!4v1771298618796!5m2!1sen!2sph',
   })
 
   const [form, setForm] = useState({
@@ -57,9 +63,16 @@ export default function Contact() {
       try {
         const { data } = await fetchSiteContent()
         if (mounted && data) {
+          const settings = readPublishedSiteManagementFromContent(data)
           setContact({
-            contact_email: data.contact_email || 'info@dmsb.example',
-            contact_phone: data.contact_phone || '+63 000 000 0000',
+            address: settings.contactPage?.address || 'Bukidnon, Philippines',
+            contact_email: settings.contactPage?.email || data.contact_email || 'info@dmsb.example',
+            contact_phone: settings.contactPage?.phone || data.contact_phone || '+63 000 000 0000',
+            office_hours: settings.contactPage?.officeHours || 'Mon-Fri, 8:00 AM - 5:00 PM',
+            messenger_link: settings.contactPage?.messengerLink || 'https://m.me/dmsb',
+            map_embed_url:
+              settings.contactPage?.mapEmbedUrl ||
+              'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0589883963135!2d125.3919950747659!3d7.783570792236212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32fec2d955555555%3A0x5e4a52a129c2ee46!2sDivine%20Mercy%20School%20of%20Buikidnon%2C%20Inc.!5e0!3m2!1sen!2sph!4v1771298618796!5m2!1sen!2sph',
           })
         }
       } catch (err) {
@@ -180,7 +193,7 @@ export default function Contact() {
                   <li className="flex items-start gap-2">
                     <FiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-goldText" aria-hidden="true" />
                     <span>
-                      Bukidnon, Philippines
+                      {contact.address || 'Bukidnon, Philippines'}
                       <span className="block text-xs text-slate-500">Update with your exact campus address.</span>
                     </span>
                   </li>
@@ -198,7 +211,7 @@ export default function Contact() {
                   </li>
                   <li className="flex items-center gap-2">
                     <FiClock className="h-4 w-4 shrink-0 text-brand-goldText" aria-hidden="true" />
-                    <span>Mon-Fri, 8:00 AM - 5:00 PM</span>
+                    <span>{contact.office_hours || 'Mon-Fri, 8:00 AM - 5:00 PM'}</span>
                   </li>
                 </ul>
 
@@ -213,7 +226,7 @@ export default function Contact() {
                     WhatsApp Quick Chat
                   </a>
                   <a
-                    href="https://m.me/dmsb"
+                    href={contact.messenger_link || 'https://m.me/dmsb'}
                     target="_blank"
                     rel="noreferrer"
                     className="btn-secondary rounded-xl"
@@ -235,7 +248,7 @@ export default function Contact() {
                     className="h-56 w-full origin-center transition duration-300 group-hover:scale-[1.03]"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0589883963135!2d125.3919950747659!3d7.783570792236212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32fec2d955555555%3A0x5e4a52a129c2ee46!2sDivine%20Mercy%20School%20of%20Buikidnon%2C%20Inc.!5e0!3m2!1sen!2sph!4v1771298618796!5m2!1sen!2sph"
+                    src={contact.map_embed_url}
                     allowFullScreen
                   />
                 </div>
@@ -246,7 +259,7 @@ export default function Contact() {
       </section>
 
       <a
-        href="https://m.me/dmsb"
+        href={contact.messenger_link || 'https://m.me/dmsb'}
         target="_blank"
         rel="noreferrer"
         className="fixed bottom-6 right-6 z-[150] inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-xs font-extrabold text-white shadow-lg transition duration-200 hover:-translate-y-0.5 hover:bg-blue-700"

@@ -137,6 +137,11 @@
   .admin-button-danger {
     @apply admin-button bg-rose-600 text-white hover:bg-rose-700;
   }
+
+  .admin-rich-editor:empty::before {
+    content: attr(data-placeholder);
+    @apply text-slate-400;
+  }
 }
 
 .route-fade {

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { FiChevronLeft, FiChevronRight, FiMaximize2, FiSearch, FiX } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
+import { fetchSiteContent } from '../services/siteInfoService.js'
+import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
 function isFacultyImage(src = '') {
   const value = String(src).toLowerCase()
@@ -17,6 +19,12 @@ export default function Gallery() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [gallerySettings, setGallerySettings] = useState({
+    categories: [],
+    layout: 'masonry',
+    enableLightbox: true,
+    defaultCaption: 'Campus memory',
+  })
 
   const { data, isLoading, isError } = usePostsQuery({ status: 'published', limit: 100 })
   const items = useMemo(() => data?.items || [], [data?.items])
@@ -28,17 +36,23 @@ export default function Gallery() {
         .filter((src) => !isFacultyImage(src))
       return images.map((src, idx) => ({
         src,
-        title: item.title || 'Campus memory',
+        title: item.title || gallerySettings.defaultCaption || 'Campus memory',
         category: item.category || item.category_slug || item.category_id || 'General',
         key: `${item.id || item.slug || 'item'}-${idx}`,
       }))
     })
-  }, [items])
+  }, [items, gallerySettings.defaultCaption])
 
   const categories = useMemo(() => {
-    const unique = Array.from(new Set(galleryItems.map((item) => item.category))).filter(Boolean)
+    const managed = (gallerySettings.categories || [])
+      .filter((item) => item.isVisible !== false)
+      .map((item) => item.name)
+      .filter(Boolean)
+    const unique = managed.length
+      ? managed
+      : Array.from(new Set(galleryItems.map((item) => item.category))).filter(Boolean)
     return ['All', ...unique]
-  }, [galleryItems])
+  }, [galleryItems, gallerySettings.categories])
 
   const filteredItems = useMemo(() => {
     const needle = search.trim().toLowerCase()
@@ -76,6 +90,26 @@ export default function Gallery() {
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [activeItem, filteredItems.length])
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchSiteContent()
+        if (!mounted || !data) return
+        const settings = readPublishedSiteManagementFromContent(data)
+        setGallerySettings((prev) => ({
+          ...prev,
+          ...(settings.gallerySettings || {}),
+        }))
+      } catch (err) {
+        console.warn('[Gallery] using default settings', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <div className="bg-brand-sky">
@@ -124,14 +158,17 @@ export default function Gallery() {
           {isError ? <p className="mt-6 text-sm text-rose-600">Failed to load gallery.</p> : null}
           {isLoading ? <p className="mt-6 text-sm text-slate-600">Loading images...</p> : null}
 
-          <div className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-3" data-reveal>
+          <div className={['mt-8 gap-4', gallerySettings.layout === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3' : 'columns-1 sm:columns-2 lg:columns-3'].join(' ')} data-reveal>
             {filteredItems.length ? (
               filteredItems.map((item, idx) => (
                 <button
                   type="button"
                   key={item.key}
-                  onClick={() => setActiveIndex(idx)}
-                  className="group relative mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-left"
+                  onClick={() => {
+                    if (!gallerySettings.enableLightbox) return
+                    setActiveIndex(idx)
+                  }}
+                  className={['group relative mb-4 block w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-left', gallerySettings.layout === 'grid' ? '' : 'break-inside-avoid'].join(' ')}
                 >
                   <img
                     src={item.src}
@@ -156,7 +193,7 @@ export default function Gallery() {
         </div>
       </section>
 
-      {activeItem ? (
+      {gallerySettings.enableLightbox && activeItem ? (
         <div
           className="fixed inset-0 z-[200] bg-black/80 p-4 backdrop-blur-sm sm:p-6"
           onClick={() => setActiveIndex(-1)}

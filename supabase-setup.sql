@@ -199,7 +199,9 @@ VALUES
   ('posts', 'posts', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']::text[]),
   ('faculty', 'faculty', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']::text[]),
   ('gallery', 'gallery', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4']::text[]),
-  ('avatars', 'avatars', true, 2097152, ARRAY['image/jpeg', 'image/png', 'image/webp']::text[])
+  ('avatars', 'avatars', true, 2097152, ARRAY['image/jpeg', 'image/png', 'image/webp']::text[]),
+  ('forms', 'forms', true, 15728640, ARRAY['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']::text[]),
+  ('branding', 'branding', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/x-icon']::text[])
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
@@ -265,6 +267,40 @@ CREATE POLICY "Public read avatars bucket"
 CREATE POLICY "Anyone can upload avatars"
   ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'avatars');
+
+-- Forms bucket
+CREATE POLICY "Public read forms bucket"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'forms');
+
+CREATE POLICY "Authenticated upload to forms"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'forms' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated update forms"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'forms' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated delete forms"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'forms' AND auth.role() = 'authenticated');
+
+-- Branding bucket
+CREATE POLICY "Public read branding bucket"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'branding');
+
+CREATE POLICY "Authenticated upload branding"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'branding' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated update branding"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'branding' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated delete branding"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'branding' AND auth.role() = 'authenticated');
 
 -- ============================================
 -- 8. CREATE UPDATED_AT TRIGGER

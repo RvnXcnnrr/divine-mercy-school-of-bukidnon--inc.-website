@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
@@ -17,8 +17,11 @@ import AdminPosts from './pages/admin/AdminPosts.jsx'
 import AdminPostEditor from './pages/admin/AdminPostEditor.jsx'
 import AdminSettings from './pages/admin/AdminSettings.jsx'
 import AdminSiteContent from './pages/admin/AdminSiteContent.jsx'
+import AdminSiteManagement from './pages/admin/AdminSiteManagement.jsx'
 import AdminTestimonials from './pages/admin/AdminTestimonials.jsx'
 import ProtectedRoute from './routes/ProtectedRoute.jsx'
+import { fetchSiteContent } from './services/siteInfoService.js'
+import { readPublishedSiteManagementFromContent } from './services/siteManagementService.js'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -33,10 +36,29 @@ function ScrollToTop() {
 function App() {
   const { pathname } = useLocation()
   const isAdminRoute = pathname.startsWith('/admin')
+  const [globalSettings, setGlobalSettings] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await fetchSiteContent()
+        if (!mounted || !data) return
+        const settings = readPublishedSiteManagementFromContent(data)
+        setGlobalSettings(settings.globalSettings || null)
+      } catch (err) {
+        console.warn('[App] using default global settings', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   useEffect(() => {
     const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')
     if (prefersReduced?.matches) return
+    if (globalSettings?.enableAnimations === false) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -66,7 +88,25 @@ function App() {
       mutationObserver.disconnect()
       observer.disconnect()
     }
-  }, [pathname])
+  }, [pathname, globalSettings?.enableAnimations])
+
+  useEffect(() => {
+    if (!globalSettings) return
+    const root = document.documentElement
+    if (globalSettings.primaryColor) root.style.setProperty('--brand-primary', globalSettings.primaryColor)
+    if (globalSettings.secondaryColor) root.style.setProperty('--brand-accent', globalSettings.secondaryColor)
+
+    if (globalSettings.faviconUrl) {
+      const link = document.querySelector("link[rel='icon']") || document.createElement('link')
+      link.setAttribute('rel', 'icon')
+      link.setAttribute('href', globalSettings.faviconUrl)
+      if (!link.parentNode) document.head.appendChild(link)
+    }
+  }, [globalSettings])
+
+  const announcement = globalSettings?.announcement || {}
+  const showAnnouncement = !isAdminRoute && announcement.isVisible && announcement.text
+  const maintenanceMode = !isAdminRoute && globalSettings?.maintenanceMode?.enabled
 
   return (
     <div className={isAdminRoute ? 'min-h-dvh bg-slate-50 text-slate-900' : 'min-h-dvh bg-brand-sky text-brand-ink'}>
@@ -79,35 +119,61 @@ function App() {
         </a>
       ) : null}
       {!isAdminRoute ? <Navbar /> : null}
+      {showAnnouncement ? (
+        <div className="bg-brand-goldText px-4 py-2 text-center text-xs font-semibold text-white">
+          {announcement.link ? (
+            <a href={announcement.link} className="underline underline-offset-2">
+              {announcement.text}
+            </a>
+          ) : (
+            announcement.text
+          )}
+        </div>
+      ) : null}
       <ScrollToTop />
 
       <main id="content" className={isAdminRoute ? '' : 'pt-20'}>
         <div key={pathname} className={isAdminRoute ? '' : 'route-fade'}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/academics" element={<Academics />} />
-            <Route path="/admissions" element={<Admissions />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
+          {maintenanceMode ? (
+            <section className="mx-auto max-w-3xl px-4 py-24">
+              <div className="surface-card p-8 text-center">
+                <p className="page-kicker">Maintenance Mode</p>
+                <h1 className="page-h2 mt-3">We will be back shortly</h1>
+                <p className="page-body mt-4">
+                  {globalSettings?.maintenanceMode?.message ||
+                    'The site is currently under scheduled maintenance. Please check back later.'}
+                </p>
+              </div>
+            </section>
+          ) : (
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/academics" element={<Academics />} />
+              <Route path="/admissions" element={<Admissions />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
 
-            <Route element={<ProtectedRoute roles={['admin', 'editor']} />}>
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="posts" element={<AdminPosts />} />
-                <Route path="posts/new" element={<AdminPostEditor />} />
-                <Route path="posts/:postId" element={<AdminPostEditor />} />
-                <Route path="testimonials" element={<AdminTestimonials />} />
-                <Route path="content" element={<AdminSiteContent />} />
-                <Route path="settings" element={<AdminSettings />} />
+              <Route element={<ProtectedRoute roles={['admin', 'editor']} />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="posts" element={<AdminPosts />} />
+                  <Route path="posts/new" element={<AdminPostEditor />} />
+                  <Route path="posts/:postId" element={<AdminPostEditor />} />
+                  <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="content" element={<AdminSiteContent />} />
+                  <Route path="site/:section" element={<AdminSiteManagement />} />
+                  <Route path="site" element={<Navigate to="/admin/site/homepage" replace />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Route>
               </Route>
-            </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          )}
         </div>
       </main>
 
