@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { FiArrowDown, FiArrowRight, FiCalendar, FiShield } from 'react-icons/fi'
-import { FaBus } from 'react-icons/fa6'
+import { FiArrowDown, FiArrowRight, FiBookOpen, FiCalendar, FiShield, FiUsers } from 'react-icons/fi'
+import { FaBus, FaSchool } from 'react-icons/fa6'
 import useParallax from '../hooks/useParallax.js'
 
 function useCountUp(target, duration = 1400, enabled = true) {
@@ -39,16 +39,29 @@ function parseStatValue(raw) {
   return { numeric: Number(match[1]), suffix: match[2] || '', raw: value }
 }
 
+function resolveStatIcon(name) {
+  const normalized = String(name || '').trim().toLowerCase()
+  if (normalized === 'school') return FaSchool
+  if (normalized === 'shield') return FiShield
+  if (normalized === 'users') return FiUsers
+  return FiBookOpen
+}
+
 function FloatingStat({ card, className, style, animated }) {
   const parsed = parseStatValue(card?.value)
   const count = useCountUp(parsed.numeric || 0, 1400, animated && parsed.numeric != null)
   const display = parsed.numeric != null ? `${count}${parsed.suffix}` : parsed.raw
+  const Icon = resolveStatIcon(card?.icon)
+  const iconLabel = card?.icon ? String(card.icon) : 'metric'
 
   return (
     <div className={className} style={style}>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card?.label || 'Stat'}</p>
       <p className="mt-1 text-2xl font-black text-brand-goldText">{display}</p>
-      <p className="text-xs text-slate-500">{card?.icon || 'School metric'}</p>
+      <div className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2 py-1 text-[11px] font-semibold text-brand-goldText ring-1 ring-red-100">
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        <span className="sr-only">{iconLabel} icon</span>
+      </div>
     </div>
   )
 }

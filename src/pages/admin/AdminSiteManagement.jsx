@@ -31,7 +31,14 @@ const SECTIONS = [
 ]
 
 const SECTION_LOOKUP = Object.fromEntries(SECTIONS.map((entry) => [entry.key, entry.label]))
-const HOME_SECTION_TYPES = ['Highlight', 'CTA', 'Image + Text', 'Stats', 'Feature Cards', 'Announcement Banner']
+const HOME_SECTION_TYPE_OPTIONS = [
+  { value: 'Highlight', label: 'Highlight' },
+  { value: 'CTA', label: 'Action Button Block' },
+  { value: 'Image + Text', label: 'Image + Text' },
+  { value: 'Stats', label: 'Stats' },
+  { value: 'Feature Cards', label: 'Feature Cards' },
+  { value: 'Announcement Banner', label: 'Announcement Banner' },
+]
 
 function asDateLabel(value) {
   if (!value) return 'N/A'
@@ -420,12 +427,9 @@ export default function AdminSiteManagement() {
                 <InputField label="Hero title" value={draft.homepage.hero.title} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, title: value } }))} />
                 <TextAreaField label="Hero subtitle" value={draft.homepage.hero.subtitle} rows={4} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, subtitle: value } }))} />
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <InputField label="CTA 1 text" value={draft.homepage.hero.ctaPrimaryText} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, ctaPrimaryText: value } }))} />
-                  <InputField label="CTA 1 link" value={draft.homepage.hero.ctaPrimaryLink} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, ctaPrimaryLink: value } }))} />
-                  <InputField label="CTA 2 text" value={draft.homepage.hero.ctaSecondaryText} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, ctaSecondaryText: value } }))} />
-                  <InputField label="CTA 2 link" value={draft.homepage.hero.ctaSecondaryLink} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, ctaSecondaryLink: value } }))} />
+                  <InputField label="Primary button text" value={draft.homepage.hero.ctaPrimaryText} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, ctaPrimaryText: value } }))} />
+                  <InputField label="Secondary button text" value={draft.homepage.hero.ctaSecondaryText} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, ctaSecondaryText: value } }))} />
                 </div>
-                <InputField label="Background image URL" value={draft.homepage.hero.backgroundImage} onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, backgroundImage: value } }))} />
                 {uploadButton({
                   label: 'Upload background image',
                   onPick: (file) => uploadImage(file, (url) => updateHome((home) => ({ ...home, hero: { ...home.hero, backgroundImage: url } }))),
@@ -441,29 +445,16 @@ export default function AdminSiteManagement() {
                   value={draft.homepage.hero.focusText}
                   onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusText: value } }))}
                 />
-                <InputField
-                  label="Focus panel image URL (this exact center box)"
-                  value={draft.homepage.hero.focusImage}
-                  onChange={(value) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusImage: value } }))}
-                />
                 {uploadButton({
                   label: 'Upload focus panel image',
                   onPick: (file) => uploadImage(file, (url) => updateHome((home) => ({ ...home, hero: { ...home.hero, focusImage: url } }))),
                 })}
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Published Hero Background</p>
-                  <p className="mt-1 break-all text-xs text-slate-600">
-                    {published?.homepage?.hero?.backgroundImage || 'Not set yet'}
-                  </p>
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Published Focus Panel Image</p>
-                  <p className="mt-1 break-all text-xs text-slate-600">
-                    {published?.homepage?.hero?.focusImage || 'Not set yet'}
-                  </p>
                   <button
                     type="button"
                     onClick={saveAndPublishHero}
                     disabled={heroSaving || saving || publishing}
-                    className="admin-button-primary mt-3"
+                    className="admin-button-primary"
                   >
                     <FiSave className="h-4 w-4" aria-hidden="true" />
                     {heroSaving ? 'Publishing Hero...' : 'Save & Publish Hero'}
@@ -505,7 +496,6 @@ export default function AdminSiteManagement() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <InputField label="Label" value={item.label} onChange={(value) => updateItem({ label: value })} />
                   <InputField label="Value" value={item.value} onChange={(value) => updateItem({ value: value })} />
-                  <InputField label="Icon" value={item.icon} onChange={(value) => updateItem({ icon: value })} />
                   <ToggleField label="Visible" checked={item.isVisible !== false} onChange={(value) => updateItem({ isVisible: value })} />
                 </div>
               )}
@@ -523,10 +513,7 @@ export default function AdminSiteManagement() {
             renderBody={({ item, updateItem }) => (
               <div className="grid gap-3 sm:grid-cols-2">
                 <InputField label="Badge label" value={item.label} onChange={(value) => updateItem({ label: value })} />
-                <InputField label="Icon name" value={item.icon} onChange={(value) => updateItem({ icon: value })} />
-                <InputField label="Icon URL" value={item.image} onChange={(value) => updateItem({ image: value })} />
                 <ToggleField label="Visible" checked={item.isVisible !== false} onChange={(value) => updateItem({ isVisible: value })} />
-                {uploadButton({ label: 'Upload badge icon', onPick: (file) => uploadImage(file, (url) => updateItem({ image: url })) })}
               </div>
             )}
           />
@@ -544,20 +531,15 @@ export default function AdminSiteManagement() {
                 <label className="block">
                   <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Section type</span>
                   <select value={item.type} onChange={(event) => updateItem({ type: event.target.value })} className="admin-input mt-1">
-                    {HOME_SECTION_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
+                    {HOME_SECTION_TYPE_OPTIONS.map((typeOption) => (
+                      <option key={typeOption.value} value={typeOption.value}>
+                        {typeOption.label}
                       </option>
                     ))}
                   </select>
                 </label>
                 <InputField label="Title" value={item.title} onChange={(value) => updateItem({ title: value })} />
                 <TextAreaField label="Content" value={item.content} rows={4} onChange={(value) => updateItem({ content: value })} />
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <InputField label="Image URL" value={item.image} onChange={(value) => updateItem({ image: value })} />
-                  <InputField label="CTA text" value={item.ctaText} onChange={(value) => updateItem({ ctaText: value })} />
-                  <InputField label="CTA link" value={item.ctaLink} onChange={(value) => updateItem({ ctaLink: value })} />
-                </div>
                 <ToggleField label="Published" checked={item.isPublished !== false} onChange={(value) => updateItem({ isPublished: value })} />
               </div>
             )}
@@ -739,7 +721,7 @@ export default function AdminSiteManagement() {
           />
 
           <article className="admin-card p-5 space-y-3">
-            <h3 className="text-base font-semibold text-slate-900">Transportation Program and CTA</h3>
+            <h3 className="text-base font-semibold text-slate-900">Transportation Program and Action Button</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <InputField
                 label="Transport title"
@@ -763,23 +745,23 @@ export default function AdminSiteManagement() {
                 }
               />
               <InputField
-                label="CTA title"
+                label="Action section title"
                 value={draft.admissionsPage.cta.title}
                 onChange={(value) => updateAdmissions((page) => ({ ...page, cta: { ...page.cta, title: value } }))}
               />
               <TextAreaField
-                label="CTA subtitle"
+                label="Action section subtitle"
                 rows={3}
                 value={draft.admissionsPage.cta.subtitle}
                 onChange={(value) => updateAdmissions((page) => ({ ...page, cta: { ...page.cta, subtitle: value } }))}
               />
               <InputField
-                label="CTA primary text"
+                label="Action button text"
                 value={draft.admissionsPage.cta.primaryText}
                 onChange={(value) => updateAdmissions((page) => ({ ...page, cta: { ...page.cta, primaryText: value } }))}
               />
               <InputField
-                label="CTA primary link"
+                label="Action button link"
                 value={draft.admissionsPage.cta.primaryLink}
                 onChange={(value) => updateAdmissions((page) => ({ ...page, cta: { ...page.cta, primaryLink: value } }))}
               />
@@ -883,7 +865,7 @@ export default function AdminSiteManagement() {
         </article>
       ) : null}
 
-      <article className="admin-card p-5">
+      <article className="admin-card hidden p-5">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-base font-semibold text-slate-900">Version History</h3>
           <span className="text-xs text-slate-500">{history.length} publish snapshots</span>
