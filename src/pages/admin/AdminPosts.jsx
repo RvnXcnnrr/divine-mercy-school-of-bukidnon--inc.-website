@@ -1,25 +1,31 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiChevronLeft, FiChevronRight, FiEdit2, FiFilter, FiPlus, FiSearch, FiStar, FiTrash } from 'react-icons/fi'
+import { FiCheckSquare, FiEdit2, FiFilter, FiLoader, FiPlus, FiSearch, FiStar, FiTrash2 } from 'react-icons/fi'
 import { usePostsQuery } from '../../hooks/usePostsQuery.js'
 import { deletePost, savePost, toggleFeatured } from '../../services/postService.js'
 import ConfirmModal from '../../components/ConfirmModal.jsx'
 import LoadingOverlay from '../../components/LoadingOverlay.jsx'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
+import AdminPagination from '../../components/admin/AdminPagination.jsx'
+import StatusBadge from '../../components/admin/StatusBadge.jsx'
 
 export default function AdminPosts() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [editingId, setEditingId] = useState(null)
-  const [editForm, setEditForm] = useState({})
-  const [savingId, setSavingId] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
-  const [confirmModal, setConfirmModal] = useState({ open: false, action: null, message: '' })
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    action: null,
+    message: '',
+    title: 'Confirm Action',
+    variant: 'default',
+  })
   const [acting, setActing] = useState(false)
-
-  const limit = 12
+  const [rowAction, setRowAction] = useState({ id: null, type: null })
 
   const queryParams = useMemo(
     () => ({
@@ -27,511 +33,359 @@ export default function AdminPosts() {
       search: search || undefined,
       hasVideo: typeFilter === 'video' ? true : undefined,
       categorySlug: typeFilter === 'events' ? 'event' : undefined,
-      limit,
+      limit: pageSize,
       page,
     }),
-    [statusFilter, typeFilter, search, page]
+    [statusFilter, typeFilter, search, pageSize, page]
   )
 
   const { data, isLoading, isFetching, refetch } = usePostsQuery(queryParams, { keepPreviousData: true })
   const items = data?.items || []
   const total = data?.count || 0
-  const totalPages = Math.max(1, Math.ceil(total / limit))
-  const hasNext = page < totalPages
-  const hasPrev = page > 1
+  const allVisibleSelected = items.length > 0 && items.every((post) => selectedIds.includes(post.id))
+  const selectedCount = selectedIds.length
+
+  function openConfirm({ title, message, action, variant = 'default' }) {
+    setConfirmModal({ open: true, title, message, action, variant })
+  }
+
+  function resetConfirm() {
+    setConfirmModal({ open: false, action: null, message: '', title: 'Confirm Action', variant: 'default' })
+  }
 
   async function onDelete(id) {
-    setConfirmModal({
-      open: true,
+    openConfirm({
+      title: 'Delete Post',
+      message: 'Delete this post permanently?',
+      variant: 'danger',
       action: async () => {
         await deletePost(id)
-        refetch()
+        setSelectedIds((prev) => prev.filter((itemId) => itemId !== id))
+        await refetch()
       },
-      message: 'Delete this post?'
     })
   }
 
   async function onToggleFeatured(id, current) {
-    await toggleFeatured(id, !current)
-    refetch()
-  }
-
-  function startEdit(post) {
-    setEditingId(post.id)
-    setEditForm({
-      title: post.title || '',
-      content: post.content || '',
-      category_id: post.category_id || post.category || post.category_slug || '',
-      featured_image_url: post.featured_image_url || '',
-      video_url: post.video_url || '',
-      status: post.status || 'published',
-      is_featured: Boolean(post.is_featured),
-    })
-  }
-
-  function cancelEdit() {
-    setEditingId(null)
-    setEditForm({})
-  }
-
-  async function handleSave(id) {
-    setSavingId(id)
+    setRowAction({ id, type: 'featured' })
     try {
-      const payload = {
-        id,
-        ...editForm,
-        status: editForm.status || 'published',
-        category_id: editForm.category_id || null,
-        featured_image_url: editForm.featured_image_url || null,
-        video_url: editForm.video_url || null,
-      }
-      await savePost(payload)
-      cancelEdit()
-      refetch()
-    } catch (err) {
-      alert(err.message || 'Failed to save')
+      await toggleFeatured(id, !current)
+      await refetch()
+    } catch (error) {
+      alert(error.message || 'Failed to update featured status.')
     } finally {
-      setSavingId(null)
+      setRowAction({ id: null, type: null })
     }
   }
 
   function toggleSelect(id) {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]))
   }
 
   function selectAllVisible() {
-    const visibleIds = items.map((p) => p.id)
-    const allSelected = visibleIds.every((id) => selectedIds.includes(id))
-    setSelectedIds(allSelected ? selectedIds.filter((id) => !visibleIds.includes(id)) : [...new Set([...selectedIds, ...visibleIds])])
-  }
-
-  async function bulkDelete() {
-    if (!selectedIds.length) return
-    setConfirmModal({
-      open: true,
-      action: async () => {
-        await Promise.all(selectedIds.map((id) => deletePost(id)))
-        setSelectedIds([])
-        refetch()
-      },
-      message: `Delete ${selectedIds.length} item(s)?`
+    const visibleIds = items.map((post) => post.id)
+    setSelectedIds((prev) => {
+      const currentlySelected = visibleIds.every((id) => prev.includes(id))
+      return currentlySelected ? prev.filter((id) => !visibleIds.includes(id)) : [...new Set([...prev, ...visibleIds])]
     })
   }
 
-  async function bulkStatus(nextStatus) {
+  async function runBulkDelete() {
     if (!selectedIds.length) return
-    await Promise.all(
-      selectedIds.map((id) =>
-        savePost({ id, status: nextStatus }).catch((err) => {
-          console.error('bulk update failed', err)
-        })
-      )
-    )
-    refetch()
+    openConfirm({
+      title: 'Delete Selected Posts',
+      message: `Delete ${selectedIds.length} selected post(s)?`,
+      variant: 'danger',
+      action: async () => {
+        await Promise.all(selectedIds.map((id) => deletePost(id)))
+        setSelectedIds([])
+        await refetch()
+      },
+    })
   }
 
-  async function deleteCloudinaryPosts() {
-    const cloudinaryPosts = items.filter(
-      (post) =>
-        post.featured_image_url?.includes('cloudinary') ||
-        post.gallery_images?.some((img) => img?.includes('cloudinary')) ||
-        post.images?.some((img) => img?.includes('cloudinary'))
-    )
-    
-    if (cloudinaryPosts.length === 0) {
-      alert('No posts with Cloudinary images found on this page.')
-      return
-    }
-
-    setConfirmModal({
-      open: true,
+  function runBulkStatus(nextStatus) {
+    if (!selectedIds.length) return
+    openConfirm({
+      title: 'Update Status',
+      message: `Mark ${selectedIds.length} selected post(s) as ${nextStatus}?`,
       action: async () => {
-        await Promise.all(cloudinaryPosts.map((post) => deletePost(post.id)))
-        refetch()
+        await Promise.all(
+          selectedIds.map((id) =>
+            savePost({ id, status: nextStatus }).catch((error) => {
+              console.error('Bulk status update failed', error)
+            })
+          )
+        )
+        await refetch()
       },
-      message: `Found ${cloudinaryPosts.length} post(s) with old Cloudinary images. Delete them?`
     })
   }
 
   return (
     <>
-    {(savingId !== null || acting) && (
-      <LoadingOverlay message={acting ? 'Deleting…' : 'Saving…'} />
-    )}
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-black text-brand-goldText">Posts</h1>
-          <p className="text-sm text-slate-600">Create, edit, and manage posts.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/admin/posts/new')}
-          className="inline-flex items-center gap-2 rounded-md bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-        >
-          <FiPlus className="h-4 w-4" aria-hidden="true" />
-          New Post
-        </button>
-      </div>
+      {(isLoading || acting) && <LoadingOverlay message={acting ? 'Applying changes...' : 'Loading posts...'} />}
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Search posts"
-              className="w-60 rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <FiFilter className="h-4 w-4" aria-hidden="true" /> Filters
-            </span>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setPage(1)
-              }}
-              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-            >
-              <option value="all">All statuses</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-            </select>
-
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value)
-                setPage(1)
-              }}
-              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-            >
-              <option value="all">All content</option>
-              <option value="video">Video / Media</option>
-              <option value="events">Events</option>
-            </select>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={bulkDelete}
-              disabled={!selectedIds.length}
-              className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-3 py-2 text-white transition hover:opacity-90 disabled:opacity-50"
-            >
-              Delete selected
+      <div className="space-y-4">
+        <AdminPageHeader
+          title="Posts Management"
+          description="Search, filter, bulk-edit, and publish content with fewer clicks."
+          actions={
+            <button type="button" onClick={() => navigate('/admin/posts/new')} className="admin-button-primary">
+              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              New Post
             </button>
-            <button
-              type="button"
-              onClick={() => bulkStatus('published')}
-              disabled={!selectedIds.length}
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-3 py-2 text-white transition hover:opacity-90 disabled:opacity-50"
-            >
-              Mark published
-            </button>
-            <button
-              type="button"
-              onClick={() => bulkStatus('draft')}
-              disabled={!selectedIds.length}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-2 text-slate-800 transition hover:bg-slate-300 disabled:opacity-50"
-            >
-              Mark draft
-            </button>
-            <button
-              type="button"
-              onClick={deleteCloudinaryPosts}
-              className="inline-flex items-center gap-2 rounded-full bg-orange-600 px-3 py-2 text-white transition hover:opacity-90"
-              title="Delete posts with old Cloudinary images"
-            >
-              <FiTrash className="h-3 w-3" />
-              Clean Cloudinary
-            </button>
-          </div>
-        </div>
-      </div>
+          }
+        />
 
-      {(isLoading || acting) && <LoadingOverlay message={acting ? 'Deleting…' : 'Loading posts…'} />}
-
-      <div className="overflow-hidden rounded-xl border border-slate-200">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-              <th className="px-4 py-3">
+        <section className="admin-card p-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative w-full max-w-md">
+                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                 <input
-                  type="checkbox"
-                  aria-label="Select all visible"
-                  onChange={selectAllVisible}
-                  checked={items.length > 0 && items.every((p) => selectedIds.includes(p.id))}
+                  type="search"
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value)
+                    setPage(1)
+                  }}
+                  placeholder="Search posts by title..."
+                  className="admin-input pl-9"
                 />
-              </th>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Featured</th>
-              <th className="px-4 py-3">Updated</th>
-              <th className="px-4 py-3">Media</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {items.map((post) => (
-              <Fragment key={post.id}>
-                <tr className="text-sm text-slate-700">
-                  <td className="px-4 py-3 align-top">
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${post.title}`}
-                      checked={selectedIds.includes(post.id)}
-                      onChange={() => toggleSelect(post.id)}
-                    />
-                  </td>
-                  <td className="px-4 py-3 font-semibold">{post.title}</td>
-                  <td className="px-4 py-3 text-slate-600">{post.category || post.category_slug || post.category_id || '—'}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={[
-                        'inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
-                        post.status === 'published'
-                          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                          : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200',
-                      ].join(' ')}
-                    >
-                      {post.status || 'draft'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => onToggleFeatured(post.id, post.is_featured)}
-                      className={[
-                        'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
-                        post.is_featured
-                          ? 'bg-amber-100 text-amber-800 ring-1 ring-amber-200'
-                          : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
-                      ].join(' ')}
-                    >
-                      <FiStar className="h-3.5 w-3.5" aria-hidden="true" />
-                      {post.is_featured ? 'Featured' : 'Standard'}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">{new Date(post.updated_at || post.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {post.featured_image_url ? (
-                      <img
-                        src={post.featured_image_url}
-                        alt={post.title}
-                        className="h-12 w-20 rounded-md object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="text-xs text-slate-500">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      {editingId === post.id ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleSave(post.id)}
-                            disabled={savingId === post.id}
-                            className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-60"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => startEdit(post)}
-                            className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-                          >
-                            <FiEdit2 className="h-4 w-4" aria-hidden="true" />
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDelete(post.id)}
-                            className="inline-flex items-center gap-1 rounded-md bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
-                          >
-                            <FiTrash className="h-4 w-4" aria-hidden="true" />
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-                {editingId === post.id ? (
-                  <tr className="bg-slate-50">
-                    <td colSpan={8} className="px-4 py-4">
-                      <div className="grid gap-3 lg:grid-cols-2">
-                        <label className="text-xs font-semibold text-slate-600">
-                          Title
-                          <input
-                            type="text"
-                            value={editForm.title || ''}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                          />
-                        </label>
-                        <label className="text-xs font-semibold text-slate-600">
-                          Category
-                          <input
-                            type="text"
-                            value={editForm.category_id || ''}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, category_id: e.target.value }))}
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Category or slug"
-                          />
-                        </label>
-                        <label className="text-xs font-semibold text-slate-600">
-                          Status
-                          <select
-                            value={editForm.status || 'draft'}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, status: e.target.value }))}
-                            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-                          >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                          </select>
-                        </label>
-                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(editForm.is_featured)}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, is_featured: e.target.checked }))}
-                            className="h-4 w-4"
-                          />
-                          Featured on homepage
-                        </label>
-                        <label className="text-xs font-semibold text-slate-600 lg:col-span-2">
-                          Content
-                          <textarea
-                            value={editForm.content || ''}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, content: e.target.value }))}
-                            rows={4}
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                          />
-                        </label>
-                        <label className="text-xs font-semibold text-slate-600">
-                          Image URL (Supabase Storage)
-                          <input
-                            type="url"
-                            value={editForm.featured_image_url || ''}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, featured_image_url: e.target.value }))}
-                            placeholder="https://your-project.supabase.co/storage/v1/object/public/posts/..."
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                          />
-                        </label>
-                        <label className="text-xs font-semibold text-slate-600">
-                          Video URL
-                          <input
-                            type="url"
-                            value={editForm.video_url || ''}
-                            onChange={(e) => setEditForm((prev) => ({ ...prev, video_url: e.target.value }))}
-                            placeholder="https://youtube.com/watch?v=..."
-                            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                          />
-                        </label>
-                      </div>
-                      {savingId === post.id ? <p className="mt-3 text-xs text-slate-500">Saving…</p> : null}
-                    </td>
-                  </tr>
-                ) : null}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-        {items.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-slate-600">No posts yet.</p>
-        ) : null}
-      </div>
+              </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
-        <div>
-          Page {page} of {totalPages} • Showing {items.length} of {total} items
-          {isFetching ? <span className="ml-2 text-xs">Loading…</span> : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={!hasPrev}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
-          >
-            <FiChevronLeft className="h-4 w-4" aria-hidden="true" /> Prev
-          </button>
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={!hasNext}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
-          >
-            Next <FiChevronRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-          {totalPages > 3 ? (
-            <div className="flex items-center gap-1 text-xs font-semibold">
-              {[...Array(Math.min(totalPages, 5))].map((_, idx) => {
-                const num = idx + 1
-                return (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setPage(num)}
-                    className={[
-                      'h-8 w-8 rounded-full ring-1 ring-slate-200 transition',
-                      page === num ? 'bg-brand-goldText text-white' : 'bg-white text-slate-700',
-                    ].join(' ')}
-                  >
-                    {num}
-                  </button>
-                )
-              })}
-              {totalPages > 5 ? <span className="px-1">…</span> : null}
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  <FiFilter className="h-4 w-4" aria-hidden="true" />
+                  Filters
+                </span>
+                <select
+                  value={statusFilter}
+                  onChange={(event) => {
+                    setStatusFilter(event.target.value)
+                    setPage(1)
+                  }}
+                  className="admin-input min-w-36 py-2"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+                <select
+                  value={typeFilter}
+                  onChange={(event) => {
+                    setTypeFilter(event.target.value)
+                    setPage(1)
+                  }}
+                  className="admin-input min-w-36 py-2"
+                >
+                  <option value="all">All content</option>
+                  <option value="video">Video / Media</option>
+                  <option value="events">Events</option>
+                </select>
+              </div>
             </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
+                <FiCheckSquare className="h-4 w-4" aria-hidden="true" />
+                {selectedCount} selected
+              </p>
+              <button type="button" onClick={runBulkDelete} disabled={!selectedCount} className="admin-button-danger">
+                Delete selected
+              </button>
+              <button type="button" onClick={() => runBulkStatus('published')} disabled={!selectedCount} className="admin-button-secondary">
+                Mark published
+              </button>
+              <button type="button" onClick={() => runBulkStatus('draft')} disabled={!selectedCount} className="admin-button-secondary">
+                Mark draft
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <div className="max-h-[64vh] overflow-auto">
+              <table className="min-w-[920px] w-full border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10 bg-white">
+                  <tr className="text-left text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                    <th className="border-b border-slate-200 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all visible posts"
+                        checked={allVisibleSelected}
+                        onChange={selectAllVisible}
+                        className="h-4 w-4 rounded border-slate-300 text-brand-goldText focus:ring-brand-goldText"
+                      />
+                    </th>
+                    <th className="border-b border-slate-200 px-4 py-3">Title</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Category</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Status</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Featured</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Updated</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Media</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((post, index) => (
+                    <tr
+                      key={post.id}
+                      className={[
+                        'text-sm text-slate-700 transition hover:bg-rose-50/40',
+                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50/45',
+                      ].join(' ')}
+                    >
+                      <td className="border-b border-slate-100 px-4 py-3 align-top">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${post.title}`}
+                          checked={selectedIds.includes(post.id)}
+                          onChange={() => toggleSelect(post.id)}
+                          className="h-4 w-4 rounded border-slate-300 text-brand-goldText focus:ring-brand-goldText"
+                        />
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/admin/posts/${post.id}`)}
+                          className="max-w-[320px] truncate text-left font-semibold text-slate-900 transition hover:text-brand-goldText"
+                          title={post.title}
+                        >
+                          {post.title || 'Untitled'}
+                        </button>
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
+                        {post.category || post.category_slug || post.category_id || '-'}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        <StatusBadge status={post.status || 'draft'} />
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3">
+                        {post.is_featured ? <StatusBadge status="featured" /> : <span className="text-xs text-slate-500">Standard</span>}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3 text-slate-500">
+                        {new Date(post.updated_at || post.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3 text-slate-500">
+                        {post.featured_image_url ? (
+                          <img src={post.featured_image_url} alt="" className="h-10 w-16 rounded-lg object-cover ring-1 ring-slate-200" loading="lazy" />
+                        ) : (
+                          <span className="text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3 text-right">
+                        <RowActions
+                          onEdit={() => navigate(`/admin/posts/${post.id}`)}
+                          onToggleFeatured={() => onToggleFeatured(post.id, post.is_featured)}
+                          onDelete={() => onDelete(post.id)}
+                          featured={Boolean(post.is_featured)}
+                          busy={rowAction.id === post.id}
+                          busyType={rowAction.id === post.id ? rowAction.type : null}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {items.length === 0 ? (
+            <div className="px-4 py-10 text-center text-sm text-slate-500">No posts found for the current filters.</div>
           ) : null}
-        </div>
+        </section>
+
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={total}
+          itemLabel="posts"
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+          isLoading={isFetching}
+        />
       </div>
 
       <ConfirmModal
         open={confirmModal.open}
-        onClose={() => setConfirmModal({ open: false, action: null, message: '' })}
+        onClose={resetConfirm}
         onConfirm={async () => {
-          if (confirmModal.action) {
-            setConfirmModal({ open: false, action: null, message: '' })
-            setActing(true)
-            try {
-              await confirmModal.action()
-            } finally {
-              setActing(false)
-            }
+          if (!confirmModal.action) return
+          setActing(true)
+          try {
+            await confirmModal.action()
+          } finally {
+            setActing(false)
+            resetConfirm()
           }
         }}
-        title="Confirm Delete"
+        title={confirmModal.title}
         message={confirmModal.message}
-        confirmText="Delete"
+        confirmText="Continue"
         cancelText="Cancel"
-        variant="danger"
+        variant={confirmModal.variant}
+      />
+    </>
+  )
+}
+
+function RowActions({ onEdit, onToggleFeatured, onDelete, featured, busy, busyType }) {
+  return (
+    <div className="inline-flex items-center justify-end gap-1.5">
+      <IconActionButton
+        onClick={onEdit}
+        icon={FiEdit2}
+        label="Edit post"
+        className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+        disabled={busy}
+      />
+      <IconActionButton
+        onClick={onToggleFeatured}
+        icon={busyType === 'featured' ? FiLoader : FiStar}
+        label={featured ? 'Remove featured' : 'Mark as featured'}
+        className={
+          featured
+            ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+        }
+        disabled={busy}
+        spin={busyType === 'featured'}
+      />
+      <IconActionButton
+        onClick={onDelete}
+        icon={FiTrash2}
+        label="Delete post"
+        className="border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+        disabled={busy}
       />
     </div>
-    </>
+  )
+}
+
+function IconActionButton({ onClick, icon: Icon, label, className, disabled = false, spin = false }) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        onClick?.()
+      }}
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      className={[
+        'inline-flex h-8 w-8 items-center justify-center rounded-lg border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-goldText focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
+        className,
+      ].join(' ')}
+    >
+      <Icon className={['h-4 w-4', spin ? 'animate-spin' : ''].join(' ')} aria-hidden="true" />
+    </button>
   )
 }

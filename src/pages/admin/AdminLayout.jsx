@@ -1,15 +1,72 @@
-import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
-import { FiBookOpen, FiGrid, FiLogOut, FiMessageSquare, FiPenTool, FiPlusCircle, FiUsers } from 'react-icons/fi'
+import { createElement, useEffect, useMemo, useRef, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import {
+  FiBookOpen,
+  FiChevronLeft,
+  FiChevronRight,
+  FiGrid,
+  FiLogOut,
+  FiMenu,
+  FiMessageSquare,
+  FiPenTool,
+  FiPlusCircle,
+  FiSettings,
+  FiUsers,
+  FiX,
+} from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
 
+const NAV_SECTIONS = [
+  {
+    title: 'Content',
+    items: [
+      { to: '/admin', label: 'Dashboard', icon: FiGrid, end: true },
+      { to: '/admin/posts', label: 'Posts', icon: FiPenTool, end: true },
+      { to: '/admin/posts/new', label: 'New Post', icon: FiPlusCircle, end: true },
+    ],
+  },
+  {
+    title: 'Engagement',
+    items: [
+      { to: '/admin/testimonials', label: 'Testimonials', icon: FiMessageSquare },
+      { to: '/admin/settings', label: 'Subscribers', icon: FiUsers },
+    ],
+  },
+  {
+    title: 'Settings',
+    items: [{ to: '/admin/content', label: 'Site Content', icon: FiBookOpen }],
+  },
+]
+
+const PAGE_TITLES = {
+  '/admin': 'Dashboard',
+  '/admin/posts': 'Posts',
+  '/admin/posts/new': 'New Post',
+  '/admin/testimonials': 'Testimonials',
+  '/admin/settings': 'Subscribers',
+  '/admin/content': 'Site Content',
+}
+
+function initialSidebarCollapsed() {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem('admin-sidebar-collapsed') === 'true'
+}
+
 export default function AdminLayout() {
+  const { pathname } = useLocation()
   const { signOut } = useAuth()
   const [showConfirm, setShowConfirm] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(initialSidebarCollapsed)
   const timerRef = useRef(null)
 
+  const pageTitle = useMemo(() => {
+    if (pathname.startsWith('/admin/posts/') && pathname !== '/admin/posts/new') return 'Edit Post'
+    return PAGE_TITLES[pathname] || 'Admin Panel'
+  }, [pathname])
+
   useEffect(() => {
-    const INACTIVITY_LIMIT = 5 * 60 * 1000 // 5 minutes
+    const INACTIVITY_LIMIT = 5 * 60 * 1000
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
 
     const resetTimer = () => {
@@ -21,13 +78,22 @@ export default function AdminLayout() {
     }
 
     resetTimer()
-    events.forEach((ev) => window.addEventListener(ev, resetTimer, { passive: true }))
+    events.forEach((eventName) => window.addEventListener(eventName, resetTimer, { passive: true }))
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
-      events.forEach((ev) => window.removeEventListener(ev, resetTimer))
+      events.forEach((eventName) => window.removeEventListener(eventName, resetTimer))
     }
   }, [signOut])
+
+  useEffect(() => {
+    document.documentElement.classList.remove('dark')
+    window.localStorage.removeItem('admin-dark-mode')
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem('admin-sidebar-collapsed', String(isCollapsed))
+  }, [isCollapsed])
 
   function requestSignOut() {
     setShowConfirm(true)
@@ -38,61 +104,142 @@ export default function AdminLayout() {
     signOut()
   }
 
+  function closeMobileMenu() {
+    setMobileOpen(false)
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[14rem_1fr]">
-        <aside className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-          <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-brand-goldText">Admin Panel</div>
-          <nav className="space-y-2" aria-label="Admin">
-            <NavItem to="/admin" label="Dashboard" icon={FiGrid} end />
-            <NavItem to="/admin/posts" label="Posts" icon={FiPenTool} />
-            <NavItem to="/admin/posts/new" label="New Post" icon={FiPlusCircle} />
-            <NavItem to="/admin/testimonials" label="Testimonials" icon={FiMessageSquare} />
-            <NavItem to="/admin/content" label="Site Content" icon={FiBookOpen} />
-            <NavItem to="/admin/settings" label="Subscribers" icon={FiUsers} />
-          </nav>
+      {mobileOpen ? (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden"
+          aria-hidden="true"
+          onClick={() => setMobileOpen(false)}
+        />
+      ) : null}
 
-          <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
-            <NavLink
-              to="/"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-            >
-              View site
-            </NavLink>
-            <button
-              type="button"
-              onClick={requestSignOut}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand-goldText px-4 py-2 text-sm font-bold uppercase tracking-wide text-white shadow-none ring-1 ring-brand-goldText/30 transition hover:-translate-y-[1px] hover:bg-brand-goldText/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
-            >
-              <FiLogOut className="h-4 w-4" aria-hidden="true" />
-              Sign out
-            </button>
-          </div>
-        </aside>
-        <main className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <Outlet />
-        </main>
-      </div>
+      <div className="flex min-h-screen">
+        <aside
+          className={[
+            'fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-white/95 p-4 shadow-xl backdrop-blur transition-all duration-200 md:sticky md:translate-x-0 md:shadow-none',
+            isCollapsed ? 'w-[88px]' : 'w-[280px]',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          ].join(' ')}
+        >
+          <div className="mb-5 flex items-center justify-between gap-2 px-1">
+            <div className={isCollapsed ? 'hidden md:block' : 'min-w-0'}>
+              {!isCollapsed ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-goldText">Divine Mercy School</p>
+                  <p className="text-sm font-semibold text-slate-700">Admin Control Panel</p>
+                </>
+              ) : (
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-brand-goldText">
+                  <FiSettings className="h-5 w-5" aria-hidden="true" />
+                </div>
+              )}
+            </div>
 
-      {showConfirm ? (
-        <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/60 px-4 backdrop-blur" role="dialog" aria-modal="true">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
-            <h2 className="text-lg font-black text-brand-goldText">Sign out?</h2>
-            <p className="mt-2 text-sm text-slate-600">You will need to log in again to manage posts.</p>
-            <div className="mt-5 flex items-center justify-end gap-2">
+            <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setShowConfirm(false)}
-                className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
+                onClick={() => setMobileOpen(false)}
+                className="admin-button-secondary px-2 md:hidden"
+                aria-label="Close menu"
               >
-                Cancel
+                <FiX className="h-4 w-4" aria-hidden="true" />
               </button>
               <button
                 type="button"
-                onClick={confirmSignOut}
-                className="rounded-md bg-rose-600 px-4 py-2 text-sm font-extrabold text-white transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                onClick={() => setIsCollapsed((prev) => !prev)}
+                className="admin-button-secondary hidden px-2 md:inline-flex"
+                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
-                Sign out
+                {isCollapsed ? <FiChevronRight className="h-4 w-4" /> : <FiChevronLeft className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <nav className="flex-1 space-y-5 overflow-y-auto pr-1" aria-label="Admin navigation">
+            {NAV_SECTIONS.map((section) => (
+              <section key={section.title}>
+                <p
+                  className={[
+                    'mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400',
+                    isCollapsed ? 'hidden' : 'block',
+                  ].join(' ')}
+                >
+                  {section.title}
+                </p>
+                <div className="space-y-1">
+                  {section.items.map((item) => (
+                    <NavItem
+                      key={item.to}
+                      to={item.to}
+                      label={item.label}
+                      icon={item.icon}
+                      end={item.end}
+                      collapsed={isCollapsed}
+                      onNavigate={closeMobileMenu}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </nav>
+
+          <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+            <a href="/" className={isCollapsed ? 'admin-button-secondary w-full px-0' : 'admin-button-secondary w-full'}>
+              {isCollapsed ? 'Site' : 'View Site'}
+            </a>
+            <button
+              type="button"
+              onClick={requestSignOut}
+              className={isCollapsed ? 'admin-button-danger w-full px-0' : 'admin-button-danger w-full'}
+            >
+              <FiLogOut className="h-4 w-4" aria-hidden="true" />
+              {!isCollapsed ? 'Sign Out' : null}
+            </button>
+          </div>
+        </aside>
+
+        <div className="flex min-h-screen flex-1 flex-col">
+          <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+            <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between gap-3 px-4 md:px-6">
+              <div className="flex min-w-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(true)}
+                  className="admin-button-secondary px-2 md:hidden"
+                  aria-label="Open menu"
+                >
+                  <FiMenu className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">{pageTitle}</p>
+                  <p className="truncate text-xs text-slate-500">School Website CMS</p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 md:p-6">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+
+      {showConfirm ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 px-4 backdrop-blur" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+            <h2 className="text-lg font-semibold text-slate-900">Sign out?</h2>
+            <p className="mt-2 text-sm text-slate-600">You will need to log in again to continue managing content.</p>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button type="button" onClick={() => setShowConfirm(false)} className="admin-button-secondary">
+                Cancel
+              </button>
+              <button type="button" onClick={confirmSignOut} className="admin-button-danger">
+                Sign Out
               </button>
             </div>
           </div>
@@ -102,20 +249,33 @@ export default function AdminLayout() {
   )
 }
 
-function NavItem({ to, label, icon: Icon, end }) {
+function NavItem({ to, label, icon: Icon, end, collapsed, onNavigate }) {
+  const { pathname } = useLocation()
+
   return (
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) =>
-        [
-          'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
-          isActive ? 'bg-brand-sky text-brand-goldText' : 'text-slate-700 hover:bg-slate-100',
+      onClick={onNavigate}
+      title={collapsed ? label : undefined}
+      className={({ isActive }) => {
+        const postListActive =
+          to === '/admin/posts' &&
+          (pathname === '/admin/posts' || (pathname.startsWith('/admin/posts/') && pathname !== '/admin/posts/new'))
+
+        const active = postListActive || isActive
+
+        return [
+          'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition duration-200',
+          collapsed ? 'justify-center' : '',
+          active
+            ? 'bg-brand-goldText text-white shadow-sm'
+            : 'text-slate-700 hover:bg-rose-50 hover:text-brand-goldText',
         ].join(' ')
-      }
+      }}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
-      {label}
+      {createElement(Icon, { className: 'h-4 w-4 shrink-0', 'aria-hidden': true })}
+      {!collapsed ? <span className="truncate">{label}</span> : null}
     </NavLink>
   )
 }

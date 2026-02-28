@@ -1,22 +1,44 @@
-import { useEffect, useState } from 'react'
-import { FiDownload, FiMail, FiTrash } from 'react-icons/fi'
-import { fetchSubscribers, deleteSubscriber } from '../../services/subscriberService.js'
+import { useEffect, useMemo, useState } from 'react'
+import { FiDownload, FiMail, FiSearch, FiTrash2 } from 'react-icons/fi'
+import { deleteSubscriber, fetchSubscribers } from '../../services/subscriberService.js'
 import usePageMeta from '../../hooks/usePageMeta.js'
 import LoadingOverlay from '../../components/LoadingOverlay.jsx'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
+import AdminPagination from '../../components/admin/AdminPagination.jsx'
 
-export default function AdminSubscribers() {
+function matchesDateRange(item, from, to) {
+  if (!from && !to) return true
+  const timestamp = new Date(item.created_at).getTime()
+  if (Number.isNaN(timestamp)) return false
+
+  const fromTs = from ? new Date(from).getTime() : null
+  const toTs = to ? new Date(to).getTime() : null
+  if (fromTs && timestamp < fromTs) return false
+  if (toTs) {
+    const inclusiveEnd = toTs + 24 * 60 * 60 * 1000 - 1
+    if (timestamp > inclusiveEnd) return false
+  }
+  return true
+}
+
+export default function AdminSettings() {
   usePageMeta({ title: 'Subscribers' })
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
 
   async function load() {
     setLoading(true)
     setError('')
     try {
       const { data } = await fetchSubscribers()
-      setItems(data)
+      setItems(data || [])
     } catch (err) {
       setError(err.message || 'Failed to load subscribers')
     } finally {
@@ -24,14 +46,36 @@ export default function AdminSubscribers() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    return items.filter((item) => {
+      const searchMatch = !term || item.email?.toLowerCase().includes(term)
+      return searchMatch && matchesDateRange(item, dateFrom, dateTo)
+    })
+  }, [items, search, dateFrom, dateTo])
+
+  const total = filtered.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const pagedItems = useMemo(() => {
+    const start = (safePage - 1) * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, safePage, pageSize])
+
+  useEffect(() => {
+    if (page !== safePage) setPage(safePage)
+  }, [page, safePage])
 
   async function handleDelete(id) {
     if (!window.confirm('Remove this subscriber?')) return
     setDeletingId(id)
     try {
       await deleteSubscriber(id)
-      setItems((prev) => prev.filter((s) => s.id !== id))
+      setItems((prev) => prev.filter((subscriber) => subscriber.id !== id))
     } catch (err) {
       setError(err.message || 'Failed to delete')
     } finally {
@@ -40,81 +84,137 @@ export default function AdminSubscribers() {
   }
 
   function exportCSV() {
-    const rows = ['email,subscribed_at', ...items.map((s) => `"${s.email}","${s.created_at || ''}"`)]
+    const rows = ['email,subscribed_at', ...filtered.map((subscriber) => `"${subscriber.email}","${subscriber.created_at || ''}"`)]
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `subscribers-${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `subscribers-${new Date().toISOString().slice(0, 10)}.csv`
+    anchor.click()
     URL.revokeObjectURL(url)
   }
 
   return (
     <>
-      {(loading || deletingId !== null) && (
-        <LoadingOverlay message={loading ? 'Loading subscribers…' : 'Removing…'} />
-      )}
+      {(loading || deletingId !== null) && <LoadingOverlay message={loading ? 'Loading subscribers...' : 'Removing subscriber...'} />}
+
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-black text-brand-goldText">Subscribers</h1>
-            <p className="text-sm text-slate-600">{items.length} email{items.length !== 1 ? 's' : ''} subscribed.</p>
-          </div>
-          {items.length > 0 && (
-            <button
-              type="button"
-              onClick={exportCSV}
-              className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-blue/90 hover:-translate-y-[1px]"
-            >
-              <FiDownload className="h-3.5 w-3.5" aria-hidden="true" /> Export CSV
+        <AdminPageHeader
+          title="Subscribers"
+          description="Manage your mailing list, filter by signup date, and export data safely."
+          actions={
+            <button type="button" onClick={exportCSV} disabled={!filtered.length} className="admin-button-primary">
+              <FiDownload className="h-4 w-4" aria-hidden="true" />
+              Export CSV
             </button>
-          )}
-        </div>
+          }
+        />
 
-        {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
+        <section className="admin-card p-4">
+          <div className="grid gap-2 md:grid-cols-[1fr_auto_auto_auto]">
+            <div className="relative">
+              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value)
+                  setPage(1)
+                }}
+                placeholder="Search email..."
+                className="admin-input pl-9"
+              />
+            </div>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(event) => {
+                setDateFrom(event.target.value)
+                setPage(1)
+              }}
+              className="admin-input md:w-44"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(event) => {
+                setDateTo(event.target.value)
+                setPage(1)
+              }}
+              className="admin-input md:w-44"
+            />
+            <div className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-700">
+              Total: {filtered.length}
+            </div>
+          </div>
+          {error ? <p className="mt-3 text-sm font-medium text-rose-600">{error}</p> : null}
+        </section>
 
-        {!loading && items.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 py-14 text-center">
+        {!loading && !filtered.length ? (
+          <section className="admin-card flex flex-col items-center gap-3 py-14 text-center">
             <FiMail className="h-8 w-8 text-slate-300" aria-hidden="true" />
-            <p className="text-sm font-semibold text-slate-500">No subscribers yet.</p>
-          </div>
+            <p className="text-sm font-medium text-slate-500">No subscribers match your filters.</p>
+          </section>
         ) : (
-          <div className="overflow-hidden rounded-xl ring-1 ring-slate-200">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">#</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">Email</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">Subscribed</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {items.map((s, i) => (
-                  <tr key={s.id} className="transition hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-400">{i + 1}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{s.email}</td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {s.created_at ? new Date(s.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(s.id)}
-                        disabled={deletingId === s.id}
-                        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-50"
-                      >
-                        <FiTrash className="h-3.5 w-3.5" aria-hidden="true" /> Remove
-                      </button>
-                    </td>
+          <section className="admin-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-[760px] w-full text-sm">
+                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  <tr>
+                    <th className="border-b border-slate-200 px-4 py-3">#</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Email</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Subscribed</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {pagedItems.map((subscriber, index) => (
+                    <tr
+                      key={subscriber.id}
+                      className={[
+                        'transition hover:bg-rose-50/40',
+                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50/45',
+                      ].join(' ')}
+                    >
+                      <td className="border-b border-slate-100 px-4 py-3 text-slate-400">{(safePage - 1) * pageSize + index + 1}</td>
+                      <td className="border-b border-slate-100 px-4 py-3 font-medium text-slate-800">{subscriber.email}</td>
+                      <td className="border-b border-slate-100 px-4 py-3 text-slate-500">
+                        {subscriber.created_at
+                          ? new Date(subscriber.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
+                          : '-'}
+                      </td>
+                      <td className="border-b border-slate-100 px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(subscriber.id)}
+                          disabled={deletingId === subscriber.id}
+                          className="admin-button-secondary border-rose-200 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50"
+                        >
+                          <FiTrash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
+
+        <AdminPagination
+          page={safePage}
+          pageSize={pageSize}
+          totalItems={total}
+          itemLabel="subscribers"
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+        />
       </div>
     </>
   )
 }
+

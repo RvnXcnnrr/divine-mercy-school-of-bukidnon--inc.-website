@@ -32,6 +32,7 @@ function ScrollToTop() {
 
 function App() {
   const { pathname } = useLocation()
+  const isAdminRoute = pathname.startsWith('/admin')
 
   useEffect(() => {
     const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')
@@ -56,17 +57,19 @@ function App() {
   }, [pathname])
 
   return (
-    <div className="min-h-dvh bg-brand-sky text-brand-ink">
-      <a
-        href="#content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-brand-ink focus:shadow"
-      >
-        Skip to content
-      </a>
-      <Navbar />
+    <div className={isAdminRoute ? 'min-h-dvh bg-slate-50 text-slate-900' : 'min-h-dvh bg-brand-sky text-brand-ink'}>
+      {!isAdminRoute ? (
+        <a
+          href="#content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-brand-ink focus:shadow"
+        >
+          Skip to content
+        </a>
+      ) : null}
+      {!isAdminRoute ? <Navbar /> : null}
       <ScrollToTop />
 
-      <main id="content" className="pt-16">
+      <main id="content" className={isAdminRoute ? '' : 'pt-16'}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -94,7 +97,7 @@ function App() {
         </Routes>
       </main>
 
-      <Footer />
+      {!isAdminRoute ? <Footer /> : null}
     </div>
   )
 }

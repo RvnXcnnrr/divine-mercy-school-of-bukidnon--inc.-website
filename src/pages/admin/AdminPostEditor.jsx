@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { FiImage, FiSave, FiUpload, FiX } from 'react-icons/fi'
+import { FiClock, FiEye, FiImage, FiSave, FiUpload, FiX } from 'react-icons/fi'
 import { useCategoriesQuery } from '../../hooks/useCategoriesQuery.js'
 import { fetchPostById, savePost } from '../../services/postService.js'
 import { uploadImageToSupabase } from '../../lib/supabaseStorage.js'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
 
 const schema = z.object({
   title: z.string().min(3),
@@ -22,9 +23,14 @@ const schema = z.object({
   is_featured: z.boolean().default(false),
 })
 
+function draftKeyFor(postId) {
+  return `admin-post-draft:${postId || 'new'}`
+}
+
 export default function AdminPostEditor() {
   const params = useParams()
   const postId = params.postId === 'new' ? null : params.postId
+  const draftKey = draftKeyFor(postId)
   const navigate = useNavigate()
   const { data: categories = [] } = useCategoriesQuery()
   const [uploading, setUploading] = useState(false)
@@ -32,6 +38,10 @@ export default function AdminPostEditor() {
   const [galleryFiles, setGalleryFiles] = useState([])
   const [galleryUrls, setGalleryUrls] = useState([])
   const [galleryField, setGalleryField] = useState('gallery_images')
+  const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [draggingFeatured, setDraggingFeatured] = useState(false)
+  const [draggingGallery, setDraggingGallery] = useState(false)
 
   const {
     register,
@@ -39,41 +49,100 @@ export default function AdminPostEditor() {
     reset,
     setValue,
     watch,
-    formState: { isSubmitting },
-  } = useForm({ resolver: zodResolver(schema), defaultValues: { status: 'published', is_featured: false, gallery_images: [] } })
+    formState: { isSubmitting, isDirty, errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: '',
+      slug: '',
+      excerpt: '',
+      content: '',
+      category_id: '',
+      featured_image_url: '',
+      video_url: '',
+      status: 'draft',
+      is_featured: false,
+      gallery_images: [],
+    },
+  })
 
-  const featuredUrlValue = watch('featured_image_url')
+  const watchedValues = watch()
+
+  const featuredPreview = useMemo(() => {
+    if (featuredFile) return URL.createObjectURL(featuredFile)
+    return watchedValues.featured_image_url || ''
+  }, [featuredFile, watchedValues.featured_image_url])
+
+  useEffect(() => {
+    return () => {
+      if (featuredPreview?.startsWith('blob:')) URL.revokeObjectURL(featuredPreview)
+    }
+  }, [featuredPreview])
 
   useEffect(() => {
     if (!postId) return
+
     async function load() {
       const { data } = await fetchPostById(postId)
-      if (data) {
-        const gallery = data.gallery_images || data.images || []
-        reset({ ...data, gallery_images: gallery, images: data.images || undefined })
-        setGalleryUrls(gallery)
-        if (data.gallery_images && Array.isArray(data.gallery_images)) setGalleryField('gallery_images')
-        else if (data.images && Array.isArray(data.images)) setGalleryField('images')
-      }
+      if (!data) return
+      const gallery = data.gallery_images || data.images || []
+      reset({
+        ...data,
+        gallery_images: gallery,
+        images: data.images || undefined,
+      })
+      setGalleryUrls(gallery)
+      if (data.gallery_images && Array.isArray(data.gallery_images)) setGalleryField('gallery_images')
+      else if (data.images && Array.isArray(data.images)) setGalleryField('images')
     }
+
     load()
   }, [postId, reset])
 
-  function handleFeaturedSelect(e) {
-    const file = e.target.files?.[0]
+  useEffect(() => {
+    if (postId) return
+    const raw = window.localStorage.getItem(draftKey)
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed?.values) reset(parsed.values)
+      if (Array.isArray(parsed?.galleryUrls)) setGalleryUrls(parsed.galleryUrls)
+      if (parsed?.galleryField) setGalleryField(parsed.galleryField)
+      if (parsed?.savedAt) setLastAutoSavedAt(new Date(parsed.savedAt))
+    } catch {
+      window.localStorage.removeItem(draftKey)
+    }
+  }, [draftKey, postId, reset])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (!isDirty || postId) return
+      const payload = {
+        values: watchedValues,
+        galleryUrls,
+        galleryField,
+        savedAt: new Date().toISOString(),
+      }
+      window.localStorage.setItem(draftKey, JSON.stringify(payload))
+      setLastAutoSavedAt(new Date())
+    }, 1200)
+
+    return () => window.clearTimeout(timer)
+  }, [draftKey, galleryField, galleryUrls, isDirty, postId, watchedValues])
+
+  function handleFeaturedSelect(file) {
     if (!file) return
     setFeaturedFile(file)
-    setValue('featured_image_url', '')
+    setValue('featured_image_url', '', { shouldDirty: true })
   }
 
   function clearFeatured() {
     setFeaturedFile(null)
-    setValue('featured_image_url', '')
+    setValue('featured_image_url', '', { shouldDirty: true })
   }
 
-  function handleGallerySelect(e) {
-    const files = Array.from(e.target.files || [])
-    if (!files.length) return
+  function handleGallerySelect(files) {
+    if (!files?.length) return
     setGalleryFiles((prev) => [...prev, ...files])
   }
 
@@ -106,7 +175,7 @@ export default function AdminPostEditor() {
 
       const payload = {
         ...values,
-        status: values.status || 'published',
+        status: values.status || 'draft',
         featured_image_url: featuredUrl,
         video_url: values.video_url || null,
         category_id: values.category_id || null,
@@ -116,213 +185,273 @@ export default function AdminPostEditor() {
       if (galleryField === 'images') {
         delete payload.gallery_images
         payload.images = galleryImages.length ? galleryImages : null
-      } else if (galleryField === 'gallery_images') {
+      } else {
         delete payload.images
         payload.gallery_images = galleryImages.length ? galleryImages : null
-      } else if (galleryImages.length) {
-        alert('Gallery images were not saved because the posts table lacks an images/gallery_images column. Please add one to Supabase.')
       }
 
       const { data } = await savePost(postId ? { ...payload, id: postId } : payload)
-      if (data) navigate('/admin/posts')
-    } catch (err) {
-      alert(err.message || 'Failed to save post')
+      if (!data) return
+
+      window.localStorage.removeItem(draftKey)
+      setGalleryFiles([])
+      setFeaturedFile(null)
+      setLastAutoSavedAt(new Date())
+      navigate('/admin/posts')
+    } catch (error) {
+      alert(error.message || 'Failed to save post')
     } finally {
       setUploading(false)
     }
   }
 
+  const saveLabel = uploading || isSubmitting ? 'Saving...' : 'Save Changes'
+  const autosaveText = (() => {
+    if (uploading || isSubmitting) return 'Saving content...'
+    if (isDirty) return 'Unsaved changes'
+    if (!lastAutoSavedAt) return 'Ready'
+    return `Autosaved ${lastAutoSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+  })()
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-black text-brand-goldText">{postId ? 'Edit Post' : 'New Post'}</h1>
-          <p className="text-sm text-slate-600">Create, schedule, or draft posts.</p>
+      <AdminPageHeader
+        title={postId ? 'Edit Post' : 'Create New Post'}
+        description="Organize content into Post Info, Publishing, and Media for faster publishing."
+      />
+
+      <section className="sticky top-[74px] z-20 admin-card bg-white/90 p-3 backdrop-blur">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="inline-flex items-center gap-2 text-sm text-slate-600">
+            <FiClock className="h-4 w-4" aria-hidden="true" />
+            {autosaveText}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => setPreviewOpen(true)} className="admin-button-secondary">
+              <FiEye className="h-4 w-4" aria-hidden="true" />
+              Preview
+            </button>
+            <button type="submit" form="post-form" disabled={isSubmitting || uploading} className="admin-button-primary">
+              <FiSave className="h-4 w-4" aria-hidden="true" />
+              {saveLabel}
+            </button>
+          </div>
         </div>
-        <button
-          type="submit"
-          form="post-form"
-          disabled={isSubmitting || uploading}
-          className="inline-flex items-center gap-2 rounded-md bg-brand-goldText px-4 py-2 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-70"
-        >
-          <FiSave className="h-4 w-4" aria-hidden="true" />
-          Save
-        </button>
-      </div>
+      </section>
 
-      <form id="post-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm font-semibold text-slate-700">
-            Title
-            <input
-              {...register('title')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-              placeholder="Post title"
-            />
-          </label>
-          <label className="block text-sm font-semibold text-slate-700">
-            Slug
-            <input
-              {...register('slug')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-              placeholder="auto-generated if blank"
-            />
-          </label>
-        </div>
+      <form id="post-form" onSubmit={handleSubmit(onSubmit)} className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-rows-[auto_1fr]">
+          <article className="admin-card p-5">
+            <h2 className="text-base font-semibold text-slate-900">Post Info</h2>
+            <p className="mt-1 text-sm text-slate-500">Core metadata for your post.</p>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <label className="block text-sm font-semibold text-slate-700">
-            Category
-            <select
-              {...register('category_id')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-            >
-              <option value="">Unassigned</option>
-              {categories.map((cat) => (
-                <option key={cat.id || cat.slug} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block text-sm font-semibold text-slate-700">
-            Status
-            <select
-              {...register('status')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </label>
-
-          <label className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <input type="checkbox" {...register('is_featured')} className="h-4 w-4" />
-            Featured on homepage
-          </label>
-        </div>
-
-        <label className="block text-sm font-semibold text-slate-700">
-          Excerpt
-          <textarea
-            {...register('excerpt')}
-            rows={2}
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-            placeholder="Short summary"
-          />
-        </label>
-
-        <label className="block text-sm font-semibold text-slate-700">
-          Content
-          <textarea
-            {...register('content')}
-            rows={8}
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-            placeholder="Use Markdown or rich text content"
-          />
-        </label>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm font-semibold text-slate-700">
-            Featured image URL
-            <div className="mt-1 flex items-center gap-2">
-              <input
-                {...register('featured_image_url')}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-                placeholder="https://your-project.supabase.co/storage/v1/object/public/posts/..."
-              />
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2">
-                <FiUpload className="h-4 w-4" aria-hidden="true" />
-                Choose file
-                <input type="file" accept="image/*" className="sr-only" onChange={handleFeaturedSelect} disabled={uploading} />
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="block text-sm font-medium text-slate-700 md:col-span-2">
+                Title
+                <input {...register('title')} className="admin-input mt-1" placeholder="Post title" />
+                {errors.title ? <span className="mt-1 block text-xs text-rose-600">Title must be at least 3 characters.</span> : null}
               </label>
-              {featuredFile ? (
-                <button
-                  type="button"
-                  onClick={clearFeatured}
-                  className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-200"
+              <label className="block text-sm font-medium text-slate-700">
+                Category
+                <select {...register('category_id')} className="admin-input mt-1">
+                  <option value="">Unassigned</option>
+                  {categories.map((category) => (
+                    <option key={category.id || category.slug} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                Status
+                <select {...register('status')} className="admin-input mt-1">
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+              </label>
+            </div>
+          </article>
+
+          <article className="admin-card p-5">
+            <h2 className="text-base font-semibold text-slate-900">Content</h2>
+            <p className="mt-1 text-sm text-slate-500">Write the main post body.</p>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-700">
+                Content
+                <textarea
+                  {...register('content')}
+                  rows={12}
+                  className="admin-input mt-1 min-h-[360px]"
+                  placeholder="Write your post content here..."
+                />
+                {errors.content ? <span className="mt-1 block text-xs text-rose-600">Content must be at least 10 characters.</span> : null}
+              </label>
+            </div>
+          </article>
+        </div>
+
+        <div className="grid gap-4 xl:grid-rows-[auto_1fr]">
+          <article className="admin-card p-5">
+            <h2 className="text-base font-semibold text-slate-900">Publishing</h2>
+            <p className="mt-1 text-sm text-slate-500">Set visibility and homepage promotion.</p>
+
+            <div className="mt-4 space-y-4">
+              <label className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <input type="checkbox" {...register('is_featured')} className="peer sr-only" />
+                <span className="relative inline-flex h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-brand-goldText">
+                  <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5" />
+                </span>
+                <span className="text-sm font-medium text-slate-700">Feature on homepage</span>
+              </label>
+            </div>
+          </article>
+
+          <article className="admin-card p-5">
+            <h2 className="text-base font-semibold text-slate-900">Media</h2>
+            <p className="mt-1 text-sm text-slate-500">Drag and drop files or use direct URLs.</p>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-700">Featured image URL</label>
+                <input
+                  {...register('featured_image_url')}
+                  className="admin-input mt-1"
+                  placeholder="https://your-project.supabase.co/storage/v1/object/public/posts/..."
+                />
+              </div>
+
+              <div
+                className={[
+                  'rounded-xl border-2 border-dashed p-4 text-center transition',
+                  draggingFeatured ? 'border-brand-goldText bg-rose-50' : 'border-slate-300 bg-slate-50/60',
+                ].join(' ')}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  setDraggingFeatured(true)
+                }}
+                onDragLeave={() => setDraggingFeatured(false)}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  setDraggingFeatured(false)
+                  handleFeaturedSelect(event.dataTransfer.files?.[0] || null)
+                }}
+              >
+                <input
+                  id="featured-file-input"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => handleFeaturedSelect(event.target.files?.[0] || null)}
+                />
+                <label htmlFor="featured-file-input" className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-goldText">
+                  <FiUpload className="h-4 w-4" aria-hidden="true" />
+                  Upload featured image
+                </label>
+                <p className="mt-2 text-xs text-slate-500">Drag an image here, or click to browse.</p>
+                {featuredFile ? (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+                    {featuredFile.name}
+                    <button type="button" onClick={clearFeatured} className="rounded-md p-1 hover:bg-rose-100" aria-label="Remove featured file">
+                      <FiX className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700">Gallery source field</label>
+                  <select value={galleryField} onChange={(event) => setGalleryField(event.target.value)} className="admin-input max-w-40 py-2 text-xs">
+                    <option value="gallery_images">gallery_images</option>
+                    <option value="images">images</option>
+                  </select>
+                </div>
+                <div
+                  className={[
+                    'rounded-xl border-2 border-dashed p-4 text-center transition',
+                    draggingGallery ? 'border-brand-goldText bg-rose-50' : 'border-slate-300 bg-slate-50/60',
+                  ].join(' ')}
+                  onDragOver={(event) => {
+                    event.preventDefault()
+                    setDraggingGallery(true)
+                  }}
+                  onDragLeave={() => setDraggingGallery(false)}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    setDraggingGallery(false)
+                    handleGallerySelect(Array.from(event.dataTransfer.files || []))
+                  }}
                 >
-                  <FiX className="h-4 w-4" aria-hidden="true" />
-                  Clear
-                </button>
+                  <input
+                    id="gallery-files-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="sr-only"
+                    onChange={(event) => handleGallerySelect(Array.from(event.target.files || []))}
+                  />
+                  <label htmlFor="gallery-files-input" className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-goldText">
+                    <FiImage className="h-4 w-4" aria-hidden="true" />
+                    Add gallery images
+                  </label>
+                  <p className="mt-2 text-xs text-slate-500">Drop multiple files, then click Save to upload.</p>
+                </div>
+              </div>
+
+              {(galleryUrls.length || galleryFiles.length) > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {galleryUrls.map((url) => (
+                    <div key={url} className="relative overflow-hidden rounded-xl border border-slate-200">
+                      <img src={url} alt="Gallery" className="h-28 w-full object-cover" loading="lazy" />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryUrl(url)}
+                        className="absolute right-1 top-1 rounded-md bg-white/90 p-1 text-slate-700 ring-1 ring-slate-200 hover:bg-white"
+                        aria-label="Remove image"
+                      >
+                        <FiX className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                  {galleryFiles.map((file) => (
+                    <div key={file.name} className="relative rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                      <p className="line-clamp-2 pr-6">{file.name}</p>
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryFile(file.name)}
+                        className="absolute right-1 top-1 rounded-md p-1 hover:bg-amber-100"
+                        aria-label="Remove queued image"
+                      >
+                        <FiX className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               ) : null}
             </div>
-            <div className="mt-2 space-y-1 text-xs text-slate-600">
-              {featuredFile ? <p>Queued: {featuredFile.name}</p> : null}
-              {!featuredFile && (featuredUrlValue || '').length > 0 ? <p>Using existing URL.</p> : null}
-            </div>
-          </label>
-
-          <label className="block text-sm font-semibold text-slate-700">
-            Video URL (YouTube / Facebook)
-            <input
-              {...register('video_url')}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
-              placeholder="https://youtube.com/watch?v=..."
-            />
-          </label>
-        </div>
-
-        <div className="space-y-2 rounded-lg border border-dashed border-slate-300 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <FiImage className="h-4 w-4 text-brand-goldText" aria-hidden="true" />
-            Gallery images (optional)
-          </div>
-          <p className="text-xs text-slate-600">Select multiple images; they upload only after you click Save.</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-brand-goldText ring-1 ring-slate-200 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2">
-              <FiUpload className="h-4 w-4" aria-hidden="true" />
-              Add images
-              <input type="file" accept="image/*" multiple className="sr-only" onChange={handleGallerySelect} disabled={uploading} />
-            </label>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-3">
-            {galleryUrls.map((url) => (
-              <div key={url} className="relative overflow-hidden rounded-md border border-slate-200">
-                <img src={url} alt="Gallery" className="h-32 w-full object-cover" loading="lazy" />
-                <button
-                  type="button"
-                  onClick={() => removeGalleryUrl(url)}
-                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 text-slate-700 shadow ring-1 ring-slate-200 transition hover:bg-white"
-                  aria-label="Remove image"
-                >
-                  <FiX className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-            ))}
-
-            {galleryFiles.map((file) => (
-              <div key={file.name} className="relative overflow-hidden rounded-md border border-amber-200 bg-amber-50">
-                <div className="flex h-32 items-center justify-center p-3 text-center text-xs text-amber-800">
-                  {file.name}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeGalleryFile(file.name)}
-                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 text-amber-800 shadow ring-1 ring-amber-200 transition hover:bg-white"
-                  aria-label="Remove queued image"
-                >
-                  <FiX className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-brand-sky/60 p-4 text-xs text-slate-700 ring-1 ring-slate-200">
-          <div className="flex items-center gap-2 font-semibold">
-            <FiImage className="h-4 w-4 text-brand-goldText" aria-hidden="true" />
-            Media guidelines
-          </div>
-          <ul className="mt-2 list-disc space-y-1 pl-4">
-            <li>Images are uploaded to Supabase Storage with auto-compression (2MB limit).</li>
-            <li>Use landscape 16:9 images for vlogs; square/4:5 for news.</li>
-            <li>Uploads happen only after you click Save.</li>
-          </ul>
+          </article>
         </div>
       </form>
+
+      {previewOpen ? (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-lg font-semibold text-slate-900">Post Preview</h2>
+              <button type="button" onClick={() => setPreviewOpen(false)} className="admin-button-secondary px-2" aria-label="Close preview">
+                <FiX className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            {featuredPreview ? (
+              <img src={featuredPreview} alt="Preview cover" className="mt-4 h-52 w-full rounded-xl object-cover" />
+            ) : null}
+            <h3 className="mt-4 text-2xl font-semibold text-slate-900">{watchedValues.title || 'Untitled post'}</h3>
+            {watchedValues.excerpt ? <p className="mt-2 text-sm text-slate-600">{watchedValues.excerpt}</p> : null}
+            <div className="mt-5 whitespace-pre-wrap text-sm leading-6 text-slate-700">{watchedValues.content || 'No content yet.'}</div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
