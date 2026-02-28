@@ -5,6 +5,31 @@ import { usePostsQuery } from '../hooks/usePostsQuery.js'
 import { fetchSiteContent } from '../services/siteInfoService.js'
 import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
+function normalizeCategory(value, fallback = 'General') {
+  const cleaned = String(value || '').trim()
+  return cleaned || fallback
+}
+
+function categoryKey(value) {
+  return normalizeCategory(value).toLowerCase()
+}
+
+function dedupeCategoryLabels(labels = []) {
+  const unique = []
+  const seen = new Set()
+
+  for (const label of labels) {
+    const cleaned = normalizeCategory(label, '')
+    if (!cleaned) continue
+    const key = cleaned.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    unique.push(cleaned)
+  }
+
+  return unique
+}
+
 function isFacultyImage(src = '') {
   const value = String(src).toLowerCase()
   return value.includes('/faculty/') || value.includes('bucket=faculty')
@@ -30,34 +55,51 @@ export default function Gallery() {
   const items = useMemo(() => data?.items || [], [data?.items])
 
   const galleryItems = useMemo(() => {
+    const seenUrls = new Set()
+
     return items.flatMap((item) => {
-      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])]
-        .filter(Boolean)
-        .filter((src) => !isFacultyImage(src))
-      return images.map((src, idx) => ({
+      const rawImages = [item.featured_image_url, ...(item.gallery_images || item.images || [])]
+      const uniqueImages = []
+
+      for (const image of rawImages) {
+        const src = String(image || '').trim()
+        if (!src || isFacultyImage(src)) continue
+        if (seenUrls.has(src)) continue
+        seenUrls.add(src)
+        uniqueImages.push(src)
+      }
+
+      const itemCategory = normalizeCategory(item.category || item.category_slug || item.category_id || 'General')
+
+      return uniqueImages.map((src, idx) => ({
         src,
         title: item.title || gallerySettings.defaultCaption || 'Campus memory',
-        category: item.category || item.category_slug || item.category_id || 'General',
-        key: `${item.id || item.slug || 'item'}-${idx}`,
+        category: itemCategory,
+        key: `${item.id || item.slug || 'item'}-${idx}-${src}`,
       }))
     })
   }, [items, gallerySettings.defaultCaption])
 
   const categories = useMemo(() => {
-    const managed = (gallerySettings.categories || [])
+    const managedLabels = (gallerySettings.categories || [])
       .filter((item) => item.isVisible !== false)
       .map((item) => item.name)
-      .filter(Boolean)
-    const unique = managed.length
-      ? managed
-      : Array.from(new Set(galleryItems.map((item) => item.category))).filter(Boolean)
-    return ['All', ...unique]
+    const managed = dedupeCategoryLabels(managedLabels).filter((label) => categoryKey(label) !== 'all')
+
+    if (managed.length) {
+      return ['All', ...managed]
+    }
+
+    const discovered = dedupeCategoryLabels(galleryItems.map((item) => item.category))
+      .filter((label) => categoryKey(label) !== 'all')
+
+    return ['All', ...discovered]
   }, [galleryItems, gallerySettings.categories])
 
   const filteredItems = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return galleryItems.filter((item) => {
-      const categoryMatch = category === 'All' || String(item.category) === category
+      const categoryMatch = category === 'All' || categoryKey(item.category) === categoryKey(category)
       const searchMatch =
         !needle ||
         item.title.toLowerCase().includes(needle) ||
@@ -65,6 +107,12 @@ export default function Gallery() {
       return categoryMatch && searchMatch
     })
   }, [galleryItems, search, category])
+
+  useEffect(() => {
+    if (!categories.includes(category)) {
+      setCategory('All')
+    }
+  }, [categories, category])
 
   const normalizedIndex = activeIndex >= 0 && filteredItems.length ? Math.min(activeIndex, filteredItems.length - 1) : -1
   const activeItem = normalizedIndex >= 0 ? filteredItems[normalizedIndex] : null

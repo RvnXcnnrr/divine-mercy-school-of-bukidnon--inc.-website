@@ -52,15 +52,15 @@ function FloatingStat({ card, className, style, animated }) {
   const count = useCountUp(parsed.numeric || 0, 1400, animated && parsed.numeric != null)
   const display = parsed.numeric != null ? `${count}${parsed.suffix}` : parsed.raw
   const Icon = resolveStatIcon(card?.icon)
-  const iconLabel = card?.icon ? String(card.icon) : 'metric'
 
   return (
     <div className={className} style={style}>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card?.label || 'Stat'}</p>
-      <p className="mt-1 text-2xl font-black text-brand-goldText">{display}</p>
-      <div className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2 py-1 text-[11px] font-semibold text-brand-goldText ring-1 ring-red-100">
-        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="sr-only">{iconLabel} icon</span>
+      <div className="mt-1 inline-flex items-center gap-2">
+        <p className="text-2xl font-black text-brand-goldText">{display}</p>
+        <span className="inline-flex items-center justify-center rounded-full bg-red-50 p-1.5 text-brand-goldText ring-1 ring-red-100">
+          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        </span>
       </div>
     </div>
   )

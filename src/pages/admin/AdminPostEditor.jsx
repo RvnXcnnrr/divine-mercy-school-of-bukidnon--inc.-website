@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,6 +27,20 @@ function draftKeyFor(postId) {
   return `admin-post-draft:${postId || 'new'}`
 }
 
+const SUBMIT_DEBOUNCE_MS = 700
+
+function createUuidV4() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16)
+    const value = char === 'x' ? random : (random & 0x3) | 0x8
+    return value.toString(16)
+  })
+}
+
 export default function AdminPostEditor() {
   const params = useParams()
   const postId = params.postId === 'new' ? null : params.postId
@@ -40,6 +54,10 @@ export default function AdminPostEditor() {
   const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [draggingUpload, setDraggingUpload] = useState(false)
+  const [submissionLocked, setSubmissionLocked] = useState(false)
+  const submitInFlightRef = useRef(false)
+  const lastSubmitAtRef = useRef(0)
+  const idempotencyKeyRef = useRef('')
 
   const {
     register,
@@ -80,6 +98,16 @@ export default function AdminPostEditor() {
   }, [queuedImagePreview])
 
   useEffect(() => {
+    if (postId) {
+      idempotencyKeyRef.current = ''
+      return
+    }
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = createUuidV4()
+    }
+  }, [postId])
+
+  useEffect(() => {
     if (!postId) return
 
     async function load() {
@@ -109,6 +137,7 @@ export default function AdminPostEditor() {
       if (Array.isArray(parsed?.galleryUrls)) setGalleryUrls(parsed.galleryUrls)
       if (parsed?.galleryField) setGalleryField(parsed.galleryField)
       if (parsed?.savedAt) setLastAutoSavedAt(new Date(parsed.savedAt))
+      if (parsed?.idempotencyKey) idempotencyKeyRef.current = parsed.idempotencyKey
     } catch {
       window.localStorage.removeItem(draftKey)
     }
@@ -122,6 +151,7 @@ export default function AdminPostEditor() {
         galleryUrls,
         galleryField,
         savedAt: new Date().toISOString(),
+        idempotencyKey: idempotencyKeyRef.current,
       }
       window.localStorage.setItem(draftKey, JSON.stringify(payload))
       setLastAutoSavedAt(new Date())
@@ -149,13 +179,35 @@ export default function AdminPostEditor() {
   }
 
   async function onSubmit(values) {
-    const confirmed = window.confirm('Save changes to this post?')
-    if (!confirmed) return
-
-    setUploading(true)
-    const existingGallery = [...galleryUrls]
-
+    const now = Date.now()
+    if (submitInFlightRef.current) return
+    if (now - lastSubmitAtRef.current < SUBMIT_DEBOUNCE_MS) return
+    lastSubmitAtRef.current = now
+    submitInFlightRef.current = true
+    setSubmissionLocked(true)
     try {
+      const confirmed = window.confirm('Save changes to this post?')
+      if (!confirmed) return
+
+      setUploading(true)
+      const existingGallery = [...galleryUrls]
+      if (!postId && !idempotencyKeyRef.current) {
+        idempotencyKeyRef.current = createUuidV4()
+      }
+      const idempotencyKey = postId ? null : idempotencyKeyRef.current
+      if (!postId && idempotencyKey) {
+        window.localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            values,
+            galleryUrls: existingGallery,
+            galleryField,
+            savedAt: new Date().toISOString(),
+            idempotencyKey,
+          })
+        )
+      }
+
       const newGalleryUrls = []
       for (const file of galleryFiles) {
         const uploaded = await uploadImageToSupabase(file, { bucket: 'posts' })
@@ -189,7 +241,8 @@ export default function AdminPostEditor() {
         }
 
         try {
-          const { data } = await savePost(postId ? { ...candidate, id: postId } : candidate)
+          const basePayload = postId ? { ...candidate, id: postId } : { ...candidate, idempotency_key: idempotencyKey }
+          const { data } = await savePost(basePayload)
           savedData = data
           if (field !== galleryField) setGalleryField(field)
           break
@@ -206,6 +259,9 @@ export default function AdminPostEditor() {
       }
 
       window.localStorage.removeItem(draftKey)
+      if (!postId) {
+        idempotencyKeyRef.current = createUuidV4()
+      }
       setGalleryFiles([])
       setLastAutoSavedAt(new Date())
       navigate('/admin/posts')
@@ -213,12 +269,15 @@ export default function AdminPostEditor() {
       alert(error.message || 'Failed to save post')
     } finally {
       setUploading(false)
+      submitInFlightRef.current = false
+      setSubmissionLocked(false)
     }
   }
 
-  const saveLabel = uploading || isSubmitting ? 'Saving...' : 'Save Changes'
+  const isSaving = uploading || isSubmitting || submissionLocked
+  const saveLabel = isSaving ? 'Saving...' : 'Save Changes'
   const autosaveText = (() => {
-    if (uploading || isSubmitting) return 'Saving content...'
+    if (isSaving) return 'Saving content...'
     if (isDirty) return 'Unsaved changes'
     if (!lastAutoSavedAt) return 'Ready'
     return `Autosaved ${lastAutoSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
@@ -253,7 +312,7 @@ export default function AdminPostEditor() {
               <FiEye className="h-4 w-4" aria-hidden="true" />
               Preview
             </button>
-            <button type="submit" form="post-form" disabled={isSubmitting || uploading} className="admin-button-primary">
+            <button type="submit" form="post-form" disabled={isSaving} className="admin-button-primary">
               <FiSave className="h-4 w-4" aria-hidden="true" />
               {saveLabel}
             </button>

@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS posts (
   images TEXT[],
   video_url TEXT,
   category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+  idempotency_key UUID,
   status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published')),
   is_featured BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now(),
@@ -78,6 +79,10 @@ CREATE TABLE IF NOT EXISTS faculty (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Ensure idempotency support exists on older installations.
+ALTER TABLE posts
+  ADD COLUMN IF NOT EXISTS idempotency_key UUID;
+
 -- ============================================
 -- 2. CREATE INDEXES
 -- ============================================
@@ -87,6 +92,9 @@ CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_featured ON posts(is_featured);
 CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_posts_idempotency_key_unique
+  ON posts(idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_testimonials_status ON testimonials(status);
 CREATE INDEX IF NOT EXISTS idx_testimonials_created ON testimonials(created_at DESC);

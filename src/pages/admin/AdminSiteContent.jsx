@@ -60,7 +60,7 @@ function paginate(list = [], page = 1, size = PAGE_SIZE) {
 }
 
 export default function AdminSiteContent() {
-  usePageMeta({ title: 'Site Content' })
+  usePageMeta({ title: 'Leadership, Faculty & Staff' })
 
   const [content, setContent] = useState({
     vision: '',
@@ -88,7 +88,7 @@ export default function AdminSiteContent() {
   const [buildingUploading, setBuildingUploading] = useState(false)
   const [buildingUploadProgress, setBuildingUploadProgress] = useState(0)
   const [formUploadingIdx, setFormUploadingIdx] = useState(null)
-  const [openSections, setOpenSections] = useState(() => new Set())
+  const [openSections, setOpenSections] = useState(() => new Set(['about']))
   function toggleSection(id) {
     setOpenSections((prev) => {
       const next = new Set(prev)
@@ -132,6 +132,13 @@ export default function AdminSiteContent() {
       const rememberedSection = localStorage.getItem('adminSiteContentLastSection') || ''
       const targetId = rememberedSection || (window.location.hash ? window.location.hash.replace('#', '') : '')
       if (targetId) {
+        if (targetId === 'faculty-staff') {
+          setOpenSections((prev) => {
+            const next = new Set(prev)
+            next.add('about')
+            return next
+          })
+        }
         setTimeout(() => {
           document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }, 100)
@@ -401,9 +408,9 @@ export default function AdminSiteContent() {
       </div>
 
       {/* -- ACCORDION HELPER ------------------------------------ */}
-      {[
+        {[
         { id: 'home',       label: 'Home',        desc: 'Campus highlights and key site info' },
-        { id: 'about',      label: 'About',       desc: 'Vision, mission, history, values, principal, faculty' },
+        { id: 'about',      label: 'About',       desc: 'Vision, mission, history, values, principal, leadership, faculty' },
         { id: 'admissions', label: 'Admissions',  desc: 'Steps, requirements, and downloadable forms' },
         { id: 'updates',    label: 'Updates',     desc: 'News posts and announcements' },
         { id: 'events',     label: 'Events',      desc: 'School events and activities' },
@@ -607,8 +614,8 @@ export default function AdminSiteContent() {
 
                   {/* Faculty & Staff sub-section */}
                   <div className="mt-2 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
-                    <p className="text-xs font-black uppercase tracking-wide text-slate-600">Faculty &amp; Staff</p>
-                    <p className="mt-0.5 text-xs text-slate-500">Names, roles, and photo URLs shown on the About page.</p>
+                    <p className="text-xs font-black uppercase tracking-wide text-slate-600">Leadership, Faculty &amp; Staff</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Names, roles, and photos shown on the About page.</p>
 
                     <form className="mt-4 space-y-3" onSubmit={handleSaveFaculty} ref={facultyRef} id="faculty-staff" onFocusCapture={() => rememberSection('faculty-staff')}>
                       <div className="grid gap-3 sm:grid-cols-2">

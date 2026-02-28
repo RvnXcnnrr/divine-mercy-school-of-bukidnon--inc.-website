@@ -40,7 +40,24 @@ export default function AdminPosts() {
   )
 
   const { data, isLoading, isFetching, refetch } = usePostsQuery(queryParams, { keepPreviousData: true })
-  const items = data?.items || []
+  const items = useMemo(() => {
+    const source = data?.items || []
+    const deduped = []
+    const seen = new Set()
+
+    for (const post of source) {
+      const key = String(post?.id || post?.slug || '')
+      if (!key) {
+        deduped.push(post)
+        continue
+      }
+      if (seen.has(key)) continue
+      seen.add(key)
+      deduped.push(post)
+    }
+
+    return deduped
+  }, [data?.items])
   const total = data?.count || 0
   const allVisibleSelected = items.length > 0 && items.every((post) => selectedIds.includes(post.id))
   const selectedCount = selectedIds.length

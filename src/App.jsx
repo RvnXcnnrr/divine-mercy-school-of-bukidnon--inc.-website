@@ -163,7 +163,7 @@ function App() {
                 <Route path="posts/new" element={<AdminPostEditor />} />
                 <Route path="posts/:postId" element={<AdminPostEditor />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />
-                <Route path="content" element={<Navigate to="/admin/site/homepage" replace />} />
+                <Route path="content" element={<Navigate to="/admin/site/about" replace />} />
                 <Route path="site/:section" element={<AdminSiteManagement />} />
                 <Route path="site" element={<Navigate to="/admin/site/homepage" replace />} />
                 <Route path="settings" element={<AdminSettings />} />

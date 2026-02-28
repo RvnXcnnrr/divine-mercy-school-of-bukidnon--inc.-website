@@ -6,6 +6,16 @@ import { subscribeEmail } from '../services/subscriberService.js'
 import { fetchSiteContent } from '../services/siteInfoService.js'
 import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
+const LOCKED_DEVELOPER_CREDIT = 'Developed by Javy M. Rodillon'
+
+function withLockedDeveloperCredit(settings = {}) {
+  return {
+    ...settings,
+    showDeveloperCredit: true,
+    developerCredit: LOCKED_DEVELOPER_CREDIT,
+  }
+}
+
 export default function Footer() {
   const [logoOk, setLogoOk] = useState(true)
   const [email, setEmail] = useState('')
@@ -23,7 +33,7 @@ export default function Footer() {
     navLinks: [],
     copyrightText: 'Divine Mercy School of Bukidnon, Inc. All rights reserved.',
     showDeveloperCredit: true,
-    developerCredit: 'Developed by Javy M. Rodillon',
+    developerCredit: LOCKED_DEVELOPER_CREDIT,
   })
   const [branding, setBranding] = useState({
     schoolName: 'Divine Mercy School of Bukidnon, Inc.',
@@ -37,7 +47,7 @@ export default function Footer() {
         const { data } = await fetchSiteContent()
         if (mounted && data) {
           const settings = readPublishedSiteManagementFromContent(data)
-          setFooterSettings(settings.footer || {})
+          setFooterSettings(withLockedDeveloperCredit(settings.footer || {}))
           setBranding({
             schoolName: settings.globalSettings?.schoolName || 'Divine Mercy School of Bukidnon, Inc.',
             logoUrl: settings.globalSettings?.logoUrl || '/logo.png',
@@ -250,9 +260,7 @@ export default function Footer() {
       <div className="border-t border-slate-200 bg-white/60 py-3">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 text-[11px] text-slate-400">
           <span>{`© ${new Date().getFullYear()} ${footerSettings.copyrightText || 'Divine Mercy School of Bukidnon, Inc. All rights reserved.'}`}</span>
-          {footerSettings.showDeveloperCredit ? (
-            <span className="font-semibold text-brand-goldText">{footerSettings.developerCredit || 'Developed by Javy M. Rodillon'}</span>
-          ) : null}
+          <span className="font-semibold text-brand-goldText">{footerSettings.developerCredit || LOCKED_DEVELOPER_CREDIT}</span>
         </div>
       </div>
     </footer>

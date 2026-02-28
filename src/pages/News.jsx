@@ -5,6 +5,41 @@ import NewsCard from '../components/NewsCard.jsx'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
 import { useCategoriesQuery } from '../hooks/useCategoriesQuery.js'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function isUuidLike(value) {
+  return UUID_PATTERN.test(String(value || '').trim())
+}
+
+function normalizeSlug(value = '') {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+}
+
+function humanizeSlug(value = '') {
+  const cleaned = String(value || '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
+  if (!cleaned) return ''
+  return cleaned
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+function safeCategoryName(item) {
+  const direct = String(item?.category_name || item?.category || '').trim()
+  if (direct && !isUuidLike(direct)) return direct
+
+  const slug = String(item?.category_slug || '').trim()
+  if (slug && !isUuidLike(slug)) return humanizeSlug(slug)
+
+  return 'Uncategorized'
+}
+
 export default function News() {
   usePageMeta({
     title: 'News & Events',
@@ -49,36 +84,33 @@ export default function News() {
 
   const tagOptions = useMemo(() => {
     const seen = new Set()
-    const slugify = (val) =>
-      (val || '')
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
+    const options = [{ id: 'All', name: 'All' }]
 
-    const derived = items
-      .map((item) => {
-        const slug = item.category_slug || item.category_id || slugify(item.category) || 'uncategorized'
-        const name = item.category || item.category_slug || item.category_id || 'Uncategorized'
-        return { id: slug, name }
-      })
-      .filter((option) => {
-        if (!option.id) return false
-        if (seen.has(option.id)) return false
-        seen.add(option.id)
-        return true
-      })
+    function pushOption(rawId, rawName) {
+      const name = String(rawName || '').trim()
+      if (!name) return
+      const normalizedId = String(rawId || '').trim()
+      const id = normalizedId || normalizeSlug(name)
+      if (!id) return
+      const key = id.toLowerCase()
+      if (key === 'all' || seen.has(key)) return
+      seen.add(key)
+      options.push({ id, name })
+    }
 
-    categories.forEach((c) => {
-      const id = c.slug || c.id
-      if (id && !seen.has(id)) {
-        seen.add(id)
-        derived.push({ id, name: c.name })
-      }
+    categories.forEach((categoryItem) => {
+      const id = String(categoryItem.slug || categoryItem.id || '').trim()
+      pushOption(id, categoryItem.name || humanizeSlug(id))
     })
 
-    return [{ id: 'All', name: 'All' }, ...derived]
+    items.forEach((item) => {
+      const name = safeCategoryName(item)
+      const slug = String(item.category_slug || '').trim()
+      const id = slug || normalizeSlug(name)
+      pushOption(id, name)
+    })
+
+    return options
   }, [categories, items])
 
   const featuredItem = upcomingItems[0]

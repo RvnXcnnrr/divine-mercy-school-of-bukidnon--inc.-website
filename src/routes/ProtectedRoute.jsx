@@ -2,13 +2,13 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../providers/AppProviders.jsx'
 
 export default function ProtectedRoute({ roles = [] }) {
-  const { user, role, loading } = useAuth()
+  const { user, role, isAuthReady } = useAuth()
   const location = useLocation()
 
-  if (loading) {
+  if (!isAuthReady) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-slate-600">Checking access…</p>
+        <p className="text-sm text-slate-600">Checking access...</p>
       </div>
     )
   }

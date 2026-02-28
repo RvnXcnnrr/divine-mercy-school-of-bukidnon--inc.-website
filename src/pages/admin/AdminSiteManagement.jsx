@@ -15,6 +15,7 @@ import {
   restoreSiteManagementVersion,
   saveSiteManagementDraft,
 } from '../../services/siteManagementService.js'
+import { deleteFaculty, fetchFaculty, upsertFaculty } from '../../services/siteInfoService.js'
 import { uploadFileToSupabase, uploadImageToSupabase } from '../../lib/supabaseStorage.js'
 import { createId } from '../../data/siteManagementDefaults.js'
 
@@ -27,7 +28,6 @@ const SECTIONS = [
   { key: 'gallery', label: 'Gallery Settings' },
   { key: 'contact', label: 'Contact Page' },
   { key: 'footer', label: 'Footer' },
-  { key: 'global', label: 'Global Settings' },
 ]
 
 const SECTION_LOOKUP = Object.fromEntries(SECTIONS.map((entry) => [entry.key, entry.label]))
@@ -39,6 +39,29 @@ const HOME_SECTION_TYPE_OPTIONS = [
   { value: 'Feature Cards', label: 'Feature Cards' },
   { value: 'Announcement Banner', label: 'Announcement Banner' },
 ]
+const EMPTY_FACULTY_FORM = { id: null, name: '', role: '', photo: '', sort_order: null }
+const LOCKED_DEVELOPER_CREDIT = 'Developed by Javy M. Rodillon'
+
+function sortFacultyList(list = []) {
+  return [...list].sort((a, b) => {
+    const orderA = a.sort_order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.sort_order ?? Number.MAX_SAFE_INTEGER
+    if (orderA !== orderB) return orderA - orderB
+    return (a.name || '').localeCompare(b.name || '')
+  })
+}
+
+function applyLockedAdminFields(payload) {
+  if (!payload) return payload
+  return {
+    ...payload,
+    footer: {
+      ...(payload.footer || {}),
+      showDeveloperCredit: true,
+      developerCredit: LOCKED_DEVELOPER_CREDIT,
+    },
+  }
+}
 
 function asDateLabel(value) {
   if (!value) return 'N/A'
@@ -136,6 +159,10 @@ export default function AdminSiteManagement() {
   const [confirmPublish, setConfirmPublish] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
   const [heroSaving, setHeroSaving] = useState(false)
+  const [faculty, setFaculty] = useState([])
+  const [facultyLoading, setFacultyLoading] = useState(true)
+  const [facultySaving, setFacultySaving] = useState(false)
+  const [facultyForm, setFacultyForm] = useState(EMPTY_FACULTY_FORM)
 
   useEffect(() => {
     let alive = true
@@ -143,8 +170,8 @@ export default function AdminSiteManagement() {
       try {
         const { data } = await fetchSiteManagement()
         if (!alive) return
-        setDraft(data.draft)
-        setPublished(data.published)
+        setDraft(applyLockedAdminFields(data.draft))
+        setPublished(applyLockedAdminFields(data.published))
         setMeta(data.meta)
         setHistory(data.history || [])
       } catch (loadError) {
@@ -152,6 +179,25 @@ export default function AdminSiteManagement() {
         setError(loadError.message || 'Failed to load site management data.')
       } finally {
         if (alive) setLoading(false)
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        const { data } = await fetchFaculty()
+        if (!alive) return
+        setFaculty(sortFacultyList(data || []))
+      } catch (loadError) {
+        if (!alive) return
+        setFailure(loadError.message || 'Failed to load leadership/faculty list.')
+      } finally {
+        if (alive) setFacultyLoading(false)
       }
     })()
     return () => {
@@ -171,7 +217,7 @@ export default function AdminSiteManagement() {
   )
 
   function patchDraft(updater) {
-    setDraft((prev) => updater(prev))
+    setDraft((prev) => applyLockedAdminFields(updater(prev)))
     setDirty(true)
   }
 
@@ -220,9 +266,10 @@ export default function AdminSiteManagement() {
     setSaving(true)
     setError('')
     try {
-      const { data } = await saveSiteManagementDraft(draft)
-      setDraft(data.draft)
-      setPublished(data.published)
+      const lockedDraft = applyLockedAdminFields(draft)
+      const { data } = await saveSiteManagementDraft(lockedDraft)
+      setDraft(applyLockedAdminFields(data.draft))
+      setPublished(applyLockedAdminFields(data.published))
       setMeta(data.meta)
       setHistory(data.history || [])
       setDirty(false)
@@ -240,9 +287,10 @@ export default function AdminSiteManagement() {
     setPublishing(true)
     setError('')
     try {
-      const { data } = await publishSiteManagement(draft, publishNote)
-      setDraft(data.draft)
-      setPublished(data.published)
+      const lockedDraft = applyLockedAdminFields(draft)
+      const { data } = await publishSiteManagement(lockedDraft, publishNote)
+      setDraft(applyLockedAdminFields(data.draft))
+      setPublished(applyLockedAdminFields(data.published))
       setMeta(data.meta)
       setHistory(data.history || [])
       setPublishNote('')
@@ -261,9 +309,10 @@ export default function AdminSiteManagement() {
     setHeroSaving(true)
     setError('')
     try {
-      const { data } = await publishSiteManagement(draft, 'Hero updated')
-      setDraft(data.draft)
-      setPublished(data.published)
+      const lockedDraft = applyLockedAdminFields(draft)
+      const { data } = await publishSiteManagement(lockedDraft, 'Hero updated')
+      setDraft(applyLockedAdminFields(data.draft))
+      setPublished(applyLockedAdminFields(data.published))
       setMeta(data.meta)
       setHistory(data.history || [])
       setDirty(false)
@@ -281,8 +330,8 @@ export default function AdminSiteManagement() {
     setError('')
     try {
       const { data } = await resetSiteManagementDraftToPublished()
-      setDraft(data.draft)
-      setPublished(data.published)
+      setDraft(applyLockedAdminFields(data.draft))
+      setPublished(applyLockedAdminFields(data.published))
       setMeta(data.meta)
       setHistory(data.history || [])
       setDirty(false)
@@ -300,8 +349,8 @@ export default function AdminSiteManagement() {
     setError('')
     try {
       const { data } = await restoreSiteManagementVersion(version)
-      setDraft(data.draft)
-      setPublished(data.published)
+      setDraft(applyLockedAdminFields(data.draft))
+      setPublished(applyLockedAdminFields(data.published))
       setMeta(data.meta)
       setHistory(data.history || [])
       setDirty(true)
@@ -350,14 +399,81 @@ export default function AdminSiteManagement() {
     patchDraft((prev) => ({ ...prev, footer: updater(prev.footer) }))
   }
 
-  function updateGlobal(updater) {
-    patchDraft((prev) => ({ ...prev, globalSettings: updater(prev.globalSettings) }))
-  }
-
   function duplicateIn(list, index, prefix) {
     const next = [...list]
     next.splice(index + 1, 0, duplicateSectionItem(list[index], prefix))
     return next
+  }
+
+  function resetFacultyForm() {
+    setFacultyForm(EMPTY_FACULTY_FORM)
+  }
+
+  function startEditFaculty(member) {
+    setFacultyForm({
+      id: member.id,
+      name: member.name || '',
+      role: member.role || '',
+      photo: member.photo || '',
+      sort_order: Number.isFinite(member.sort_order) ? member.sort_order : member.sort_order ?? null,
+    })
+  }
+
+  async function uploadFacultyPhoto(file) {
+    if (!file) return
+    setUploading(true)
+    setError('')
+    try {
+      const result = await uploadImageToSupabase(file, { bucket: 'faculty' })
+      setFacultyForm((prev) => ({ ...prev, photo: result.publicUrl }))
+      setSuccess('Member photo uploaded.')
+    } catch (uploadError) {
+      setError(uploadError.message || 'Member photo upload failed.')
+      setFailure(uploadError.message || 'Member photo upload failed.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function saveFacultyMember() {
+    if (!facultyForm.name?.trim() || !facultyForm.role?.trim()) {
+      setFailure('Name and role are required.')
+      return
+    }
+    setFacultySaving(true)
+    setError('')
+    try {
+      const { data } = await upsertFaculty({
+        ...facultyForm,
+        name: facultyForm.name,
+        role: facultyForm.role,
+      })
+      setFaculty((prev) => sortFacultyList([data, ...prev.filter((item) => item.id !== data.id)]))
+      resetFacultyForm()
+      setSuccess('Leadership/faculty member saved.')
+    } catch (saveError) {
+      setError(saveError.message || 'Failed to save leadership/faculty member.')
+      setFailure(saveError.message || 'Failed to save leadership/faculty member.')
+    } finally {
+      setFacultySaving(false)
+    }
+  }
+
+  async function removeFacultyMember(id) {
+    if (!window.confirm('Delete this member?')) return
+    setFacultySaving(true)
+    setError('')
+    try {
+      await deleteFaculty(id)
+      setFaculty((prev) => prev.filter((item) => item.id !== id))
+      if (facultyForm.id === id) resetFacultyForm()
+      setSuccess('Member deleted.')
+    } catch (deleteError) {
+      setError(deleteError.message || 'Failed to delete member.')
+      setFailure(deleteError.message || 'Failed to delete member.')
+    } finally {
+      setFacultySaving(false)
+    }
   }
 
   return (
@@ -545,50 +661,6 @@ export default function AdminSiteManagement() {
             )}
           />
 
-          <article className="admin-card p-5">
-            <h3 className="text-base font-semibold text-slate-900">News Settings Manager</h3>
-            <p className="mt-1 text-sm text-slate-500">Configure featured news visibility, layout style, and pagination controls.</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <ToggleField
-                label="Show featured"
-                checked={draft.homepage.featuredNews.showFeatured}
-                onChange={(value) => updateHome((home) => ({ ...home, featuredNews: { ...home.featuredNews, showFeatured: value } }))}
-              />
-              <ToggleField
-                label="Enable category filters"
-                checked={draft.homepage.featuredNews.enableCategoryFilters}
-                onChange={(value) => updateHome((home) => ({ ...home, featuredNews: { ...home.featuredNews, enableCategoryFilters: value } }))}
-              />
-              <InputField
-                label="Posts per page"
-                type="number"
-                value={String(draft.homepage.featuredNews.postsPerPage || 6)}
-                onChange={(value) =>
-                  updateHome((home) => ({ ...home, featuredNews: { ...home.featuredNews, postsPerPage: Number(value) || 6 } }))
-                }
-              />
-              <InputField
-                label="Pagination size"
-                type="number"
-                value={String(draft.homepage.featuredNews.paginationSize || 6)}
-                onChange={(value) =>
-                  updateHome((home) => ({ ...home, featuredNews: { ...home.featuredNews, paginationSize: Number(value) || 6 } }))
-                }
-              />
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Layout style</span>
-                <select
-                  value={draft.homepage.featuredNews.layoutStyle}
-                  onChange={(event) => updateHome((home) => ({ ...home, featuredNews: { ...home.featuredNews, layoutStyle: event.target.value } }))}
-                  className="admin-input mt-1"
-                >
-                  <option value="cards">Cards</option>
-                  <option value="list">List</option>
-                  <option value="magazine">Magazine</option>
-                </select>
-              </label>
-            </div>
-          </article>
         </div>
       ) : null}
 
@@ -619,6 +691,74 @@ export default function AdminSiteManagement() {
               </div>
             )}
           />
+
+          <article className="admin-card p-5 space-y-3">
+            <h3 className="text-base font-semibold text-slate-900">Leadership, Faculty & Staff</h3>
+            <p className="text-sm text-slate-500">Manage the members shown on the public About page.</p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <InputField label="Name" value={facultyForm.name} onChange={(value) => setFacultyForm((prev) => ({ ...prev, name: value }))} />
+              <InputField label="Role / Department" value={facultyForm.role} onChange={(value) => setFacultyForm((prev) => ({ ...prev, role: value }))} />
+              <InputField
+                label="Order (optional)"
+                type="number"
+                value={facultyForm.sort_order == null ? '' : String(facultyForm.sort_order)}
+                onChange={(value) => setFacultyForm((prev) => ({ ...prev, sort_order: value === '' ? null : Number(value) }))}
+              />
+              <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Photo</p>
+                <p className="mt-1 text-sm text-slate-600">{facultyForm.photo ? 'Uploaded' : 'No photo uploaded yet'}</p>
+              </div>
+            </div>
+
+            {uploadButton({ label: 'Upload member photo', onPick: uploadFacultyPhoto })}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={saveFacultyMember} disabled={facultySaving || uploading} className="admin-button-primary">
+                <FiSave className="h-4 w-4" aria-hidden="true" />
+                {facultySaving ? 'Saving...' : facultyForm.id ? 'Update member' : 'Add member'}
+              </button>
+              {facultyForm.id ? (
+                <button type="button" onClick={resetFacultyForm} className="admin-button-secondary" disabled={facultySaving || uploading}>
+                  Cancel edit
+                </button>
+              ) : null}
+            </div>
+
+            {facultyLoading ? (
+              <p className="text-sm text-slate-500">Loading leadership/faculty members...</p>
+            ) : faculty.length ? (
+              <div className="space-y-2">
+                {faculty.map((member) => (
+                  <div key={member.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="flex items-center gap-3">
+                      {member.photo ? (
+                        <img src={member.photo} alt={member.name || 'Member'} className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200" loading="lazy" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
+                          {(member.name || '?').charAt(0)}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{member.name || 'Untitled'}</p>
+                        <p className="text-xs text-slate-600">{member.role || 'No role set'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => startEditFaculty(member)} className="admin-button-secondary" disabled={facultySaving || uploading}>
+                        Edit
+                      </button>
+                      <button type="button" onClick={() => removeFacultyMember(member.id)} className="admin-button-danger" disabled={facultySaving || uploading}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No members yet. Add your first leadership/faculty record above.</p>
+            )}
+          </article>
         </div>
       ) : null}
 
@@ -637,7 +777,6 @@ export default function AdminSiteManagement() {
                 <InputField label="Program key" value={item.key} onChange={(value) => updateItem({ key: value })} />
                 <InputField label="Title" value={item.title} onChange={(value) => updateItem({ title: value })} />
                 <TextAreaField label="Description" rows={3} value={item.description} onChange={(value) => updateItem({ description: value })} />
-                <InputField label="Image URL" value={item.image} onChange={(value) => updateItem({ image: value })} />
                 <ToggleField label="Visible" checked={item.isVisible !== false} onChange={(value) => updateItem({ isVisible: value })} />
                 {uploadButton({ label: 'Upload tab image', onPick: (file) => uploadImage(file, (url) => updateItem({ image: url })) })}
               </div>
@@ -657,6 +796,33 @@ export default function AdminSiteManagement() {
                 <InputField label="Title" value={item.title} onChange={(value) => updateItem({ title: value })} />
                 <TextAreaField label="Description" rows={3} value={item.description} onChange={(value) => updateItem({ description: value })} />
                 <ToggleField label="Visible" checked={item.isVisible !== false} onChange={(value) => updateItem({ isVisible: value })} />
+              </div>
+            )}
+          />
+
+          <SortableCardsEditor
+            title="Facilities, Labs and Learning Spaces"
+            description="Manage facility cards shown on the Academics page."
+            items={draft.academicsPage.facilitySections}
+            addLabel="Add facility"
+            onAdd={() =>
+              updateAcademics((page) => ({
+                ...page,
+                facilitySections: [...page.facilitySections, { id: createId('facility'), title: '', description: '', image: '', isVisible: true }],
+              }))
+            }
+            onChange={(items) => updateAcademics((page) => ({ ...page, facilitySections: items }))}
+            onDuplicate={(_, index) => updateAcademics((page) => ({ ...page, facilitySections: duplicateIn(page.facilitySections, index, 'facility') }))}
+            renderBody={({ item, updateItem }) => (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <InputField label="Title" value={item.title} onChange={(value) => updateItem({ title: value })} />
+                <TextAreaField label="Description" rows={3} value={item.description} onChange={(value) => updateItem({ description: value })} />
+                <ToggleField label="Visible" checked={item.isVisible !== false} onChange={(value) => updateItem({ isVisible: value })} />
+                <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Facility photo</p>
+                  <p className="mt-1 text-sm text-slate-600">{item.image ? 'Uploaded' : 'No photo uploaded yet'}</p>
+                </div>
+                {uploadButton({ label: 'Upload facility photo', onPick: (file) => uploadImage(file, (url) => updateItem({ image: url })) })}
               </div>
             )}
           />
@@ -709,7 +875,6 @@ export default function AdminSiteManagement() {
             renderBody={({ item, updateItem }) => (
               <div className="grid gap-3 sm:grid-cols-2">
                 <InputField label="Label" value={item.label} onChange={(value) => updateItem({ label: value })} />
-                <InputField label="File URL" value={item.url} onChange={(value) => updateItem({ url: value })} />
                 <ToggleField label="Visible" checked={item.isVisible !== false} onChange={(value) => updateItem({ isVisible: value })} />
                 {uploadButton({
                   label: 'Upload file',
@@ -777,8 +942,6 @@ export default function AdminSiteManagement() {
             <ToggleField label="Show featured event" checked={draft.eventsSettings.showFeaturedEvent} onChange={(value) => updateEvents((page) => ({ ...page, showFeaturedEvent: value }))} />
             <ToggleField label="Enable countdown" checked={draft.eventsSettings.enableCountdown} onChange={(value) => updateEvents((page) => ({ ...page, enableCountdown: value }))} />
             <ToggleField label="Show Add to Calendar" checked={draft.eventsSettings.showAddToCalendar} onChange={(value) => updateEvents((page) => ({ ...page, showAddToCalendar: value }))} />
-            <InputField label="Featured event ID" value={draft.eventsSettings.featuredEventId} onChange={(value) => updateEvents((page) => ({ ...page, featuredEventId: value }))} />
-            <InputField label="Banner image URL" value={draft.eventsSettings.eventBannerImage} onChange={(value) => updateEvents((page) => ({ ...page, eventBannerImage: value }))} />
             {uploadButton({ label: 'Upload event banner', onPick: (file) => uploadImage(file, (url) => updateEvents((page) => ({ ...page, eventBannerImage: url }))) })}
           </div>
         </article>
@@ -825,9 +988,7 @@ export default function AdminSiteManagement() {
             <InputField label="Phone" value={draft.contactPage.phone} onChange={(value) => updateContact((page) => ({ ...page, phone: value }))} />
             <InputField label="Email" type="email" value={draft.contactPage.email} onChange={(value) => updateContact((page) => ({ ...page, email: value }))} />
             <InputField label="Office hours" value={draft.contactPage.officeHours} onChange={(value) => updateContact((page) => ({ ...page, officeHours: value }))} />
-            <TextAreaField label="Map embed link" rows={3} value={draft.contactPage.mapEmbedUrl} onChange={(value) => updateContact((page) => ({ ...page, mapEmbedUrl: value }))} />
             <InputField label="Messenger link" value={draft.contactPage.messengerLink} onChange={(value) => updateContact((page) => ({ ...page, messengerLink: value }))} />
-            <InputField label="Enrollment form link" value={draft.contactPage.enrollmentFormLink} onChange={(value) => updateContact((page) => ({ ...page, enrollmentFormLink: value }))} />
             <InputField label="Contact form recipient email" type="email" value={draft.contactPage.recipientEmail} onChange={(value) => updateContact((page) => ({ ...page, recipientEmail: value }))} />
           </div>
         </article>
@@ -838,29 +999,8 @@ export default function AdminSiteManagement() {
           <h2 className="text-base font-semibold text-slate-900">Footer Manager</h2>
           <TextAreaField label="Footer description" rows={4} value={draft.footer.description} onChange={(value) => updateFooter((page) => ({ ...page, description: value }))} />
           <InputField label="Copyright text" value={draft.footer.copyrightText} onChange={(value) => updateFooter((page) => ({ ...page, copyrightText: value }))} />
-          <ToggleField label="Show developer credit" checked={draft.footer.showDeveloperCredit} onChange={(value) => updateFooter((page) => ({ ...page, showDeveloperCredit: value }))} />
-          <InputField label="Developer credit" value={draft.footer.developerCredit} onChange={(value) => updateFooter((page) => ({ ...page, developerCredit: value }))} />
-        </article>
-      ) : null}
-
-      {activeSection === 'global' ? (
-        <article className="admin-card p-5 space-y-3">
-          <h2 className="text-base font-semibold text-slate-900">Global Settings Panel</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <InputField label="School name" value={draft.globalSettings.schoolName} onChange={(value) => updateGlobal((page) => ({ ...page, schoolName: value }))} />
-            <InputField label="Logo URL" value={draft.globalSettings.logoUrl} onChange={(value) => updateGlobal((page) => ({ ...page, logoUrl: value }))} />
-            <InputField label="Favicon URL" value={draft.globalSettings.faviconUrl} onChange={(value) => updateGlobal((page) => ({ ...page, faviconUrl: value }))} />
-            <InputField label="Primary color" type="color" value={draft.globalSettings.primaryColor} onChange={(value) => updateGlobal((page) => ({ ...page, primaryColor: value }))} />
-            <InputField label="Secondary color" type="color" value={draft.globalSettings.secondaryColor} onChange={(value) => updateGlobal((page) => ({ ...page, secondaryColor: value }))} />
-            <ToggleField label="Enable dark mode" checked={draft.globalSettings.enableDarkMode} onChange={(value) => updateGlobal((page) => ({ ...page, enableDarkMode: value }))} />
-            <ToggleField label="Enable animations" checked={draft.globalSettings.enableAnimations} onChange={(value) => updateGlobal((page) => ({ ...page, enableAnimations: value }))} />
-            <ToggleField label="Maintenance mode" checked={draft.globalSettings.maintenanceMode.enabled} onChange={(value) => updateGlobal((page) => ({ ...page, maintenanceMode: { ...page.maintenanceMode, enabled: value } }))} />
-            <TextAreaField label="Maintenance message" rows={3} value={draft.globalSettings.maintenanceMode.message} onChange={(value) => updateGlobal((page) => ({ ...page, maintenanceMode: { ...page.maintenanceMode, message: value } }))} />
-            <ToggleField label="Announcement banner" checked={draft.globalSettings.announcement.isVisible} onChange={(value) => updateGlobal((page) => ({ ...page, announcement: { ...page.announcement, isVisible: value } }))} />
-            <InputField label="Announcement text" value={draft.globalSettings.announcement.text} onChange={(value) => updateGlobal((page) => ({ ...page, announcement: { ...page.announcement, text: value } }))} />
-            <InputField label="Announcement link" value={draft.globalSettings.announcement.link} onChange={(value) => updateGlobal((page) => ({ ...page, announcement: { ...page.announcement, link: value } }))} />
-            {uploadButton({ label: 'Upload logo', onPick: (file) => uploadImage(file, (url) => updateGlobal((page) => ({ ...page, logoUrl: url }))) })}
-            {uploadButton({ label: 'Upload favicon', onPick: (file) => uploadImage(file, (url) => updateGlobal((page) => ({ ...page, faviconUrl: url }))) })}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+            Developer credit is locked and always shown on the public footer.
           </div>
         </article>
       ) : null}

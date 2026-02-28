@@ -8,7 +8,6 @@ import {
   FiChevronRight,
   FiHeart,
   FiImage,
-  FiShield,
   FiUsers,
 } from 'react-icons/fi'
 import { FaBus, FaHandHoldingHeart, FaMapLocationDot, FaShieldHeart } from 'react-icons/fa6'
@@ -19,21 +18,11 @@ import Testimonial from '../components/Testimonial.jsx'
 import NewsCard from '../components/NewsCard.jsx'
 import usePageMeta from '../hooks/usePageMeta.js'
 import useFloatParallax from '../hooks/useFloatParallax.js'
-import { boardMembers, highlights, newsItems, partners, testimonials, transportProgram } from '../data/siteContent.js'
-import { fetchFaculty, cacheFaculty, readFacultyCache, fetchSiteContent } from '../services/siteInfoService.js'
-import BoardMemberCard from '../components/BoardMemberCard.jsx'
+import { highlights, newsItems, testimonials, transportProgram } from '../data/siteContent.js'
+import { fetchSiteContent } from '../services/siteInfoService.js'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
 import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 import { fetchApprovedTestimonials, submitTestimonial } from '../services/testimonialService.js'
-
-function sortFaculty(list = []) {
-  return [...list].sort((a, b) => {
-    const orderA = a.sort_order ?? Number.MAX_SAFE_INTEGER
-    const orderB = b.sort_order ?? Number.MAX_SAFE_INTEGER
-    if (orderA !== orderB) return orderA - orderB
-    return (a.name || '').localeCompare(b.name || '')
-  })
-}
 
 function HighlightCard({ item, icon }) {
   const { ref, style } = useFloatParallax({ factor: 0.12, max: 12 })
@@ -157,29 +146,9 @@ export default function Home() {
   const testimonialTitle = siteSettings?.homepage?.testimonials?.title || 'Parent and guardian testimonials'
   const testimonialSubtitle = siteSettings?.homepage?.testimonials?.subtitle || 'Feedback from families in our school community.'
 
-  const [faculty, setFaculty] = useState(() => sortFaculty(readFacultyCache() || boardMembers))
   const [testimonialList, setTestimonialList] = useState(testimonials)
   const [testimonialForm, setTestimonialForm] = useState({ name: '', role: '', quote: '' })
   const [testimonialStatus, setTestimonialStatus] = useState('idle')
-
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const { data } = await fetchFaculty()
-        if (!mounted || !data) return
-        const sorted = sortFaculty(data)
-        setFaculty(sorted)
-        cacheFaculty(sorted)
-      } catch (err) {
-        console.warn('[Home] using cached board list', err)
-      }
-    })()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -514,55 +483,6 @@ export default function Home() {
           </div>
           ) : null}
 
-          <div data-reveal>
-            <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-              <div className="surface-card p-6">
-                <h3 className="page-h3">Leadership team</h3>
-                <p className="page-muted mt-2">Guiding our mission of faith, discipline, and service.</p>
-                {faculty.length ? (
-                  <div className="mt-5 grid gap-4">
-                    {faculty.slice(0, 3).map((member) => (
-                      <BoardMemberCard key={member.id || member.name} member={member} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-5 text-sm text-slate-600">No faculty profiles yet. Add members from the admin dashboard.</p>
-                )}
-              </div>
-
-              <div className="surface-card p-6">
-                <h3 className="page-h3">Partners and community</h3>
-                <p className="page-muted mt-2">Organizations and families that support our learners.</p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {partners.length ? (
-                    partners.map((partner) => (
-                      <span
-                        key={partner.name}
-                        className="inline-flex flex-col rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-brand-navy"
-                      >
-                        {partner.name}
-                        <span className="text-[11px] font-normal text-slate-500">{partner.note}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-600">Community partner details will appear here.</p>
-                  )}
-                </div>
-
-                <div className="section-separator my-6" />
-
-                <div className="rounded-xl bg-red-50 p-4">
-                  <p className="inline-flex items-center gap-2 text-sm font-bold text-brand-goldText">
-                    <FiShield className="h-4 w-4" aria-hidden="true" />
-                    Safe and supportive campus environment
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Faith-based teaching, structured discipline, and practical support for every student journey.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

@@ -1,5 +1,32 @@
 import { FiArrowRight, FiCalendar, FiClock, FiMapPin, FiTag, FiUser } from 'react-icons/fi'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function isUuidLike(value) {
+  return UUID_PATTERN.test(String(value || '').trim())
+}
+
+function humanizeSlug(value = '') {
+  const cleaned = String(value || '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
+  if (!cleaned) return ''
+  return cleaned
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+function resolveCategoryLabel(item) {
+  const direct = String(item?.category_name || item?.category || '').trim()
+  if (direct && !isUuidLike(direct)) return direct
+
+  const slug = String(item?.category_slug || '').trim()
+  if (slug && !isUuidLike(slug)) return humanizeSlug(slug)
+
+  return 'Uncategorized'
+}
+
 function formatDate(item) {
   const candidate = item?.date || item?.event_date || item?.created_at || item?.updated_at
   if (!candidate) return null
@@ -18,7 +45,7 @@ function estimateReadTime(item) {
 }
 
 export default function NewsCard({ item, featured = false }) {
-  const categoryLabel = item.category || item.category_slug || item.category_id || 'Uncategorized'
+  const categoryLabel = resolveCategoryLabel(item)
   const dateLabel = formatDate(item)
   const image = item.featured_image_url || (item.gallery_images || item.images || [])[0]
   const hasImage = Boolean(image)

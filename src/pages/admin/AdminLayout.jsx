@@ -1,11 +1,10 @@
-import { createElement, useEffect, useMemo, useRef, useState } from 'react'
+import { createElement, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   FiBook,
   FiBookOpen,
   FiCalendar,
   FiClipboard,
-  FiGlobe,
   FiChevronLeft,
   FiChevronRight,
   FiChevronDown,
@@ -58,7 +57,6 @@ const NAV_SECTIONS = [
       { to: '/admin/site/gallery', label: 'Gallery Settings', icon: FiImage },
       { to: '/admin/site/contact', label: 'Contact Page', icon: FiPhoneCall },
       { to: '/admin/site/footer', label: 'Footer', icon: FiMonitor },
-      { to: '/admin/site/global', label: 'Global Settings', icon: FiGlobe },
     ],
   },
 ]
@@ -69,7 +67,6 @@ const PAGE_TITLES = {
   '/admin/posts/new': 'New Post',
   '/admin/testimonials': 'Testimonials',
   '/admin/settings': 'Subscribers',
-  '/admin/content': 'Site Content',
   '/admin/site': 'Site Management',
 }
 
@@ -82,7 +79,6 @@ const SITE_PAGE_TITLES = {
   gallery: 'Gallery Settings',
   contact: 'Contact Page Manager',
   footer: 'Footer Manager',
-  global: 'Global Settings',
 }
 
 function initialSidebarCollapsed() {
@@ -108,7 +104,6 @@ export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(initialSidebarCollapsed)
   const [openGroups, setOpenGroups] = useState(initialGroupState)
-  const timerRef = useRef(null)
 
   const pageTitle = useMemo(() => {
     if (pathname.startsWith('/admin/posts/') && pathname !== '/admin/posts/new') return 'Edit Post'
@@ -118,27 +113,6 @@ export default function AdminLayout() {
     }
     return PAGE_TITLES[pathname] || 'Admin Panel'
   }, [pathname])
-
-  useEffect(() => {
-    const INACTIVITY_LIMIT = 5 * 60 * 1000
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
-
-    const resetTimer = () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(() => {
-        setShowConfirm(false)
-        signOut()
-      }, INACTIVITY_LIMIT)
-    }
-
-    resetTimer()
-    events.forEach((eventName) => window.addEventListener(eventName, resetTimer, { passive: true }))
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      events.forEach((eventName) => window.removeEventListener(eventName, resetTimer))
-    }
-  }, [signOut])
 
   useEffect(() => {
     document.documentElement.classList.remove('dark')
