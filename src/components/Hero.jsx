@@ -145,7 +145,7 @@ export default function Hero({ settings = null }) {
         </div>
 
         <div
-          data-reveal
+            data-reveal
             className="relative"
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect()
@@ -179,6 +179,19 @@ export default function Hero({ settings = null }) {
             </div>
           </div>
 
+          {statCards.length ? (
+            <div className="mt-4 grid gap-3 sm:hidden">
+              {statCards.map((card, index) => (
+                <FloatingStat
+                  key={`${card?.label || 'stat'}-${index}`}
+                  card={card}
+                  animated={animatedCounters}
+                  className="rounded-2xl border border-red-100 bg-white/95 px-4 py-3 shadow-md"
+                />
+              ))}
+            </div>
+          ) : null}
+
           {statCards[0] ? (
             <FloatingStat
               card={statCards[0]}
@@ -191,7 +204,7 @@ export default function Hero({ settings = null }) {
             <FloatingStat
               card={statCards[1]}
               animated={animatedCounters}
-              className="hero-float hero-float--2 absolute -right-4 top-20 rounded-2xl border border-red-100 bg-white/95 px-4 py-3 shadow-md"
+              className="hero-float hero-float--2 absolute -right-4 top-20 hidden rounded-2xl border border-red-100 bg-white/95 px-4 py-3 shadow-md sm:block"
               style={{ transform: `translate3d(${effectiveMouse.x * 16}px, ${effectiveMouse.y * 12}px, 0)` }}
             />
           ) : null}
@@ -199,7 +212,7 @@ export default function Hero({ settings = null }) {
             <FloatingStat
               card={statCards[2]}
               animated={animatedCounters}
-              className="hero-float hero-float--3 absolute -bottom-4 right-12 rounded-2xl border border-red-100 bg-white/95 px-4 py-3 shadow-md"
+              className="hero-float hero-float--3 absolute -bottom-4 right-12 hidden rounded-2xl border border-red-100 bg-white/95 px-4 py-3 shadow-md sm:block"
               style={{ transform: `translate3d(${effectiveMouse.x * 11}px, ${effectiveMouse.y * -11}px, 0)` }}
             />
           ) : null}
