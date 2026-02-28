@@ -59,6 +59,7 @@ export const extraContent = {
   about_intro: '',
   principal_message: '',
   core_values: [],
+  faculty_members: [],
   programs,
   curriculum_overview: [],
   facilities,

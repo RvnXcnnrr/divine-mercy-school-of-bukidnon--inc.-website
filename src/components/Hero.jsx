@@ -109,16 +109,14 @@ export default function Hero() {
               transform: `translate3d(${mouse.x * 10}px, ${mouse.y * 10}px, 0)`,
             }}
           >
-            <img
-              src="/building-mock.png"
-              alt="Divine Mercy School of Bukidnon campus"
-              className="aspect-[5/4] w-full rounded-3xl object-cover"
-              loading="eager"
-            />
-            <div className="absolute inset-2 rounded-3xl bg-gradient-to-t from-black/45 via-black/10 to-transparent" aria-hidden="true" />
-            <div className="absolute bottom-6 left-6 max-w-[240px] rounded-2xl bg-white/92 px-4 py-3 shadow-md ring-1 ring-white/80">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Campus Focus</p>
-              <p className="mt-1 text-sm font-bold text-brand-ink">Faith, Discipline, and Service in every classroom.</p>
+            <div className="relative aspect-[5/4] w-full rounded-3xl bg-gradient-to-br from-red-100 via-white to-rose-100">
+              <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_20%_25%,rgba(185,28,28,0.16),transparent_36%),radial-gradient(circle_at_80%_8%,rgba(251,113,133,0.2),transparent_26%)]" aria-hidden="true" />
+              <div className="absolute inset-0 flex items-center justify-center p-8 text-center">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Campus Focus</p>
+                  <p className="mt-2 text-lg font-bold text-brand-ink">Faith, Discipline, and Service in every classroom.</p>
+                </div>
+              </div>
             </div>
           </div>
 

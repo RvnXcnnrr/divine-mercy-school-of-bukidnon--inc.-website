@@ -27,6 +27,30 @@ function sortFaculty(list = []) {
   })
 }
 
+function normalizeFacultyForExtra(list = []) {
+  return sortFaculty(list || []).map((member) => ({
+    id: member.id || null,
+    name: member.name || '',
+    role: member.role || '',
+    photo: member.photo || '',
+    sort_order: member.sort_order ?? null,
+  }))
+}
+
+function withFacultyMirror(content, faculty) {
+  const safe = content || {}
+  const extra = { ...fallbackExtraContent, ...(safe.extra_content || {}) }
+  return {
+    ...safe,
+    extra_content: {
+      ...extra,
+      programs: Array.isArray(extra.programs) ? extra.programs : [],
+      facilities: Array.isArray(extra.facilities) ? extra.facilities : [],
+      faculty_members: normalizeFacultyForExtra(faculty || []),
+    },
+  }
+}
+
 function paginate(list = [], page = 1, size = PAGE_SIZE) {
   const totalPages = Math.max(1, Math.ceil((list.length || 0) / size))
   const current = Math.min(Math.max(page, 1), totalPages)
@@ -118,16 +142,59 @@ export default function AdminSiteContent() {
     }
   }, [])
 
-  async function handleSaveContent(e) {
+  async function persistFacultyDraftIfNeeded() {
+    const hasDraftValues = Boolean(
+      facultyForm.name?.trim() || facultyForm.role?.trim() || facultyForm.photo?.trim() || facultyImageFile
+    )
+    if (!hasDraftValues) return faculty
+
+    if (!facultyForm.name?.trim() || !facultyForm.role?.trim()) {
+      throw new Error('Complete Name and Role in Faculty form, or clear it before saving About content.')
+    }
+
+    setSavingFaculty(true)
+
+    try {
+      let photoUrl = facultyForm.photo?.trim() || ''
+      if (facultyImageFile) {
+        setUploading(true)
+        const result = await uploadImageToSupabase(facultyImageFile, { bucket: 'faculty' })
+        photoUrl = result.publicUrl
+      }
+
+      const { data } = await upsertFaculty({ ...facultyForm, photo: photoUrl })
+      const merged = sortFaculty([data, ...faculty.filter((member) => member.id !== data.id)])
+      setFaculty(merged)
+      cacheFaculty(merged)
+      setFacultyPage(1)
+      setContent((prev) => withFacultyMirror(prev, merged))
+      resetFacultyForm()
+      return merged
+    } finally {
+      setSavingFaculty(false)
+      setUploading(false)
+      setUploadProgress(0)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setFacultyImageFile(null)
+    }
+  }
+
+  async function handleSaveContent(e, options = {}) {
     if (e?.preventDefault) e.preventDefault()
     if (!window.confirm('Save site content changes?')) return
     setError('')
     setSavingContent(true)
     try {
-      const { data } = await saveSiteContent(content)
-      setContent(data)
+      let facultyForSave = faculty
+      if (options.includePendingFaculty) {
+        facultyForSave = await persistFacultyDraftIfNeeded()
+      }
+
+      const payload = withFacultyMirror(content, facultyForSave)
+      const { data } = await saveSiteContent(payload)
+      setContent(withFacultyMirror(data || payload, facultyForSave))
       const refreshed = await fetchSiteContent()
-      if (refreshed?.data) setContent(refreshed.data)
+      if (refreshed?.data) setContent(withFacultyMirror(refreshed.data, facultyForSave))
     } catch (err) {
       setError(err.message || 'Failed to save content')
     } finally {
@@ -171,6 +238,7 @@ export default function AdminSiteContent() {
       setFaculty((prev) => {
         const merged = sortFaculty([data, ...prev.filter((m) => m.id !== data.id)])
         cacheFaculty(merged)
+        setContent((current) => withFacultyMirror(current, merged))
         return merged
       })
 
@@ -180,6 +248,7 @@ export default function AdminSiteContent() {
           const sorted = sortFaculty(refreshed.data)
           cacheFaculty(sorted)
           setFacultyPage(1)
+          setContent((current) => withFacultyMirror(current, sorted))
           return sorted
         })
       }
@@ -204,6 +273,7 @@ export default function AdminSiteContent() {
         const remaining = prev.filter((m) => m.id !== id)
         cacheFaculty(remaining)
         setFacultyPage(1)
+        setContent((current) => withFacultyMirror(current, remaining))
         return remaining
       })
       if (facultyForm.id === id) resetFacultyForm()
@@ -223,6 +293,23 @@ export default function AdminSiteContent() {
     if (!file) return
     setFacultyImageFile(file)
     setUploadProgress(0)
+  }
+
+  async function handleRefreshAboutContent() {
+    setLoading(true)
+    setError('')
+    try {
+      const [{ data: siteData }, { data: facultyData }] = await Promise.all([fetchSiteContent(), fetchFaculty()])
+      const sorted = sortFaculty(facultyData || [])
+      setFaculty(sorted)
+      cacheFaculty(sorted)
+      setFacultyPage(1)
+      setContent(withFacultyMirror(siteData || defaultContent, sorted))
+    } catch (err) {
+      setError(err.message || 'Failed to refresh About content')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleAdmissionsFormFileUpload(e, globalIdx) {
@@ -431,15 +518,12 @@ export default function AdminSiteContent() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={handleSaveContent} disabled={savingContent}
+                    <button type="button" onClick={(e) => handleSaveContent(e, { includePendingFaculty: true })} disabled={savingContent}
                       className="inline-flex items-center gap-2 rounded-full bg-brand-goldText px-4 py-2 text-sm font-bold uppercase tracking-wide text-white ring-1 ring-brand-goldText/30 transition hover:-translate-y-[1px] hover:bg-brand-goldText/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-60">
                       <FiSave className="h-4 w-4" aria-hidden="true" />
                       {savingContent ? 'Saving...' : 'Save About content'}
                     </button>
-                    <button type="button" onClick={async () => {
-                        setLoading(true); setError('')
-                        try { const { data } = await fetchSiteContent(); setContent(data || defaultContent) } catch (err) { setError(err.message || 'Failed') } finally { setLoading(false) }
-                      }}
+                    <button type="button" onClick={handleRefreshAboutContent}
                       className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-[1px] hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2">
                       <FiRefreshCcw className="h-4 w-4" aria-hidden="true" />
                       Refresh

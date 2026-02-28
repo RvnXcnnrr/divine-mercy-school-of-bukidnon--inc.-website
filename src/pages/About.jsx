@@ -70,12 +70,11 @@ export default function About() {
 
   const historyTimeline = useMemo(() => toTimeline(missionVision.history), [missionVision.history])
   const photoGrid = useMemo(() => {
-    const photos = faculty
-      .map((member) => member.photo)
+    const buildingPhotos = (extraContent.buildings || [])
+      .map((item) => item.image || item.featured_image_url)
       .filter(Boolean)
-    if (photos.length) return photos.slice(0, 6)
-    return ['/building-mock.png', '/building-mock.png', '/building-mock.png']
-  }, [faculty])
+    return buildingPhotos.slice(0, 6)
+  }, [extraContent.buildings])
 
   return (
     <div className="bg-brand-sky">
@@ -168,13 +167,17 @@ export default function About() {
             <div data-reveal>
               <p className="page-kicker">School Life</p>
               <h3 className="page-h3 mt-2">Photo highlights</h3>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {photoGrid.map((photo, idx) => (
-                  <figure key={`${photo}-${idx}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                    <img src={photo} alt={`Campus highlight ${idx + 1}`} className="aspect-[4/3] w-full object-cover transition duration-300 hover:scale-105" loading="lazy" />
-                  </figure>
-                ))}
-              </div>
+              {photoGrid.length ? (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {photoGrid.map((photo, idx) => (
+                    <figure key={`${photo}-${idx}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                      <img src={photo} alt={`Campus highlight ${idx + 1}`} className="aspect-[4/3] w-full object-cover transition duration-300 hover:scale-105" loading="lazy" />
+                    </figure>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-slate-600">No campus photos yet. Add building photos in admin content.</p>
+              )}
             </div>
           </div>
 
@@ -187,9 +190,11 @@ export default function About() {
             </div>
 
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {faculty.map((member) => (
-                <BoardMemberCard key={member.id || member.name} member={member} />
-              ))}
+              {faculty.length ? (
+                faculty.map((member) => <BoardMemberCard key={member.id || member.name} member={member} />)
+              ) : (
+                <p className="text-sm text-slate-600">No faculty profiles yet. Add members from the admin dashboard.</p>
+              )}
             </div>
           </div>
         </div>

@@ -217,13 +217,17 @@ export default function Academics() {
             ))}
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
-            {(facilityImages.length ? facilityImages : ['/building-mock.png']).slice(0, 3).map((image, idx) => (
-              <figure key={`${image}-${idx}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                <img src={image} alt={`Facility preview ${idx + 1}`} className="aspect-[4/3] w-full object-cover transition duration-300 hover:scale-105" loading="lazy" />
-              </figure>
-            ))}
-          </div>
+          {facilityImages.length ? (
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+              {facilityImages.slice(0, 3).map((image, idx) => (
+                <figure key={`${image}-${idx}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                  <img src={image} alt={`Facility preview ${idx + 1}`} className="aspect-[4/3] w-full object-cover transition duration-300 hover:scale-105" loading="lazy" />
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-8 text-sm text-slate-600" data-reveal>No facility photos yet. Add building images from admin content.</p>
+          )}
         </div>
       </section>
     </div>

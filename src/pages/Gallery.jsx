@@ -3,6 +3,11 @@ import { FiChevronLeft, FiChevronRight, FiMaximize2, FiSearch, FiX } from 'react
 import usePageMeta from '../hooks/usePageMeta.js'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
 
+function isFacultyImage(src = '') {
+  const value = String(src).toLowerCase()
+  return value.includes('/faculty/') || value.includes('bucket=faculty')
+}
+
 export default function Gallery() {
   usePageMeta({
     title: 'Media Gallery',
@@ -18,7 +23,9 @@ export default function Gallery() {
 
   const galleryItems = useMemo(() => {
     return items.flatMap((item) => {
-      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])].filter(Boolean)
+      const images = [item.featured_image_url, ...(item.gallery_images || item.images || [])]
+        .filter(Boolean)
+        .filter((src) => !isFacultyImage(src))
       return images.map((src, idx) => ({
         src,
         title: item.title || 'Campus memory',

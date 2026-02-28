@@ -497,11 +497,15 @@ export default function Home() {
               <div className="surface-card p-6">
                 <h3 className="page-h3">Leadership team</h3>
                 <p className="page-muted mt-2">Guiding our mission of faith, discipline, and service.</p>
-                <div className="mt-5 grid gap-4">
-                  {faculty.slice(0, 3).map((member) => (
-                    <BoardMemberCard key={member.id || member.name} member={member} />
-                  ))}
-                </div>
+                {faculty.length ? (
+                  <div className="mt-5 grid gap-4">
+                    {faculty.slice(0, 3).map((member) => (
+                      <BoardMemberCard key={member.id || member.name} member={member} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-5 text-sm text-slate-600">No faculty profiles yet. Add members from the admin dashboard.</p>
+                )}
               </div>
 
               <div className="surface-card p-6">

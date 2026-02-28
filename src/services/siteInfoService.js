@@ -23,6 +23,7 @@ import {
 
 const SINGLETON_ID = 'site-singleton'
 export const FACULTY_CACHE_KEY = 'dmsb-faculty-cache'
+const FACULTY_EXTRA_KEY = 'faculty_members'
 
 export function readFacultyCache() {
   try {
@@ -47,6 +48,70 @@ function withExtraContent(row = {}) {
     ...row,
     extra_content: { ...fallbackExtraContent, ...(row.extra_content || {}) },
   }
+}
+
+function sortFacultyList(list = []) {
+  return [...list].sort((a, b) => {
+    const orderA = a.sort_order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.sort_order ?? Number.MAX_SAFE_INTEGER
+    if (orderA !== orderB) return orderA - orderB
+    return (a.name || '').localeCompare(b.name || '')
+  })
+}
+
+function makeLocalId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `faculty-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function normalizeFacultyMember(member = {}) {
+  return {
+    id: member.id || makeLocalId(),
+    name: member.name?.trim() || 'Untitled',
+    role: member.role?.trim() || '',
+    photo: member.photo?.trim() || '',
+    sort_order: Number.isFinite(member.sort_order) ? member.sort_order : member.sort_order ?? null,
+    created_at: member.created_at || null,
+    updated_at: member.updated_at || null,
+  }
+}
+
+function normalizeFacultyList(list = []) {
+  const seen = new Set()
+  const normalized = []
+  for (const raw of list || []) {
+    const member = normalizeFacultyMember(raw)
+    if (!member.name) continue
+    if (seen.has(member.id)) continue
+    seen.add(member.id)
+    normalized.push(member)
+  }
+  return sortFacultyList(normalized)
+}
+
+async function fetchFacultyFromSiteContent() {
+  const { data } = await fetchSiteContent()
+  const list = data?.extra_content?.[FACULTY_EXTRA_KEY] || []
+  return normalizeFacultyList(list)
+}
+
+async function saveFacultyToSiteContent(mutator) {
+  const { data } = await fetchSiteContent()
+  const safe = data || { id: SINGLETON_ID, ...fallbackMissionVision, ...fallbackContact, extra_content: fallbackExtraContent }
+  const extra = { ...fallbackExtraContent, ...(safe.extra_content || {}) }
+  const current = normalizeFacultyList(extra[FACULTY_EXTRA_KEY] || [])
+  const next = normalizeFacultyList(mutator(current))
+  const payload = {
+    ...safe,
+    extra_content: {
+      ...extra,
+      [FACULTY_EXTRA_KEY]: next,
+    },
+  }
+  await saveSiteContent(payload)
+  return next
 }
 
 export async function fetchSiteContent() {
@@ -105,17 +170,31 @@ export async function saveSiteContent(payload) {
 
 export async function fetchFaculty() {
   if (!supabaseReady) {
-    return { data: fallbackFaculty }
+    return { data: normalizeFacultyList(fallbackFaculty) }
   }
 
-  const { data, error } = await supabase
-    .from(supabaseTables.faculty)
-    .select('*')
-    .order('sort_order', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from(supabaseTables.faculty)
+      .select('*')
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true })
 
-  if (error) throw error
-  return { data: data ?? [] }
+    if (error) throw error
+
+    const normalized = normalizeFacultyList(data || [])
+    if (normalized.length) return { data: normalized }
+
+    const mirrored = await fetchFacultyFromSiteContent()
+    if (mirrored.length) return { data: mirrored }
+
+    return { data: [] }
+  } catch (error) {
+    console.warn('[Faculty] falling back to site_content mirror', error)
+    const mirrored = await fetchFacultyFromSiteContent()
+    if (mirrored.length) return { data: mirrored }
+    return { data: normalizeFacultyList(fallbackFaculty) }
+  }
 }
 
 export async function upsertFaculty(member) {
@@ -132,19 +211,52 @@ export async function upsertFaculty(member) {
   // Allow Supabase to generate a primary key when creating a new member.
   if (!record.id) delete record.id
 
-  const { data, error } = await supabase
-    .from(supabaseTables.faculty)
-    .upsert(record)
-    .select('*')
-    .maybeSingle()
+  try {
+    const { data, error } = await supabase
+      .from(supabaseTables.faculty)
+      .upsert(record, { onConflict: 'id' })
+      .select('*')
+      .maybeSingle()
 
-  if (error) throw error
-  return { data }
+    if (error) throw error
+    const saved = normalizeFacultyMember(data || record)
+
+    try {
+      await saveFacultyToSiteContent((current) => {
+        const next = [...current.filter((item) => item.id !== saved.id), saved]
+        return next
+      })
+    } catch (mirrorError) {
+      console.warn('[Faculty] failed to sync site_content mirror after table upsert', mirrorError)
+    }
+
+    return { data: saved }
+  } catch (tableError) {
+    console.warn('[Faculty] table upsert failed; using site_content mirror', tableError)
+    const localRecord = normalizeFacultyMember({ ...record, id: record.id || makeLocalId() })
+    const mirrored = await saveFacultyToSiteContent((current) => {
+      const next = [...current.filter((item) => item.id !== localRecord.id), localRecord]
+      return next
+    })
+    return { data: mirrored.find((item) => item.id === localRecord.id) || localRecord }
+  }
 }
 
 export async function deleteFaculty(id) {
   if (!supabaseReady) throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
-  const { error } = await supabase.from(supabaseTables.faculty).delete().eq('id', id)
-  if (error) throw error
+
+  try {
+    const { error } = await supabase.from(supabaseTables.faculty).delete().eq('id', id)
+    if (error) throw error
+  } catch (tableError) {
+    console.warn('[Faculty] table delete failed; using site_content mirror', tableError)
+  }
+
+  try {
+    await saveFacultyToSiteContent((current) => current.filter((item) => item.id !== id))
+  } catch (mirrorError) {
+    console.warn('[Faculty] failed to sync delete to site_content mirror', mirrorError)
+  }
+
   return { data: true }
 }
