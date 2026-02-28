@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { FiClock, FiEye, FiImage, FiSave, FiUpload, FiX } from 'react-icons/fi'
+import { FiClock, FiEye, FiSave, FiUpload, FiX } from 'react-icons/fi'
 import { useCategoriesQuery } from '../../hooks/useCategoriesQuery.js'
 import { fetchPostById, savePost } from '../../services/postService.js'
 import { uploadImageToSupabase } from '../../lib/supabaseStorage.js'
@@ -34,20 +34,17 @@ export default function AdminPostEditor() {
   const navigate = useNavigate()
   const { data: categories = [] } = useCategoriesQuery()
   const [uploading, setUploading] = useState(false)
-  const [featuredFile, setFeaturedFile] = useState(null)
   const [galleryFiles, setGalleryFiles] = useState([])
   const [galleryUrls, setGalleryUrls] = useState([])
   const [galleryField, setGalleryField] = useState('gallery_images')
   const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [draggingFeatured, setDraggingFeatured] = useState(false)
-  const [draggingGallery, setDraggingGallery] = useState(false)
+  const [draggingUpload, setDraggingUpload] = useState(false)
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     watch,
     formState: { isSubmitting, isDirty, errors },
   } = useForm({
@@ -67,17 +64,20 @@ export default function AdminPostEditor() {
   })
 
   const watchedValues = watch()
+  const queuedImagePreview = useMemo(() => {
+    if (!galleryFiles.length) return ''
+    return URL.createObjectURL(galleryFiles[0])
+  }, [galleryFiles])
 
   const featuredPreview = useMemo(() => {
-    if (featuredFile) return URL.createObjectURL(featuredFile)
-    return watchedValues.featured_image_url || ''
-  }, [featuredFile, watchedValues.featured_image_url])
+    return queuedImagePreview || galleryUrls[0] || watchedValues.featured_image_url || ''
+  }, [queuedImagePreview, galleryUrls, watchedValues.featured_image_url])
 
   useEffect(() => {
     return () => {
-      if (featuredPreview?.startsWith('blob:')) URL.revokeObjectURL(featuredPreview)
+      if (queuedImagePreview?.startsWith('blob:')) URL.revokeObjectURL(queuedImagePreview)
     }
-  }, [featuredPreview])
+  }, [queuedImagePreview])
 
   useEffect(() => {
     if (!postId) return
@@ -130,20 +130,14 @@ export default function AdminPostEditor() {
     return () => window.clearTimeout(timer)
   }, [draftKey, galleryField, galleryUrls, isDirty, postId, watchedValues])
 
-  function handleFeaturedSelect(file) {
-    if (!file) return
-    setFeaturedFile(file)
-    setValue('featured_image_url', '', { shouldDirty: true })
-  }
-
-  function clearFeatured() {
-    setFeaturedFile(null)
-    setValue('featured_image_url', '', { shouldDirty: true })
-  }
-
   function handleGallerySelect(files) {
     if (!files?.length) return
     setGalleryFiles((prev) => [...prev, ...files])
+  }
+
+  function handleUnifiedUpload(files) {
+    if (!files?.length) return
+    handleGallerySelect(files)
   }
 
   function removeGalleryUrl(url) {
@@ -155,16 +149,13 @@ export default function AdminPostEditor() {
   }
 
   async function onSubmit(values) {
+    const confirmed = window.confirm('Save changes to this post?')
+    if (!confirmed) return
+
     setUploading(true)
-    let featuredUrl = values.featured_image_url || null
     const existingGallery = [...galleryUrls]
 
     try {
-      if (featuredFile) {
-        const uploaded = await uploadImageToSupabase(featuredFile, { bucket: 'posts' })
-        featuredUrl = uploaded.publicUrl
-      }
-
       const newGalleryUrls = []
       for (const file of galleryFiles) {
         const uploaded = await uploadImageToSupabase(file, { bucket: 'posts' })
@@ -172,6 +163,7 @@ export default function AdminPostEditor() {
       }
 
       const galleryImages = [...existingGallery, ...newGalleryUrls]
+      const featuredUrl = values.featured_image_url || galleryImages[0] || null
 
       const payload = {
         ...values,
@@ -182,20 +174,39 @@ export default function AdminPostEditor() {
         is_featured: Boolean(values.is_featured),
       }
 
-      if (galleryField === 'images') {
-        delete payload.gallery_images
-        payload.images = galleryImages.length ? galleryImages : null
-      } else {
-        delete payload.images
-        payload.gallery_images = galleryImages.length ? galleryImages : null
+      const preferredFields = galleryField === 'images' ? ['images', 'gallery_images'] : ['gallery_images', 'images']
+      let savedData = null
+      let lastError = null
+
+      for (const field of preferredFields) {
+        const candidate = { ...payload }
+        if (field === 'images') {
+          delete candidate.gallery_images
+          candidate.images = galleryImages.length ? galleryImages : null
+        } else {
+          delete candidate.images
+          candidate.gallery_images = galleryImages.length ? galleryImages : null
+        }
+
+        try {
+          const { data } = await savePost(postId ? { ...candidate, id: postId } : candidate)
+          savedData = data
+          if (field !== galleryField) setGalleryField(field)
+          break
+        } catch (error) {
+          lastError = error
+          if (!isMissingColumnError(error, field)) {
+            throw error
+          }
+        }
       }
 
-      const { data } = await savePost(postId ? { ...payload, id: postId } : payload)
-      if (!data) return
+      if (!savedData) {
+        throw lastError || new Error('Failed to save post')
+      }
 
       window.localStorage.removeItem(draftKey)
       setGalleryFiles([])
-      setFeaturedFile(null)
       setLastAutoSavedAt(new Date())
       navigate('/admin/posts')
     } catch (error) {
@@ -213,11 +224,19 @@ export default function AdminPostEditor() {
     return `Autosaved ${lastAutoSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
   })()
 
+  function handleCancelEdit() {
+    if (isDirty) {
+      const confirmed = window.confirm('Discard unsaved changes and return to posts?')
+      if (!confirmed) return
+    }
+    navigate('/admin/posts')
+  }
+
   return (
     <div className="space-y-4">
       <AdminPageHeader
         title={postId ? 'Edit Post' : 'Create New Post'}
-        description="Organize content into Post Info, Publishing, and Media for faster publishing."
+        description="Set post details, media, and publish status in one streamlined layout."
       />
 
       <section className="sticky top-[74px] z-20 admin-card bg-white/90 p-3 backdrop-blur">
@@ -227,6 +246,9 @@ export default function AdminPostEditor() {
             {autosaveText}
           </p>
           <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={handleCancelEdit} className="admin-button-secondary">
+              Cancel
+            </button>
             <button type="button" onClick={() => setPreviewOpen(true)} className="admin-button-secondary">
               <FiEye className="h-4 w-4" aria-hidden="true" />
               Preview
@@ -239,8 +261,8 @@ export default function AdminPostEditor() {
         </div>
       </section>
 
-      <form id="post-form" onSubmit={handleSubmit(onSubmit)} className="grid gap-4 xl:grid-cols-2">
-        <div className="grid gap-4 xl:grid-rows-[auto_1fr]">
+      <form id="post-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
           <article className="admin-card p-5">
             <h2 className="text-base font-semibold text-slate-900">Post Info</h2>
             <p className="mt-1 text-sm text-slate-500">Core metadata for your post.</p>
@@ -251,7 +273,7 @@ export default function AdminPostEditor() {
                 <input {...register('title')} className="admin-input mt-1" placeholder="Post title" />
                 {errors.title ? <span className="mt-1 block text-xs text-rose-600">Title must be at least 3 characters.</span> : null}
               </label>
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-slate-700 md:col-span-2">
                 Category
                 <select {...register('category_id')} className="admin-input mt-1">
                   <option value="">Unassigned</option>
@@ -262,6 +284,14 @@ export default function AdminPostEditor() {
                   ))}
                 </select>
               </label>
+            </div>
+          </article>
+
+          <article className="admin-card p-5">
+            <h2 className="text-base font-semibold text-slate-900">Publishing & Media</h2>
+            <p className="mt-1 text-sm text-slate-500">Set visibility and upload images used in gallery and previews.</p>
+
+            <div className="mt-4 space-y-4">
               <label className="block text-sm font-medium text-slate-700">
                 Status
                 <select {...register('status')} className="admin-input mt-1">
@@ -269,34 +299,7 @@ export default function AdminPostEditor() {
                   <option value="published">Published</option>
                 </select>
               </label>
-            </div>
-          </article>
 
-          <article className="admin-card p-5">
-            <h2 className="text-base font-semibold text-slate-900">Content</h2>
-            <p className="mt-1 text-sm text-slate-500">Write the main post body.</p>
-
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-slate-700">
-                Content
-                <textarea
-                  {...register('content')}
-                  rows={12}
-                  className="admin-input mt-1 min-h-[360px]"
-                  placeholder="Write your post content here..."
-                />
-                {errors.content ? <span className="mt-1 block text-xs text-rose-600">Content must be at least 10 characters.</span> : null}
-              </label>
-            </div>
-          </article>
-        </div>
-
-        <div className="grid gap-4 xl:grid-rows-[auto_1fr]">
-          <article className="admin-card p-5">
-            <h2 className="text-base font-semibold text-slate-900">Publishing</h2>
-            <p className="mt-1 text-sm text-slate-500">Set visibility and homepage promotion.</p>
-
-            <div className="mt-4 space-y-4">
               <label className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                 <input type="checkbox" {...register('is_featured')} className="peer sr-only" />
                 <span className="relative inline-flex h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-brand-goldText">
@@ -304,103 +307,48 @@ export default function AdminPostEditor() {
                 </span>
                 <span className="text-sm font-medium text-slate-700">Feature on homepage</span>
               </label>
-            </div>
-          </article>
 
-          <article className="admin-card p-5">
-            <h2 className="text-base font-semibold text-slate-900">Media</h2>
-            <p className="mt-1 text-sm text-slate-500">Drag and drop files or use direct URLs.</p>
+              <div className="border-t border-slate-200 pt-4">
+                <p className="text-sm font-medium text-slate-700">Upload image(s)</p>
+                <p className="mt-1 text-xs text-slate-500">Select one or more images. They are saved to gallery automatically.</p>
 
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700">Featured image URL</label>
-                <input
-                  {...register('featured_image_url')}
-                  className="admin-input mt-1"
-                  placeholder="https://your-project.supabase.co/storage/v1/object/public/posts/..."
-                />
-              </div>
-
-              <div
+                <div
+                className="mt-3"
+              >
+                <div
                 className={[
                   'rounded-xl border-2 border-dashed p-4 text-center transition',
-                  draggingFeatured ? 'border-brand-goldText bg-rose-50' : 'border-slate-300 bg-slate-50/60',
+                  draggingUpload ? 'border-brand-goldText bg-rose-50' : 'border-slate-300 bg-slate-50/60',
                 ].join(' ')}
                 onDragOver={(event) => {
                   event.preventDefault()
-                  setDraggingFeatured(true)
+                  setDraggingUpload(true)
                 }}
-                onDragLeave={() => setDraggingFeatured(false)}
+                onDragLeave={() => setDraggingUpload(false)}
                 onDrop={(event) => {
                   event.preventDefault()
-                  setDraggingFeatured(false)
-                  handleFeaturedSelect(event.dataTransfer.files?.[0] || null)
+                  setDraggingUpload(false)
+                  handleUnifiedUpload(Array.from(event.dataTransfer.files || []))
                 }}
               >
                 <input
-                  id="featured-file-input"
+                  id="media-upload-input"
                   type="file"
                   accept="image/*"
-                  className="sr-only"
-                  onChange={(event) => handleFeaturedSelect(event.target.files?.[0] || null)}
+                  multiple
+                  className="hidden"
+                  onChange={(event) => handleUnifiedUpload(Array.from(event.target.files || []))}
                 />
-                <label htmlFor="featured-file-input" className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-goldText">
+                <label htmlFor="media-upload-input" className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-goldText">
                   <FiUpload className="h-4 w-4" aria-hidden="true" />
-                  Upload featured image
+                  Upload image(s)
                 </label>
-                <p className="mt-2 text-xs text-slate-500">Drag an image here, or click to browse.</p>
-                {featuredFile ? (
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
-                    {featuredFile.name}
-                    <button type="button" onClick={clearFeatured} className="rounded-md p-1 hover:bg-rose-100" aria-label="Remove featured file">
-                      <FiX className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>
-                  </div>
-                ) : null}
+                <p className="mt-2 text-xs text-slate-500">Select one or more images. Drag and drop is supported.</p>
               </div>
-
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <label className="text-sm font-medium text-slate-700">Gallery source field</label>
-                  <select value={galleryField} onChange={(event) => setGalleryField(event.target.value)} className="admin-input max-w-40 py-2 text-xs">
-                    <option value="gallery_images">gallery_images</option>
-                    <option value="images">images</option>
-                  </select>
-                </div>
-                <div
-                  className={[
-                    'rounded-xl border-2 border-dashed p-4 text-center transition',
-                    draggingGallery ? 'border-brand-goldText bg-rose-50' : 'border-slate-300 bg-slate-50/60',
-                  ].join(' ')}
-                  onDragOver={(event) => {
-                    event.preventDefault()
-                    setDraggingGallery(true)
-                  }}
-                  onDragLeave={() => setDraggingGallery(false)}
-                  onDrop={(event) => {
-                    event.preventDefault()
-                    setDraggingGallery(false)
-                    handleGallerySelect(Array.from(event.dataTransfer.files || []))
-                  }}
-                >
-                  <input
-                    id="gallery-files-input"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="sr-only"
-                    onChange={(event) => handleGallerySelect(Array.from(event.target.files || []))}
-                  />
-                  <label htmlFor="gallery-files-input" className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-goldText">
-                    <FiImage className="h-4 w-4" aria-hidden="true" />
-                    Add gallery images
-                  </label>
-                  <p className="mt-2 text-xs text-slate-500">Drop multiple files, then click Save to upload.</p>
-                </div>
               </div>
 
               {(galleryUrls.length || galleryFiles.length) > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {galleryUrls.map((url) => (
                     <div key={url} className="relative overflow-hidden rounded-xl border border-slate-200">
                       <img src={url} alt="Gallery" className="h-28 w-full object-cover" loading="lazy" />
@@ -429,9 +377,28 @@ export default function AdminPostEditor() {
                   ))}
                 </div>
               ) : null}
+              </div>
             </div>
           </article>
         </div>
+
+        <article className="admin-card p-5">
+          <h2 className="text-base font-semibold text-slate-900">Content</h2>
+          <p className="mt-1 text-sm text-slate-500">Write the main post body.</p>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700">
+              Content
+              <textarea
+                {...register('content')}
+                rows={12}
+                className="admin-input mt-1 min-h-[420px]"
+                placeholder="Write your post content here..."
+              />
+              {errors.content ? <span className="mt-1 block text-xs text-rose-600">Content must be at least 10 characters.</span> : null}
+            </label>
+          </div>
+        </article>
       </form>
 
       {previewOpen ? (
@@ -454,4 +421,10 @@ export default function AdminPostEditor() {
       ) : null}
     </div>
   )
+}
+
+function isMissingColumnError(error, field) {
+  const message = String(error?.message || '').toLowerCase()
+  const normalizedField = String(field || '').toLowerCase()
+  return message.includes('column') && message.includes('does not exist') && message.includes(normalizedField)
 }

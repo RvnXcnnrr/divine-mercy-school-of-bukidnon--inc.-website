@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { createElement, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiCheckSquare, FiEdit2, FiFilter, FiLoader, FiPlus, FiSearch, FiStar, FiTrash2 } from 'react-icons/fi'
 import { usePostsQuery } from '../../hooks/usePostsQuery.js'
@@ -59,23 +59,34 @@ export default function AdminPosts() {
       message: 'Delete this post permanently?',
       variant: 'danger',
       action: async () => {
-        await deletePost(id)
-        setSelectedIds((prev) => prev.filter((itemId) => itemId !== id))
-        await refetch()
+        setActing(true)
+        try {
+          await deletePost(id)
+          setSelectedIds((prev) => prev.filter((itemId) => itemId !== id))
+          await refetch()
+        } finally {
+          setActing(false)
+        }
       },
     })
   }
 
   async function onToggleFeatured(id, current) {
-    setRowAction({ id, type: 'featured' })
-    try {
-      await toggleFeatured(id, !current)
-      await refetch()
-    } catch (error) {
-      alert(error.message || 'Failed to update featured status.')
-    } finally {
-      setRowAction({ id: null, type: null })
-    }
+    openConfirm({
+      title: current ? 'Remove Featured' : 'Mark as Featured',
+      message: current ? 'Remove this post from featured?' : 'Mark this post as featured?',
+      action: async () => {
+        setRowAction({ id, type: 'featured' })
+        try {
+          await toggleFeatured(id, !current)
+          await refetch()
+        } catch (error) {
+          alert(error.message || 'Failed to update featured status.')
+        } finally {
+          setRowAction({ id: null, type: null })
+        }
+      },
+    })
   }
 
   function toggleSelect(id) {
@@ -97,9 +108,14 @@ export default function AdminPosts() {
       message: `Delete ${selectedIds.length} selected post(s)?`,
       variant: 'danger',
       action: async () => {
-        await Promise.all(selectedIds.map((id) => deletePost(id)))
-        setSelectedIds([])
-        await refetch()
+        setActing(true)
+        try {
+          await Promise.all(selectedIds.map((id) => deletePost(id)))
+          setSelectedIds([])
+          await refetch()
+        } finally {
+          setActing(false)
+        }
       },
     })
   }
@@ -110,14 +126,19 @@ export default function AdminPosts() {
       title: 'Update Status',
       message: `Mark ${selectedIds.length} selected post(s) as ${nextStatus}?`,
       action: async () => {
-        await Promise.all(
-          selectedIds.map((id) =>
-            savePost({ id, status: nextStatus }).catch((error) => {
-              console.error('Bulk status update failed', error)
-            })
+        setActing(true)
+        try {
+          await Promise.all(
+            selectedIds.map((id) =>
+              savePost({ id, status: nextStatus }).catch((error) => {
+                console.error('Bulk status update failed', error)
+              })
+            )
           )
-        )
-        await refetch()
+          await refetch()
+        } finally {
+          setActing(false)
+        }
       },
     })
   }
@@ -278,7 +299,13 @@ export default function AdminPosts() {
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-right">
                         <RowActions
-                          onEdit={() => navigate(`/admin/posts/${post.id}`)}
+                          onEdit={() =>
+                            openConfirm({
+                              title: 'Edit Post',
+                              message: 'Open this post in editor?',
+                              action: async () => navigate(`/admin/posts/${post.id}`),
+                            })
+                          }
                           onToggleFeatured={() => onToggleFeatured(post.id, post.is_featured)}
                           onDelete={() => onDelete(post.id)}
                           featured={Boolean(post.is_featured)}
@@ -317,11 +344,9 @@ export default function AdminPosts() {
         onClose={resetConfirm}
         onConfirm={async () => {
           if (!confirmModal.action) return
-          setActing(true)
           try {
             await confirmModal.action()
           } finally {
-            setActing(false)
             resetConfirm()
           }
         }}
@@ -385,7 +410,7 @@ function IconActionButton({ onClick, icon: Icon, label, className, disabled = fa
         className,
       ].join(' ')}
     >
-      <Icon className={['h-4 w-4', spin ? 'animate-spin' : ''].join(' ')} aria-hidden="true" />
+      {createElement(Icon, { className: ['h-4 w-4', spin ? 'animate-spin' : ''].join(' '), 'aria-hidden': true })}
     </button>
   )
 }

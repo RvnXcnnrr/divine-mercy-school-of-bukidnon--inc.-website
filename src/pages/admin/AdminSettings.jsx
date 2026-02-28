@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FiDownload, FiMail, FiSearch, FiTrash2 } from 'react-icons/fi'
-import { deleteSubscriber, fetchSubscribers } from '../../services/subscriberService.js'
+import { FiDownload, FiMail, FiSearch } from 'react-icons/fi'
+import { fetchSubscribers } from '../../services/subscriberService.js'
 import usePageMeta from '../../hooks/usePageMeta.js'
 import LoadingOverlay from '../../components/LoadingOverlay.jsx'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
@@ -25,7 +25,6 @@ export default function AdminSettings() {
   usePageMeta({ title: 'Subscribers' })
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-  const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -70,19 +69,6 @@ export default function AdminSettings() {
     if (page !== safePage) setPage(safePage)
   }, [page, safePage])
 
-  async function handleDelete(id) {
-    if (!window.confirm('Remove this subscriber?')) return
-    setDeletingId(id)
-    try {
-      await deleteSubscriber(id)
-      setItems((prev) => prev.filter((subscriber) => subscriber.id !== id))
-    } catch (err) {
-      setError(err.message || 'Failed to delete')
-    } finally {
-      setDeletingId(null)
-    }
-  }
-
   function exportCSV() {
     const rows = ['email,subscribed_at', ...filtered.map((subscriber) => `"${subscriber.email}","${subscriber.created_at || ''}"`)]
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
@@ -96,7 +82,7 @@ export default function AdminSettings() {
 
   return (
     <>
-      {(loading || deletingId !== null) && <LoadingOverlay message={loading ? 'Loading subscribers...' : 'Removing subscriber...'} />}
+      {loading && <LoadingOverlay message="Loading subscribers..." />}
 
       <div className="space-y-4">
         <AdminPageHeader
@@ -164,7 +150,6 @@ export default function AdminSettings() {
                     <th className="border-b border-slate-200 px-4 py-3">#</th>
                     <th className="border-b border-slate-200 px-4 py-3">Email</th>
                     <th className="border-b border-slate-200 px-4 py-3">Subscribed</th>
-                    <th className="border-b border-slate-200 px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -182,17 +167,6 @@ export default function AdminSettings() {
                         {subscriber.created_at
                           ? new Date(subscriber.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
                           : '-'}
-                      </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(subscriber.id)}
-                          disabled={deletingId === subscriber.id}
-                          className="admin-button-secondary border-rose-200 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50"
-                        >
-                          <FiTrash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          Remove
-                        </button>
                       </td>
                     </tr>
                   ))}
@@ -217,4 +191,3 @@ export default function AdminSettings() {
     </>
   )
 }
-

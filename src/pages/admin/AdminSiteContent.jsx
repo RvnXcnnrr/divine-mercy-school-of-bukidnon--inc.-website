@@ -55,7 +55,6 @@ export default function AdminSiteContent() {
   const [facultyImageFile, setFacultyImageFile] = useState(null)
   const [error, setError] = useState('')
   const [facultyForm, setFacultyForm] = useState(emptyFaculty)
-  const [lastSection, setLastSection] = useState(() => localStorage.getItem('adminSiteContentLastSection') || '')
   const [facultyPage, setFacultyPage] = useState(1)
   const [programPage, setProgramPage] = useState(1)
   const [facilityPage, setFacilityPage] = useState(1)
@@ -106,7 +105,8 @@ export default function AdminSiteContent() {
       } finally {
         if (mounted) setLoading(false)
       }
-      const targetId = lastSection || (window.location.hash ? window.location.hash.replace('#', '') : '')
+      const rememberedSection = localStorage.getItem('adminSiteContentLastSection') || ''
+      const targetId = rememberedSection || (window.location.hash ? window.location.hash.replace('#', '') : '')
       if (targetId) {
         setTimeout(() => {
           document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -120,6 +120,7 @@ export default function AdminSiteContent() {
 
   async function handleSaveContent(e) {
     if (e?.preventDefault) e.preventDefault()
+    if (!window.confirm('Save site content changes?')) return
     setError('')
     setSavingContent(true)
     try {
@@ -153,6 +154,7 @@ export default function AdminSiteContent() {
 
   async function handleSaveFaculty(e) {
     e.preventDefault()
+    if (!window.confirm('Save faculty changes?')) return
     setError('')
     setSavingFaculty(true)
     try {
@@ -194,6 +196,7 @@ export default function AdminSiteContent() {
   }
 
   async function handleDeleteFaculty(id) {
+    if (!window.confirm('Delete this faculty record?')) return
     setError('')
     try {
       await deleteFaculty(id)
@@ -267,7 +270,6 @@ export default function AdminSiteContent() {
   }
 
   function rememberSection(id) {
-    setLastSection(id)
     localStorage.setItem('adminSiteContentLastSection', id)
     window.location.hash = id
   }
@@ -311,7 +313,7 @@ export default function AdminSiteContent() {
         {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
       </div>
 
-      {/* ── ACCORDION HELPER ──────────────────────────────────── */}
+      {/* -- ACCORDION HELPER ------------------------------------ */}
       {[
         { id: 'home',       label: 'Home',        desc: 'Campus highlights and key site info' },
         { id: 'about',      label: 'About',       desc: 'Vision, mission, history, values, principal, faculty' },
@@ -341,7 +343,7 @@ export default function AdminSiteContent() {
           {openSections.has(id) ? (
             <div className="border-t border-slate-100 px-5 pb-6 pt-4">
 
-              {/* ── HOME ──────────────────────────────────────── */}
+              {/* -- HOME ---------------------------------------- */}
               {id === 'home' ? (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-500">
@@ -368,7 +370,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── ABOUT ─────────────────────────────────────── */}
+              {/* -- ABOUT --------------------------------------- */}
               {id === 'about' ? (
                 <div className="space-y-4">
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -624,7 +626,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── ADMISSIONS ────────────────────────────────── */}
+              {/* -- ADMISSIONS ---------------------------------- */}
               {id === 'admissions' ? (
                 <div className="space-y-4">
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -736,7 +738,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── UPDATES ───────────────────────────────────── */}
+              {/* -- UPDATES ------------------------------------- */}
               {id === 'updates' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">
@@ -749,7 +751,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── EVENTS ────────────────────────────────────── */}
+              {/* -- EVENTS -------------------------------------- */}
               {id === 'events' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">
@@ -762,7 +764,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── GALLERY ───────────────────────────────────── */}
+              {/* -- GALLERY ------------------------------------- */}
               {id === 'gallery' ? (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-500">
@@ -839,7 +841,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── CONTACT ───────────────────────────────────── */}
+              {/* -- CONTACT ------------------------------------- */}
               {id === 'contact' ? (
                 <div className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -866,7 +868,7 @@ export default function AdminSiteContent() {
                 </div>
               ) : null}
 
-              {/* ── FOOTER ────────────────────────────────────── */}
+              {/* -- FOOTER -------------------------------------- */}
               {id === 'footer' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">
@@ -891,3 +893,7 @@ export default function AdminSiteContent() {
     </>
   )
 }
+
+
+
+
