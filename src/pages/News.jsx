@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { FiSearch } from 'react-icons/fi'
+import { FiChevronLeft, FiChevronRight, FiFilter, FiSearch } from 'react-icons/fi'
 import usePageMeta from '../hooks/usePageMeta.js'
 import NewsCard from '../components/NewsCard.jsx'
 import { usePostsQuery } from '../hooks/usePostsQuery.js'
@@ -8,36 +8,42 @@ import { useCategoriesQuery } from '../hooks/useCategoriesQuery.js'
 export default function News() {
   usePageMeta({
     title: 'News & Events',
-    description: 'School news, events, and announcements from Divine Mercy School of Bukidnon, Inc.',
+    description: 'School news, events, and announcements from Divine Mercy School of Bukidnon.',
   })
 
   const [category, setCategory] = useState('All')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const pageSize = 6
+
   const { data: categories = [] } = useCategoriesQuery()
   const categorySlug = category === 'All' ? undefined : category
   const { data, isLoading, isError } = usePostsQuery({
     status: 'published',
     categorySlug,
     search: search || undefined,
-    limit: 40,
+    limit: 80,
   })
 
-  const items = data?.items || []
+  const items = useMemo(() => data?.items || [], [data?.items])
+
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
 
-  const [activeItems, pastItems] = useMemo(() => {
+  const [upcomingItems, pastItems] = useMemo(() => {
     const upcoming = []
     const past = []
+
     items.forEach((item) => {
       const date = item?.date ? new Date(item.date) : null
       const isPast = date ? date < today : false
       const bucket = isPast || item.status === 'past' ? past : upcoming
       bucket.push(item)
     })
+
     return [upcoming, past]
   }, [items, today])
 
@@ -50,16 +56,17 @@ export default function News() {
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
+
     const derived = items
       .map((item) => {
         const slug = item.category_slug || item.category_id || slugify(item.category) || 'uncategorized'
         const name = item.category || item.category_slug || item.category_id || 'Uncategorized'
         return { id: slug, name }
       })
-      .filter((opt) => {
-        if (!opt.id) return false
-        if (seen.has(opt.id)) return false
-        seen.add(opt.id)
+      .filter((option) => {
+        if (!option.id) return false
+        if (seen.has(option.id)) return false
+        seen.add(option.id)
         return true
       })
 
@@ -74,103 +81,181 @@ export default function News() {
     return [{ id: 'All', name: 'All' }, ...derived]
   }, [categories, items])
 
+  const featuredItem = upcomingItems[0]
+  const listingItems = upcomingItems.slice(1)
+  const totalPages = Math.max(1, Math.ceil(listingItems.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const pagedItems = listingItems.slice((safePage - 1) * pageSize, safePage * pageSize)
+
   return (
-    <div>
-      <section>
-        <div className="mx-auto max-w-6xl px-4 py-14">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between" data-reveal>
-            <div className="max-w-2xl">
-              <h1 className="gold-gradient-text text-3xl font-black tracking-tight sm:text-4xl">News & Events</h1>
-              <p className="mt-3 text-sm text-slate-600">
-                Updates on school activities, announcements, and community highlights.
-              </p>
+    <div className="bg-brand-sky">
+      <section className="section-space bg-gradient-to-br from-white via-red-50/35 to-rose-50/55">
+        <div className="mx-auto max-w-7xl px-4" data-reveal>
+          <p className="page-kicker">Newsroom</p>
+          <h1 className="page-h1 mt-4">News and Events</h1>
+          <p className="page-body mt-6 max-w-2xl">
+            Featured stories, announcements, and event updates for students, families, and the school community.
+          </p>
+        </div>
+      </section>
+
+      <section className="section-space bg-brand-sky">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="space-y-8">
+              {isError ? <p className="text-sm text-rose-600">Failed to load posts.</p> : null}
+              {isLoading ? <p className="text-sm text-slate-600">Loading posts...</p> : null}
+
+              {featuredItem ? (
+                <div data-reveal>
+                  <p className="page-kicker">Featured Post</p>
+                  <div className="mt-4">
+                    <NewsCard item={featuredItem} featured />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-600" data-reveal>
+                  No featured items for this filter.
+                </p>
+              )}
+
+              <div data-reveal>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="page-h3">Latest Updates</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    {listingItems.length} total
+                  </p>
+                </div>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  {pagedItems.length ? (
+                    pagedItems.map((item) => <NewsCard key={item.id || item.slug} item={item} />)
+                  ) : (
+                    <p className="text-sm text-slate-600">No updates for this filter.</p>
+                  )}
+                </div>
+
+                {listingItems.length > pageSize ? (
+                  <div className="mt-6 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPage((value) => Math.max(1, value - 1))}
+                      disabled={safePage <= 1}
+                      className="btn-secondary rounded-xl px-3 py-2 text-xs disabled:opacity-60"
+                    >
+                      <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }).map((_, idx) => {
+                      const pageNumber = idx + 1
+                      return (
+                        <button
+                          key={pageNumber}
+                          type="button"
+                          onClick={() => setPage(pageNumber)}
+                          className={[
+                            'inline-flex h-9 w-9 items-center justify-center rounded-xl text-xs font-extrabold transition duration-200',
+                            pageNumber === safePage
+                              ? 'gold-gradient-bg text-white'
+                              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+                          ].join(' ')}
+                        >
+                          {pageNumber}
+                        </button>
+                      )
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                      disabled={safePage >= totalPages}
+                      className="btn-secondary rounded-xl px-3 py-2 text-xs disabled:opacity-60"
+                    >
+                      Next
+                      <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              <div data-reveal>
+                <h3 className="page-h3">Past Archive</h3>
+                <p className="page-muted mt-2">Recently completed events and announcements.</p>
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  {pastItems.length ? (
+                    pastItems.slice(0, 6).map((item) => <NewsCard key={`${item.id || item.slug}-past`} item={item} />)
+                  ) : (
+                    <p className="text-sm text-slate-600">No past events for this filter.</p>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <label className="relative block">
-                <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+
+            <aside className="space-y-5" data-reveal>
+              <div className="surface-card p-5">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <FiSearch className="h-3.5 w-3.5" aria-hidden="true" />
+                  Search
+                </p>
                 <input
                   type="search"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setPage(1)
+                  }}
                   placeholder="Search posts"
-                  className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition duration-200 focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
                 />
-              </label>
-              <div className="flex flex-wrap gap-2" aria-label="Filter news by category">
-                {tagOptions.map((tag) => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => setCategory(tag.id)}
-                    className={[
-                      'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-extrabold transition-colors ring-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2',
-                      category === tag.id
-                        ? 'gold-gradient-bg text-white ring-brand-gold/60'
-                        : 'bg-white text-brand-goldText ring-slate-200 hover:bg-brand-sky',
-                    ].join(' ')}
-                  >
-                    {tag.name}
-                  </button>
-                ))}
               </div>
-            </div>
+
+              <div className="surface-card p-5">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <FiFilter className="h-3.5 w-3.5" aria-hidden="true" />
+                  Filters
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2" aria-label="Filter news by category">
+                  {tagOptions.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        setCategory(tag.id)
+                        setPage(1)
+                      }}
+                      className={[
+                        'rounded-full px-3 py-1 text-xs font-extrabold transition duration-200',
+                        category === tag.id
+                          ? 'gold-gradient-bg text-white'
+                          : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+                      ].join(' ')}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="surface-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Quick Stats</p>
+                <dl className="mt-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <dt className="text-sm text-slate-600">Published</dt>
+                    <dd className="text-lg font-extrabold text-brand-goldText">{items.length}</dd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <dt className="text-sm text-slate-600">Upcoming</dt>
+                    <dd className="text-lg font-extrabold text-brand-goldText">{upcomingItems.length}</dd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <dt className="text-sm text-slate-600">Archive</dt>
+                    <dd className="text-lg font-extrabold text-brand-goldText">{pastItems.length}</dd>
+                  </div>
+                </dl>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
-
-      <div className="w-full overflow-hidden bg-brand-sky leading-none" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-white sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
-
-      <section className="bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-14">
-          {isError ? <p className="text-sm text-rose-600">Failed to load posts.</p> : null}
-          {isLoading ? <p className="text-sm text-slate-600">Loading posts…</p> : null}
-
-          <div className="max-w-2xl" data-reveal>
-            <h2 className="gold-gradient-text text-2xl font-black tracking-tight">Latest & Upcoming</h2>
-            <p className="mt-2 text-sm text-slate-600">Events and announcements you can act on now.</p>
-          </div>
-
-          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {activeItems.length ? (
-              activeItems.map((item) => <NewsCard key={item.id || item.slug} item={item} />)
-            ) : (
-              <p className="text-sm text-slate-600" data-reveal>No items for this filter.</p>
-            )}
-          </div>
-
-          <div className="mt-12" data-reveal>
-            <h3 className="text-lg font-extrabold text-brand-goldText">Past events archive</h3>
-            <p className="text-sm text-slate-600">Recent past events for reference and documentation.</p>
-          </div>
-          <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {pastItems.length ? (
-              pastItems.map((item) => <NewsCard key={`${item.id || item.slug}-past`} item={item} />)
-            ) : (
-              <p className="text-sm text-slate-600" data-reveal>No past events for this filter.</p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <div className="w-full overflow-hidden bg-white leading-none" aria-hidden="true">
-        <svg
-          className="block h-8 w-full fill-current text-brand-sky sm:h-10"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          focusable="false"
-        >
-          <path d="M0,32 C240,80 480,80 720,40 C960,0 1200,0 1440,32 L1440,80 L0,80 Z" />
-        </svg>
-      </div>
     </div>
   )
 }

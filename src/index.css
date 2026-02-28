@@ -1,16 +1,117 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --surface-soft: #f8fafc;
+    --surface-muted: #f1f5f9;
+    --brand-primary: #b91c1c;
+    --brand-accent: #fb7185;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+    @apply bg-brand-sky text-brand-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Sora', ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+}
+
 @layer components {
   .gold-gradient-bg {
-    @apply bg-gradient-to-r from-brand-goldText via-brand-gold to-brand-goldBright;
+    @apply bg-gradient-to-r from-brand-red via-brand-gold to-brand-rose;
   }
 
   .gold-gradient-text {
-    @apply bg-gradient-to-r from-brand-goldText via-brand-gold to-brand-goldBright bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-brand-red via-brand-gold to-brand-rose bg-clip-text text-transparent;
+  }
+
+  .page-kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-goldText;
+  }
+
+  .page-h1 {
+    @apply text-5xl font-extrabold leading-[1.05] tracking-tight text-brand-ink sm:text-[3.5rem];
+  }
+
+  .page-h2 {
+    @apply text-[2rem] font-extrabold leading-tight tracking-tight text-brand-ink sm:text-4xl;
+  }
+
+  .page-h3 {
+    @apply text-2xl font-bold leading-snug tracking-tight text-brand-ink;
+  }
+
+  .page-body {
+    @apply text-[17px] leading-8 text-slate-600;
+  }
+
+  .page-muted {
+    @apply text-sm text-slate-500;
+  }
+
+  .section-space {
+    @apply py-20 sm:py-24;
+  }
+
+  .surface-card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-md;
+  }
+
+  .surface-card-hover {
+    @apply transition duration-200 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .section-separator {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent;
+  }
+
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-extrabold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn-base gold-gradient-bg text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply btn-base border border-slate-300 bg-white text-slate-800 hover:-translate-y-0.5 hover:bg-slate-50;
+  }
+
+  .btn-ripple {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .btn-ripple::after {
+    content: '';
+    position: absolute;
+    inset: -65%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.36) 0%, transparent 62%);
+    opacity: 0;
+    transform: scale(0.2);
+    transition: opacity 200ms ease, transform 200ms ease;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .btn-ripple:hover::after,
+  .btn-ripple:focus-visible::after {
+    opacity: 1;
+    transform: scale(1);
   }
 
   .admin-card {
@@ -38,13 +139,19 @@
   }
 }
 
-html {
-  scroll-behavior: smooth;
+.route-fade {
+  animation: route-fade 280ms ease;
 }
 
-body {
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
-  @apply bg-brand-sky text-brand-ink antialiased;
+@keyframes route-fade {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 /* Hero motion accents (respect reduced motion) */
@@ -60,7 +167,7 @@ body {
 .hero-animated .hero-sweep {
   background-image:
     radial-gradient(650px 280px at 15% 30%, rgba(7, 26, 47, 0.06), transparent 60%),
-    radial-gradient(520px 240px at 85% 60%, rgba(197, 22, 29, 0.12), transparent 60%);
+    radial-gradient(520px 240px at 85% 60%, rgba(185, 28, 28, 0.12), transparent 60%);
   animation: hero-sweep 14s ease-in-out infinite;
 }
 
@@ -88,7 +195,7 @@ body {
   content: '';
   position: absolute;
   inset: -40% -55%;
-  background: linear-gradient(120deg, transparent 44%, rgba(197, 22, 29, 0.12) 50%, transparent 56%);
+  background: linear-gradient(120deg, transparent 44%, rgba(185, 28, 28, 0.12) 50%, transparent 56%);
   transform: translateX(-70%);
   opacity: 0.75;
   animation: hero-shimmer 8.5s ease-in-out infinite;
@@ -106,6 +213,10 @@ body {
 
 .hero-animated .hero-float--3 {
   animation-delay: -3.2s;
+}
+
+.hero-animated .hero-scroll-indicator {
+  animation: hero-bounce 2.2s ease-in-out infinite;
 }
 
 @keyframes hero-orb {
@@ -152,11 +263,28 @@ body {
   }
 }
 
+@keyframes hero-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate3d(0, 7px, 0);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .route-fade {
+    animation: none;
+  }
+
   .hero-animated .hero-sweep,
   .hero-animated .hero-orb,
   .hero-animated .hero-float,
-  .hero-animated .hero-shimmer::after {
+  .hero-animated .hero-shimmer::after,
+  .hero-animated .hero-scroll-indicator {
     animation: none !important;
   }
 

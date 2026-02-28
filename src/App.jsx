@@ -69,32 +69,34 @@ function App() {
       {!isAdminRoute ? <Navbar /> : null}
       <ScrollToTop />
 
-      <main id="content" className={isAdminRoute ? '' : 'pt-16'}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/academics" element={<Academics />} />
-          <Route path="/admissions" element={<Admissions />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+      <main id="content" className={isAdminRoute ? '' : 'pt-20'}>
+        <div key={pathname} className={isAdminRoute ? '' : 'route-fade'}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/academics" element={<Academics />} />
+            <Route path="/admissions" element={<Admissions />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-          <Route element={<ProtectedRoute roles={['admin', 'editor']} />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="posts" element={<AdminPosts />} />
-              <Route path="posts/new" element={<AdminPostEditor />} />
-              <Route path="posts/:postId" element={<AdminPostEditor />} />
-              <Route path="testimonials" element={<AdminTestimonials />} />
-              <Route path="content" element={<AdminSiteContent />} />
-              <Route path="settings" element={<AdminSettings />} />
+            <Route element={<ProtectedRoute roles={['admin', 'editor']} />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="posts" element={<AdminPosts />} />
+                <Route path="posts/new" element={<AdminPostEditor />} />
+                <Route path="posts/:postId" element={<AdminPostEditor />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="content" element={<AdminSiteContent />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
 
       {!isAdminRoute ? <Footer /> : null}

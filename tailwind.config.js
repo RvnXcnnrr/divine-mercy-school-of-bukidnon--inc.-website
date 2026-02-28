@@ -6,21 +6,26 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
         brand: {
           navy: '#071A2F',
-          // Logo-based primary (red)
-          gold: '#C5161D',
-          goldBright: '#E0444A',
+          red: '#B91C1C',
+          rose: '#FB7185',
+          gold: '#B91C1C',
+          goldBright: '#EF4444',
           goldPale: '#FCE8EA',
-          goldText: '#A11318',
-          sky: '#F4F7FF',
-          blue: '#C5161D',
+          goldText: '#B91C1C',
+          sky: '#F8FAFC',
+          blue: '#B91C1C',
           ink: '#0B1220',
+          neutral: '#F8FAFC',
         },
       },
     },
   },
   plugins: [lineClamp],
 }
-

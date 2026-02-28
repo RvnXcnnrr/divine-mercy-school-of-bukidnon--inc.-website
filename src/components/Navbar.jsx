@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { FiLogIn, FiMenu, FiX } from 'react-icons/fi'
 import { FaSchool } from 'react-icons/fa6'
 import AdminLoginModal from './AdminLoginModal.jsx'
@@ -30,7 +30,6 @@ function NavItem({ to, children, onClick, className }) {
 }
 
 export default function Navbar() {
-  const { pathname } = useLocation()
   const [logoOk, setLogoOk] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
@@ -72,10 +71,6 @@ export default function Navbar() {
       )}
     </div>
   )
-
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)')
