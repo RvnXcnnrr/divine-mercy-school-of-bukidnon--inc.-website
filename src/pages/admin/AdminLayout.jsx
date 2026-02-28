@@ -20,7 +20,6 @@ import {
   FiPhoneCall,
   FiPlusCircle,
   FiSettings,
-  FiUsers,
   FiX,
 } from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
@@ -38,7 +37,6 @@ const NAV_SECTIONS = [
     title: 'Engagement',
     items: [
       { to: '/admin/testimonials', label: 'Testimonials', icon: FiMessageSquare },
-      { to: '/admin/settings', label: 'Subscribers', icon: FiUsers },
     ],
   },
   {
@@ -66,7 +64,6 @@ const PAGE_TITLES = {
   '/admin/posts': 'Posts',
   '/admin/posts/new': 'New Post',
   '/admin/testimonials': 'Testimonials',
-  '/admin/settings': 'Subscribers',
   '/admin/site': 'Site Management',
 }
 

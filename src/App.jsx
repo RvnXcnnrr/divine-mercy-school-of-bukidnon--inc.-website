@@ -15,7 +15,6 @@ import AdminLayout from './pages/admin/AdminLayout.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminPosts from './pages/admin/AdminPosts.jsx'
 import AdminPostEditor from './pages/admin/AdminPostEditor.jsx'
-import AdminSettings from './pages/admin/AdminSettings.jsx'
 import AdminSiteManagement from './pages/admin/AdminSiteManagement.jsx'
 import AdminTestimonials from './pages/admin/AdminTestimonials.jsx'
 import ProtectedRoute from './routes/ProtectedRoute.jsx'
@@ -166,7 +165,7 @@ function App() {
                 <Route path="content" element={<Navigate to="/admin/site/about" replace />} />
                 <Route path="site/:section" element={<AdminSiteManagement />} />
                 <Route path="site" element={<Navigate to="/admin/site/homepage" replace />} />
-                <Route path="settings" element={<AdminSettings />} />
+                <Route path="settings" element={<Navigate to="/admin" replace />} />
                 </Route>
               </Route>
 
