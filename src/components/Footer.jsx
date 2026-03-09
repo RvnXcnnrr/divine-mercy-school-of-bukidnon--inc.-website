@@ -195,7 +195,15 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="grid gap-8 border-t border-white/60 pt-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="footer-premium-divider" aria-hidden="true">
+          <span className="footer-premium-divider__line" />
+          <span className="footer-premium-divider__seal">
+            <span className="footer-premium-divider__dot" />
+          </span>
+          <span className="footer-premium-divider__line" />
+        </div>
+
+        <div className="grid gap-8 pt-1 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-3">
             <p className="text-sm font-extrabold text-brand-goldText">Explore</p>
             <ul className="space-y-2 text-sm">
