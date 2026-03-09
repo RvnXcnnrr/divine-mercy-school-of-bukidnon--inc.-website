@@ -7,6 +7,7 @@ import About from './pages/About.jsx'
 import Academics from './pages/Academics.jsx'
 import Admissions from './pages/Admissions.jsx'
 import News from './pages/News.jsx'
+import NewsDetail from './pages/NewsDetail.jsx'
 import Contact from './pages/Contact.jsx'
 import Events from './pages/Events.jsx'
 import Gallery from './pages/Gallery.jsx'
@@ -149,6 +150,7 @@ function App() {
               <Route path="/academics" element={<Academics />} />
               <Route path="/admissions" element={<Admissions />} />
               <Route path="/news" element={<News />} />
+              <Route path="/news/:idOrSlug" element={<NewsDetail />} />
               <Route path="/events" element={<Events />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/contact" element={<Contact />} />

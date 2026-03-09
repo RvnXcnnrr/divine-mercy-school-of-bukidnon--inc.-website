@@ -192,6 +192,16 @@
       flex-wrap: nowrap;
     }
   }
+
+  .news-article-body {
+    font-size: 1.03rem;
+    line-height: 1.9;
+    color: #334155;
+  }
+
+  .news-article-body p + p {
+    margin-top: 1rem;
+  }
 }
 
 .route-fade {

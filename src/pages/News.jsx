@@ -121,29 +121,27 @@ export default function News() {
 
   return (
     <div className="bg-brand-sky">
-      <section className="section-space bg-gradient-to-br from-white via-red-50/35 to-rose-50/55">
+      <section className="bg-gradient-to-br from-white via-red-50/35 to-rose-50/55 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4" data-reveal>
           <p className="page-kicker">Newsroom</p>
           <h1 className="page-h1 mt-4">News and Events</h1>
-          <p className="page-body mt-6 max-w-2xl">
+          <p className="page-body mt-5 max-w-2xl">
             Featured stories, announcements, and event updates for students, families, and the school community.
           </p>
         </div>
       </section>
 
-      <section className="section-space bg-brand-sky">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="space-y-8">
+      <section className="bg-slate-50 py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 lg:px-6">
+          <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-12">
               {isError ? <p className="text-sm text-rose-600">Failed to load posts.</p> : null}
               {isLoading ? <p className="text-sm text-slate-600">Loading posts...</p> : null}
 
               {featuredItem ? (
-                <div data-reveal>
+                <div className="space-y-4" data-reveal>
                   <p className="page-kicker">Featured Post</p>
-                  <div className="mt-4">
-                    <NewsCard item={featuredItem} featured />
-                  </div>
+                  <NewsCard item={featuredItem} featured />
                 </div>
               ) : (
                 <p className="text-sm text-slate-600" data-reveal>
@@ -151,15 +149,15 @@ export default function News() {
                 </p>
               )}
 
-              <div data-reveal>
+              <div className="space-y-5" data-reveal>
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="page-h3">Latest Updates</h2>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                     {listingItems.length} total
                   </p>
                 </div>
 
-                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   {pagedItems.length ? (
                     pagedItems.map((item) => <NewsCard key={item.id || item.slug} item={item} />)
                   ) : (
@@ -168,7 +166,7 @@ export default function News() {
                 </div>
 
                 {listingItems.length > pageSize ? (
-                  <div className="mt-6 flex flex-wrap items-center gap-2">
+                  <div className="mt-8 flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setPage((value) => Math.max(1, value - 1))}
@@ -209,10 +207,10 @@ export default function News() {
                 ) : null}
               </div>
 
-              <div data-reveal>
+              <div className="space-y-4" data-reveal>
                 <h3 className="page-h3">Past Archive</h3>
                 <p className="page-muted mt-2">Recently completed events and announcements.</p>
-                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   {pastItems.length ? (
                     pastItems.slice(0, 6).map((item) => <NewsCard key={`${item.id || item.slug}-past`} item={item} />)
                   ) : (
@@ -222,8 +220,8 @@ export default function News() {
               </div>
             </div>
 
-            <aside className="space-y-5" data-reveal>
-              <div className="surface-card p-5">
+            <aside className="space-y-5 self-start xl:sticky xl:top-28" data-reveal>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                   <FiSearch className="h-3.5 w-3.5" aria-hidden="true" />
                   Search
@@ -236,11 +234,11 @@ export default function News() {
                     setPage(1)
                   }}
                   placeholder="Search posts"
-                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition duration-200 focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition duration-200 focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/30"
                 />
               </div>
 
-              <div className="surface-card p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                   <FiFilter className="h-3.5 w-3.5" aria-hidden="true" />
                   Filters
@@ -258,7 +256,7 @@ export default function News() {
                         'rounded-full px-3 py-1 text-xs font-extrabold transition duration-200',
                         category === tag.id
                           ? 'gold-gradient-bg text-white'
-                          : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+                          : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100',
                       ].join(' ')}
                     >
                       {tag.name}
@@ -267,7 +265,7 @@ export default function News() {
                 </div>
               </div>
 
-              <div className="surface-card p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Quick Stats</p>
                 <dl className="mt-3 space-y-3">
                   <div className="flex items-center justify-between">

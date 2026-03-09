@@ -214,7 +214,7 @@ export async function fetchPostById(idOrSlug) {
     const match = fallbackNews.find((n) => String(n.id) === String(idOrSlug) || n.slug === idOrSlug)
     return { data: match ?? null }
   }
-  const isUuid = typeof idOrSlug === 'string' && idOrSlug.includes('-')
+  const isUuid = isUuidLike(idOrSlug)
   const column = isUuid ? 'id' : 'slug'
   const { data, error } = await supabase
     .from(supabaseTables.posts)
