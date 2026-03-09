@@ -7,6 +7,11 @@ import { fetchSiteContent } from '../services/siteInfoService.js'
 import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
 
 const LOCKED_DEVELOPER_CREDIT = 'Developed by Javy M. Rodillon'
+const PARTNER_LOGOS = [
+  { id: 'esc', label: 'ESC', src: '/logos/partners/esc.png' },
+  { id: 'deped', label: 'DepEd', src: '/logos/partners/deped.png' },
+  { id: 'kagawaran', label: 'Kagawaran ng Pilipinas', src: '/logos/partners/kagawaran-ng-pilipinas.png' },
+]
 
 function withLockedDeveloperCredit(settings = {}) {
   return {
@@ -119,6 +124,19 @@ export default function Footer() {
             <p className="max-w-2xl text-sm text-slate-700">
               {footerSettings.description || 'A private Catholic school committed to faith-based education, discipline, and service. We bring education closer to every child.'}
             </p>
+            <div className="footer-partners">
+              <p className="partners-title">Official School Partners</p>
+              <div className="partners-logos" aria-label="Official school partners">
+                {PARTNER_LOGOS.map((logo) => (
+                  <img
+                    key={logo.id}
+                    src={logo.src}
+                    alt={`${logo.label} official school partner logo`}
+                    loading="lazy"
+                  />
+                ))}
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               {(socialLinks.length
                 ? socialLinks
