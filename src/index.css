@@ -27,6 +27,16 @@
   h4 {
     font-family: 'Sora', ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
   }
+
+  .login-field-input:-webkit-autofill,
+  .login-field-input:-webkit-autofill:hover,
+  .login-field-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #0f172a;
+    caret-color: #0f172a;
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    box-shadow: 0 0 0 1000px #fff inset;
+    transition: background-color 9999s ease-out 0s;
+  }
 }
 
 @layer components {

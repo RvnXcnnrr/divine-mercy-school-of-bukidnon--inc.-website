@@ -14,7 +14,9 @@ export default function ProtectedRoute({ roles = [] }) {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />
+    const fromPath = location.pathname.startsWith('/admin') ? location.pathname : '/admin'
+    const encodedFrom = encodeURIComponent(fromPath)
+    return <Navigate to={`/?adminLogin=1&from=${encodedFrom}`} replace />
   }
 
   if (roles.length && !roles.includes(role)) {

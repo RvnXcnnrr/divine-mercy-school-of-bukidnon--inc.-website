@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate, useLocation, NavLink } from 'react-router-dom'
-import { FiLock, FiMail } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiLock, FiMail } from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
 import usePageMeta from '../../hooks/usePageMeta.js'
 import LoadingOverlay from '../../components/LoadingOverlay.jsx'
@@ -21,6 +21,7 @@ export default function AdminLogin() {
   const location = useLocation()
   const from = location.state?.from || '/admin'
   const [signingIn, setSigningIn] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function onSubmit(values) {
     setSigningIn(true)
@@ -49,7 +50,7 @@ export default function AdminLogin() {
             <input
               type="email"
               {...register('email')}
-              className="w-full bg-transparent text-sm text-slate-900 outline-none"
+              className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
               placeholder="you@example.com"
             />
           </div>
@@ -60,11 +61,20 @@ export default function AdminLogin() {
           <div className="mt-1 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/30">
             <FiLock className="h-4 w-4 text-slate-400" aria-hidden="true" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               {...register('password')}
-              className="w-full bg-transparent text-sm text-slate-900 outline-none"
-              placeholder="••••••••"
+              className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
+              placeholder="********"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="inline-flex h-6 w-6 items-center justify-center text-slate-400 transition hover:text-slate-600 focus:outline-none"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <FiEyeOff className="h-4 w-4" aria-hidden="true" /> : <FiEye className="h-4 w-4" aria-hidden="true" />}
+            </button>
           </div>
         </label>
 
@@ -83,7 +93,7 @@ export default function AdminLogin() {
           Need an account? Ask an admin to invite you in Supabase. <NavLink to="/" className="font-semibold text-brand-goldText">Back to site</NavLink>
         </p>
       </form>
-      {signingIn && <LoadingOverlay message="Signing in…" />}
+      {signingIn && <LoadingOverlay message="Signing in..." />}
     </div>
   )
 }

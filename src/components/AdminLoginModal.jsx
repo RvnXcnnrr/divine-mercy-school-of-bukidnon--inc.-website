@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FiLock, FiMail, FiX } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiLock, FiMail, FiX } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../providers/AppProviders.jsx'
 
@@ -11,7 +11,8 @@ const schema = z.object({
   password: z.string().min(6),
 })
 
-export default function AdminLoginModal({ open, onClose }) {
+export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }) {
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
   const { signIn } = useAuth()
   const {
@@ -35,7 +36,8 @@ export default function AdminLoginModal({ open, onClose }) {
       return
     }
     onClose?.()
-    navigate('/admin')
+    const safeRedirect = typeof redirectTo === 'string' && redirectTo.startsWith('/admin') ? redirectTo : '/admin'
+    navigate(safeRedirect)
   }
 
   if (!open) return null
@@ -67,7 +69,7 @@ export default function AdminLoginModal({ open, onClose }) {
               <input
                 type="email"
                 {...register('email')}
-                className="w-full bg-transparent text-sm text-slate-900 outline-none"
+                className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
                 placeholder="you@example.com"
                 autoComplete="username"
               />
@@ -79,12 +81,21 @@ export default function AdminLoginModal({ open, onClose }) {
             <div className="mt-1 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/30">
               <FiLock className="h-4 w-4 text-slate-400" aria-hidden="true" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 {...register('password')}
-                className="w-full bg-transparent text-sm text-slate-900 outline-none"
-                placeholder="••••••••"
+                className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
+                placeholder="********"
                 autoComplete="current-password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="inline-flex h-6 w-6 items-center justify-center text-slate-400 transition hover:text-slate-600 focus:outline-none"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <FiEyeOff className="h-4 w-4" aria-hidden="true" /> : <FiEye className="h-4 w-4" aria-hidden="true" />}
+              </button>
             </div>
           </label>
 
@@ -99,7 +110,7 @@ export default function AdminLoginModal({ open, onClose }) {
           >
             Sign in
           </button>
-          <p className="text-[11px] text-slate-500">You’ll be redirected to the admin dashboard after login.</p>
+          <p className="text-[11px] text-slate-500">You'll be redirected to the admin dashboard after login.</p>
         </form>
       </div>
     </div>

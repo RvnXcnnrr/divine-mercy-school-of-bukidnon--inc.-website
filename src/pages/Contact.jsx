@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FiCheckCircle, FiClock, FiMail, FiMapPin, FiMessageCircle, FiPhone, FiSend } from 'react-icons/fi'
-import { FaWhatsapp } from 'react-icons/fa6'
+import { FaFacebookF } from 'react-icons/fa6'
 import usePageMeta from '../hooks/usePageMeta.js'
 import { fetchSiteContent } from '../services/siteInfoService.js'
 import { readPublishedSiteManagementFromContent } from '../services/siteManagementService.js'
@@ -217,13 +217,13 @@ export default function Contact() {
 
                 <div className="grid gap-2 border-t border-slate-200 p-5">
                   <a
-                    href="https://wa.me/639000000000"
+                    href="https://www.facebook.com/dmsbherald"
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-base rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                    className="btn-base rounded-xl bg-[#1877F2] text-white hover:bg-[#166fe5]"
                   >
-                    <FaWhatsapp className="h-4 w-4" aria-hidden="true" />
-                    WhatsApp Quick Chat
+                    <FaFacebookF className="h-4 w-4" aria-hidden="true" />
+                    Facebook Page
                   </a>
                   <a
                     href={contact.messenger_link || 'https://m.me/dmsb'}

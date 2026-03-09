@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { FiLogIn, FiMenu, FiX } from 'react-icons/fi'
 import { FaSchool } from 'react-icons/fa6'
 import AdminLoginModal from './AdminLoginModal.jsx'
@@ -33,7 +33,10 @@ export default function Navbar() {
   const [logoOk, setLogoOk] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
-  const { user } = useAuth()
+  const [loginRedirectTo, setLoginRedirectTo] = useState('/admin')
+  const { user, isAuthReady } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const mobilePanelId = useId()
 
   const links = useMemo(
@@ -62,7 +65,10 @@ export default function Navbar() {
       ) : (
         <button
           type="button"
-          onClick={() => setLoginOpen(true)}
+          onClick={() => {
+            setLoginRedirectTo('/admin')
+            setLoginOpen(true)
+          }}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-goldText px-4 text-xs font-bold uppercase tracking-wide text-white shadow-none ring-1 ring-brand-goldText/20 transition hover:-translate-y-[1px] hover:bg-brand-goldText/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
         >
           <FiLogIn className="mr-1 h-4 w-4" aria-hidden="true" />
@@ -71,6 +77,30 @@ export default function Navbar() {
       )}
     </div>
   )
+
+  useEffect(() => {
+    if (!isAuthReady) return
+    const params = new URLSearchParams(location.search)
+    const shouldOpenLogin = params.get('adminLogin') === '1'
+    if (!shouldOpenLogin) return
+
+    const requestedFrom = params.get('from')
+    const nextRedirect = requestedFrom && requestedFrom.startsWith('/admin') ? requestedFrom : '/admin'
+    setLoginRedirectTo(nextRedirect)
+
+    if (!user) setLoginOpen(true)
+
+    params.delete('adminLogin')
+    params.delete('from')
+    const nextSearch = params.toString()
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : '',
+      },
+      { replace: true }
+    )
+  }, [isAuthReady, location.pathname, location.search, navigate, user])
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)')
@@ -197,7 +227,10 @@ export default function Navbar() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setLoginOpen(true)}
+                  onClick={() => {
+                    setLoginRedirectTo('/admin')
+                    setLoginOpen(true)
+                  }}
                   className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   <FiLogIn className="h-5 w-5" aria-hidden="true" />
@@ -250,7 +283,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <AdminLoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+      <AdminLoginModal open={loginOpen} onClose={() => setLoginOpen(false)} redirectTo={loginRedirectTo} />
     </>
   )
 }
