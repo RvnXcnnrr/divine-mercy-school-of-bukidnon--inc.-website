@@ -32,7 +32,7 @@ function buildPageItems(currentPage, totalPages) {
 }
 
 function rangeLabel(page, pageSize, totalItems, itemLabel) {
-  if (!totalItems) return `No ${itemLabel}`
+  if (!totalItems) return `No ${itemLabel} found`
   const start = (page - 1) * pageSize + 1
   const end = Math.min(page * pageSize, totalItems)
   const suffix = totalItems === 1 ? itemLabel.replace(/s$/, '') : itemLabel
@@ -71,12 +71,12 @@ export default function AdminPagination({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="text-sm text-slate-600">
           {rangeLabel(page, pageSize, totalItems, itemLabel)}
-          {isLoading ? <span className="ml-2 text-xs text-slate-500">Refreshing...</span> : null}
+          {isLoading ? <span className="ml-2 text-xs text-slate-500">Updating list...</span> : null}
         </p>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <label htmlFor="rows-per-page" className="text-slate-600">
-            Rows per page
+            Results per page
           </label>
           <select
             id="rows-per-page"
@@ -104,7 +104,7 @@ export default function AdminPagination({
         </PageButton>
         <PageButton disabled={!hasPrev} onClick={() => jump(page - 1)} ariaLabel="Go to previous page">
           <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Prev</span>
+          <span className="hidden sm:inline">Previous</span>
         </PageButton>
 
         <div className="flex items-center gap-1">

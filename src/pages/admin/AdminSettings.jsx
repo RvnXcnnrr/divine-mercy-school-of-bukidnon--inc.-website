@@ -39,7 +39,7 @@ export default function AdminSettings() {
       const { data } = await fetchSubscribers()
       setItems(data || [])
     } catch (err) {
-      setError(err.message || 'Failed to load subscribers')
+      setError(err.message || 'We could not load the subscriber list. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -82,16 +82,16 @@ export default function AdminSettings() {
 
   return (
     <>
-      {loading && <LoadingOverlay message="Loading subscribers..." />}
+      {loading && <LoadingOverlay message="Loading subscriber list..." />}
 
       <div className="space-y-4">
         <AdminPageHeader
           title="Subscribers"
-          description="Manage your mailing list, filter by signup date, and export data safely."
+          description="Review newsletter subscribers, filter by subscription date, and export the current list."
           actions={
             <button type="button" onClick={exportCSV} disabled={!filtered.length} className="admin-button-primary">
               <FiDownload className="h-4 w-4" aria-hidden="true" />
-              Export CSV
+              Export subscriber list
             </button>
           }
         />
@@ -107,30 +107,36 @@ export default function AdminSettings() {
                   setSearch(event.target.value)
                   setPage(1)
                 }}
-                placeholder="Search email..."
+                placeholder="Search subscribers by email address"
                 className="admin-input pl-9"
               />
             </div>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(event) => {
-                setDateFrom(event.target.value)
-                setPage(1)
-              }}
-              className="admin-input md:w-44"
-            />
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(event) => {
-                setDateTo(event.target.value)
-                setPage(1)
-              }}
-              className="admin-input md:w-44"
-            />
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Subscribed from</span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(event) => {
+                  setDateFrom(event.target.value)
+                  setPage(1)
+                }}
+                className="admin-input md:w-44"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Subscribed to</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(event) => {
+                  setDateTo(event.target.value)
+                  setPage(1)
+                }}
+                className="admin-input md:w-44"
+              />
+            </label>
             <div className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-700">
-              Total: {filtered.length}
+              Total subscribers shown: {filtered.length}
             </div>
           </div>
           {error ? <p className="mt-3 text-sm font-medium text-rose-600">{error}</p> : null}
@@ -139,7 +145,7 @@ export default function AdminSettings() {
         {!loading && !filtered.length ? (
           <section className="admin-card flex flex-col items-center gap-3 py-14 text-center">
             <FiMail className="h-8 w-8 text-slate-300" aria-hidden="true" />
-            <p className="text-sm font-medium text-slate-500">No subscribers match your filters.</p>
+            <p className="text-sm font-medium text-slate-500">No subscribers match the current filters. Try changing the date range or clearing the search.</p>
           </section>
         ) : (
           <section className="admin-card overflow-hidden">
@@ -148,8 +154,8 @@ export default function AdminSettings() {
                 <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
                   <tr>
                     <th className="border-b border-slate-200 px-4 py-3">#</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Email</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Subscribed</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Email address</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Subscription date</th>
                   </tr>
                 </thead>
                 <tbody>

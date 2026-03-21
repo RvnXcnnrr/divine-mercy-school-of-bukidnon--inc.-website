@@ -1,4 +1,4 @@
-export default function LoadingOverlay({ message = 'Loading…' }) {
+export default function LoadingOverlay({ message = 'Loading...' }) {
   return (
     <div
       className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50 backdrop-blur-sm"

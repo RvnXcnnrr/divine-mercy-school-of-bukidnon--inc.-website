@@ -8,7 +8,14 @@ const COMMANDS = [
   { label: 'Bullets', icon: FiList, command: 'insertUnorderedList' },
 ]
 
-export default function AdminRichTextEditor({ label, value, onChange, placeholder = 'Write content...', minHeight = 140 }) {
+export default function AdminRichTextEditor({
+  label,
+  value,
+  onChange,
+  placeholder = 'Type the content that will appear on the website.',
+  minHeight = 140,
+  helperText = '',
+}) {
   const ref = useRef(null)
 
   useEffect(() => {
@@ -30,6 +37,7 @@ export default function AdminRichTextEditor({ label, value, onChange, placeholde
       {label ? (
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
       ) : null}
+      {helperText ? <p className="mb-2 text-sm text-slate-500">{helperText}</p> : null}
 
       <div className="rounded-xl border border-slate-200 bg-white">
         <div className="flex flex-wrap items-center gap-1 border-b border-slate-200 px-2 py-2">
@@ -47,7 +55,7 @@ export default function AdminRichTextEditor({ label, value, onChange, placeholde
           ))}
           <span className="ml-2 inline-flex items-center gap-1 text-xs text-slate-500">
             <FiType className="h-3.5 w-3.5" aria-hidden="true" />
-            Rich text
+            Text formatting
           </span>
         </div>
 

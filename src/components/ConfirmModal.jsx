@@ -5,10 +5,10 @@ export default function ConfirmModal({
   open, 
   onClose, 
   onConfirm, 
-  title = 'Confirm Action',
-  message = 'Are you sure you want to continue?',
-  confirmText = 'OK',
-  cancelText = 'Cancel',
+  title = 'Confirm change',
+  message = 'Please confirm that you want to continue.',
+  confirmText = 'Confirm',
+  cancelText = 'Go back',
   variant = 'default' // 'default' | 'danger'
 }) {
   useEffect(() => {

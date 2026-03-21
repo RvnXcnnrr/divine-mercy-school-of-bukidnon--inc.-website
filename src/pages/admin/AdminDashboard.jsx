@@ -59,14 +59,14 @@ export default function AdminDashboard() {
 
     return [
       {
-        label: 'Published',
+        label: 'Published posts',
         value: published,
         trend: trendText(thisWeekPublished, previousWeekPublished),
         icon: FiFileText,
         tint: 'rose',
       },
       {
-        label: 'Drafts',
+        label: 'Draft posts',
         value: draftsCount,
         trend: trendText(thisWeekDrafts, previousWeekDrafts),
         icon: FiZap,
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
         tint: 'blue',
       },
       {
-        label: 'Vlogs',
+        label: 'Posts with video',
         value: vlogs,
         trend: `${vlogs ? `${Math.round((vlogs / Math.max(published, 1)) * 100)}%` : '0%'} with media`,
         icon: FiPlayCircle,
@@ -115,17 +115,17 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Dashboard Overview"
-        description="Monitor publishing activity, moderation queue, and audience growth."
+        title="Dashboard"
+        description="Monitor publishing activity, testimonials waiting for review, and subscriber growth."
         actions={
           <>
             <button type="button" className="admin-button-secondary" onClick={() => navigate('/')}>
               <FiExternalLink className="h-4 w-4" aria-hidden="true" />
-              View Site
+              Open website
             </button>
             <button type="button" className="admin-button-primary" onClick={() => navigate('/admin/posts/new')}>
               <FiPlus className="h-4 w-4" aria-hidden="true" />
-              Create Post
+              Create new post
             </button>
           </>
         }
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
             <FiActivity className="h-4 w-4 text-slate-400" aria-hidden="true" />
           </div>
           {recentPosts.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-slate-300 px-4 py-8 text-sm text-slate-500">No recent post activity found.</p>
+            <p className="rounded-xl border border-dashed border-slate-300 px-4 py-8 text-sm text-slate-500">No recent post activity yet.</p>
           ) : (
             <ul className="space-y-2">
               {recentPosts.map((post) => (
@@ -177,20 +177,20 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             <button type="button" className="admin-button-secondary w-full justify-start" onClick={() => navigate('/admin/posts/new')}>
               <FiPlus className="h-4 w-4" aria-hidden="true" />
-              Create New Post
+              Create new post
             </button>
             <button type="button" className="admin-button-secondary w-full justify-start" onClick={() => navigate('/admin/testimonials')}>
               <FiMessageCircle className="h-4 w-4" aria-hidden="true" />
-              Manage Testimonials
+              Review testimonials
             </button>
             <button type="button" className="admin-button-secondary w-full justify-start" onClick={() => navigate('/admin/posts')}>
               <FiFileText className="h-4 w-4" aria-hidden="true" />
-              Review Posts
+              Open posts list
             </button>
           </div>
           <dl className="mt-5 space-y-3 rounded-xl bg-slate-50 p-4">
             <div className="flex items-center justify-between text-sm">
-              <dt className="text-slate-600">Pending testimonials</dt>
+              <dt className="text-slate-600">Testimonials waiting for review</dt>
               <dd className="font-semibold text-slate-900">{pendingTestimonials}</dd>
             </div>
             <div className="flex items-center justify-between text-sm">

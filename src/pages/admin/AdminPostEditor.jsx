@@ -55,6 +55,7 @@ export default function AdminPostEditor() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [draggingUpload, setDraggingUpload] = useState(false)
   const [submissionLocked, setSubmissionLocked] = useState(false)
+  const [formError, setFormError] = useState('')
   const submitInFlightRef = useRef(false)
   const lastSubmitAtRef = useRef(0)
   const idempotencyKeyRef = useRef('')
@@ -185,8 +186,9 @@ export default function AdminPostEditor() {
     lastSubmitAtRef.current = now
     submitInFlightRef.current = true
     setSubmissionLocked(true)
+    setFormError('')
     try {
-      const confirmed = window.confirm('Save changes to this post?')
+      const confirmed = window.confirm('Save this post with the current details and publishing status?')
       if (!confirmed) return
 
       setUploading(true)
@@ -266,7 +268,7 @@ export default function AdminPostEditor() {
       setLastAutoSavedAt(new Date())
       navigate('/admin/posts')
     } catch (error) {
-      alert(error.message || 'Failed to save post')
+      setFormError(error.message || 'We could not save the post. Please try again.')
     } finally {
       setUploading(false)
       submitInFlightRef.current = false
@@ -275,17 +277,17 @@ export default function AdminPostEditor() {
   }
 
   const isSaving = uploading || isSubmitting || submissionLocked
-  const saveLabel = isSaving ? 'Saving...' : 'Save Changes'
+  const saveLabel = isSaving ? 'Saving post...' : 'Save post'
   const autosaveText = (() => {
-    if (isSaving) return 'Saving content...'
-    if (isDirty) return 'Unsaved changes'
-    if (!lastAutoSavedAt) return 'Ready'
-    return `Autosaved ${lastAutoSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    if (isSaving) return 'Saving post...'
+    if (isDirty) return 'You have unsaved changes'
+    if (!lastAutoSavedAt) return 'No unsaved changes'
+    return `Saved automatically at ${lastAutoSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
   })()
 
   function handleCancelEdit() {
     if (isDirty) {
-      const confirmed = window.confirm('Discard unsaved changes and return to posts?')
+      const confirmed = window.confirm('Discard unsaved changes and return to the posts list?')
       if (!confirmed) return
     }
     navigate('/admin/posts')
@@ -294,9 +296,11 @@ export default function AdminPostEditor() {
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title={postId ? 'Edit Post' : 'Create New Post'}
-        description="Set post details, media, and publish status in one streamlined layout."
+        title={postId ? 'Edit post' : 'Create new post'}
+        description="Enter the post details, choose whether it stays as a draft or goes live, and upload the images visitors will see."
       />
+
+      {formError ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{formError}</p> : null}
 
       <section className="sticky top-[74px] z-20 admin-card bg-white/90 p-3 backdrop-blur">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -306,11 +310,11 @@ export default function AdminPostEditor() {
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={handleCancelEdit} className="admin-button-secondary">
-              Cancel
+              Back to posts
             </button>
             <button type="button" onClick={() => setPreviewOpen(true)} className="admin-button-secondary">
               <FiEye className="h-4 w-4" aria-hidden="true" />
-              Preview
+              Preview post
             </button>
             <button type="submit" form="post-form" disabled={isSaving} className="admin-button-primary">
               <FiSave className="h-4 w-4" aria-hidden="true" />
@@ -323,40 +327,42 @@ export default function AdminPostEditor() {
       <form id="post-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
           <article className="admin-card p-5">
-            <h2 className="text-base font-semibold text-slate-900">Post Info</h2>
-            <p className="mt-1 text-sm text-slate-500">Core metadata for your post.</p>
+            <h2 className="text-base font-semibold text-slate-900">Post details</h2>
+            <p className="mt-1 text-sm text-slate-500">Enter the main information that staff and visitors will see.</p>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <label className="block text-sm font-medium text-slate-700 md:col-span-2">
-                Title
-                <input {...register('title')} className="admin-input mt-1" placeholder="Post title" />
-                {errors.title ? <span className="mt-1 block text-xs text-rose-600">Title must be at least 3 characters.</span> : null}
+                Post title
+                <input {...register('title')} className="admin-input mt-1" placeholder="Enter the post title that visitors will see" />
+                {errors.title ? <span className="mt-1 block text-xs text-rose-600">Enter a post title with at least 3 characters.</span> : null}
               </label>
               <label className="block text-sm font-medium text-slate-700 md:col-span-2">
-                Category
+                Post category
                 <select {...register('category_id')} className="admin-input mt-1">
-                  <option value="">Unassigned</option>
+                  <option value="">No category selected</option>
                   {categories.map((category) => (
                     <option key={category.id || category.slug} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
+                <span className="mt-1 block text-xs text-slate-500">Choose the group this post belongs to. Leave this blank if it does not match any category.</span>
               </label>
             </div>
           </article>
 
           <article className="admin-card p-5">
-            <h2 className="text-base font-semibold text-slate-900">Publishing & Media</h2>
-            <p className="mt-1 text-sm text-slate-500">Set visibility and upload images used in gallery and previews.</p>
+            <h2 className="text-base font-semibold text-slate-900">Visibility and images</h2>
+            <p className="mt-1 text-sm text-slate-500">Choose whether this post stays private or goes live, and add the images used in previews and galleries.</p>
 
             <div className="mt-4 space-y-4">
               <label className="block text-sm font-medium text-slate-700">
-                Status
+                Publishing status
                 <select {...register('status')} className="admin-input mt-1">
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
                 </select>
+                <span className="mt-1 block text-xs text-slate-500">Select Draft if the post should stay private until it is ready to appear on the website.</span>
               </label>
 
               <label className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -364,12 +370,12 @@ export default function AdminPostEditor() {
                 <span className="relative inline-flex h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-brand-goldText">
                   <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5" />
                 </span>
-                <span className="text-sm font-medium text-slate-700">Feature on homepage</span>
+                <span className="text-sm font-medium text-slate-700">Show this post in featured areas on the homepage</span>
               </label>
 
               <div className="border-t border-slate-200 pt-4">
-                <p className="text-sm font-medium text-slate-700">Upload image(s)</p>
-                <p className="mt-1 text-xs text-slate-500">Select one or more images. They are saved to gallery automatically.</p>
+                <p className="text-sm font-medium text-slate-700">Post images</p>
+                <p className="mt-1 text-xs text-slate-500">Upload one or more images. The first image will be used as the main preview image if you do not set a different one elsewhere.</p>
 
                 <div
                 className="mt-3"
@@ -400,9 +406,9 @@ export default function AdminPostEditor() {
                 />
                 <label htmlFor="media-upload-input" className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-goldText">
                   <FiUpload className="h-4 w-4" aria-hidden="true" />
-                  Upload image(s)
+                  Select images to upload
                 </label>
-                <p className="mt-2 text-xs text-slate-500">Select one or more images. Drag and drop is supported.</p>
+                <p className="mt-2 text-xs text-slate-500">You can choose multiple images at once, or drag and drop them here.</p>
               </div>
               </div>
 
@@ -415,7 +421,7 @@ export default function AdminPostEditor() {
                         type="button"
                         onClick={() => removeGalleryUrl(url)}
                         className="absolute right-1 top-1 rounded-md bg-white/90 p-1 text-slate-700 ring-1 ring-slate-200 hover:bg-white"
-                        aria-label="Remove image"
+                        aria-label="Remove uploaded image"
                       >
                         <FiX className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -428,7 +434,7 @@ export default function AdminPostEditor() {
                         type="button"
                         onClick={() => removeGalleryFile(file.name)}
                         className="absolute right-1 top-1 rounded-md p-1 hover:bg-amber-100"
-                        aria-label="Remove queued image"
+                        aria-label="Remove image waiting to upload"
                       >
                         <FiX className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -442,19 +448,19 @@ export default function AdminPostEditor() {
         </div>
 
         <article className="admin-card p-5">
-          <h2 className="text-base font-semibold text-slate-900">Content</h2>
-          <p className="mt-1 text-sm text-slate-500">Write the main post body.</p>
+          <h2 className="text-base font-semibold text-slate-900">Post content</h2>
+          <p className="mt-1 text-sm text-slate-500">Write the full text that will appear on the website.</p>
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-slate-700">
-              Content
+              Main post content
               <textarea
                 {...register('content')}
                 rows={12}
                 className="admin-input mt-1 min-h-[420px]"
-                placeholder="Write your post content here..."
+                placeholder="Write the post content that will appear on the website."
               />
-              {errors.content ? <span className="mt-1 block text-xs text-rose-600">Content must be at least 10 characters.</span> : null}
+              {errors.content ? <span className="mt-1 block text-xs text-rose-600">Enter the main post content. Please write at least 10 characters.</span> : null}
             </label>
           </div>
         </article>
@@ -464,7 +470,7 @@ export default function AdminPostEditor() {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-2xl bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-lg font-semibold text-slate-900">Post Preview</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Preview of this post</h2>
               <button type="button" onClick={() => setPreviewOpen(false)} className="admin-button-secondary px-2" aria-label="Close preview">
                 <FiX className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -474,7 +480,7 @@ export default function AdminPostEditor() {
             ) : null}
             <h3 className="mt-4 text-2xl font-semibold text-slate-900">{watchedValues.title || 'Untitled post'}</h3>
             {watchedValues.excerpt ? <p className="mt-2 text-sm text-slate-600">{watchedValues.excerpt}</p> : null}
-            <div className="mt-5 whitespace-pre-wrap text-sm leading-6 text-slate-700">{watchedValues.content || 'No content yet.'}</div>
+            <div className="mt-5 whitespace-pre-wrap text-sm leading-6 text-slate-700">{watchedValues.content || 'No content has been added yet.'}</div>
           </div>
         </div>
       ) : null}

@@ -7,12 +7,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../providers/AppProviders.jsx'
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email('Enter a valid email address.'),
+  password: z.string().min(6, 'Enter a password with at least 6 characters.'),
 })
 
 export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [authError, setAuthError] = useState('')
   const navigate = useNavigate()
   const { signIn } = useAuth()
   const {
@@ -30,9 +31,10 @@ export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }
   }, [open, onClose])
 
   async function onSubmit(values) {
+    setAuthError('')
     const { error } = await signIn({ email: values.email, password: values.password })
     if (error) {
-      alert(error.message)
+      setAuthError(error.message || 'We could not sign you in. Please check your email and password.')
       return
     }
     onClose?.()
@@ -47,9 +49,9 @@ export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Admin</p>
-            <h2 className="text-xl font-black text-brand-goldText">Secure Login</h2>
-            <p className="text-xs text-slate-600">For admins and editors.</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Staff access</p>
+            <h2 className="text-xl font-black text-brand-goldText">Sign in to the dashboard</h2>
+            <p className="text-xs text-slate-600">Use your staff email address and password.</p>
           </div>
           <button
             type="button"
@@ -70,10 +72,11 @@ export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }
                 type="email"
                 {...register('email')}
                 className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
-                placeholder="you@example.com"
+                placeholder="name@school.edu.ph"
                 autoComplete="username"
               />
             </div>
+            {errors.email ? <p className="mt-1 text-xs text-rose-600">{errors.email.message}</p> : null}
           </label>
 
           <label className="block text-sm font-semibold text-slate-700">
@@ -84,7 +87,7 @@ export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }
                 type={showPassword ? 'text' : 'password'}
                 {...register('password')}
                 className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
-                placeholder="********"
+                placeholder="Enter your password"
                 autoComplete="current-password"
               />
               <button
@@ -97,20 +100,19 @@ export default function AdminLoginModal({ open, onClose, redirectTo = '/admin' }
                 {showPassword ? <FiEyeOff className="h-4 w-4" aria-hidden="true" /> : <FiEye className="h-4 w-4" aria-hidden="true" />}
               </button>
             </div>
+            {errors.password ? <p className="mt-1 text-xs text-rose-600">{errors.password.message}</p> : null}
           </label>
 
-          {errors.email || errors.password ? (
-            <p className="text-xs text-rose-600">Enter a valid email and password.</p>
-          ) : null}
+          {authError ? <p className="text-xs text-rose-600">{authError}</p> : null}
 
           <button
             type="submit"
             disabled={isSubmitting}
             className="inline-flex w-full items-center justify-center rounded-md bg-brand-goldText px-4 py-3 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 disabled:opacity-70"
           >
-            Sign in
+            {isSubmitting ? 'Signing in...' : 'Sign in to dashboard'}
           </button>
-          <p className="text-[11px] text-slate-500">You'll be redirected to the admin dashboard after login.</p>
+          <p className="text-[11px] text-slate-500">After you sign in, you will be taken to the dashboard automatically.</p>
         </form>
       </div>
     </div>

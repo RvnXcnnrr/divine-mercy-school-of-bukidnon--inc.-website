@@ -8,8 +8,17 @@ const variants = {
 }
 
 export default function StatusBadge({ status, className = '' }) {
-  const label = (status || 'draft').toString().toLowerCase()
-  const tone = variants[label] || 'bg-slate-100 text-slate-700 ring-slate-200'
+  const rawLabel = (status || 'draft').toString().toLowerCase()
+  const tone = variants[rawLabel] || 'bg-slate-100 text-slate-700 ring-slate-200'
+  const textByStatus = {
+    published: 'Published',
+    draft: 'Draft',
+    featured: 'Featured',
+    approved: 'Approved',
+    pending: 'Pending review',
+    rejected: 'Rejected',
+  }
+  const label = textByStatus[rawLabel] || rawLabel
 
   return (
     <span
