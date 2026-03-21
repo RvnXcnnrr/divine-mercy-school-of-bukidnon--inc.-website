@@ -21,11 +21,14 @@ export default function AdminPosts() {
     open: false,
     action: null,
     message: '',
-    title: 'Confirm Action',
+    title: 'Confirm change',
+    confirmText: 'Confirm',
+    cancelText: 'Go back',
     variant: 'default',
   })
   const [acting, setActing] = useState(false)
   const [rowAction, setRowAction] = useState({ id: null, type: null })
+  const [error, setError] = useState('')
 
   const queryParams = useMemo(
     () => ({
@@ -62,25 +65,29 @@ export default function AdminPosts() {
   const allVisibleSelected = items.length > 0 && items.every((post) => selectedIds.includes(post.id))
   const selectedCount = selectedIds.length
 
-  function openConfirm({ title, message, action, variant = 'default' }) {
-    setConfirmModal({ open: true, title, message, action, variant })
+  function openConfirm({ title, message, action, variant = 'default', confirmText = 'Confirm', cancelText = 'Go back' }) {
+    setConfirmModal({ open: true, title, message, action, variant, confirmText, cancelText })
   }
 
   function resetConfirm() {
-    setConfirmModal({ open: false, action: null, message: '', title: 'Confirm Action', variant: 'default' })
+    setConfirmModal({ open: false, action: null, message: '', title: 'Confirm change', confirmText: 'Confirm', cancelText: 'Go back', variant: 'default' })
   }
 
   async function onDelete(id) {
     openConfirm({
-      title: 'Delete Post',
-      message: 'Delete this post permanently?',
+      title: 'Delete post',
+      message: 'Delete this post permanently? This action cannot be undone.',
+      confirmText: 'Delete post',
       variant: 'danger',
       action: async () => {
         setActing(true)
+        setError('')
         try {
           await deletePost(id)
           setSelectedIds((prev) => prev.filter((itemId) => itemId !== id))
           await refetch()
+        } catch (deleteError) {
+          setError(deleteError.message || 'We could not delete the post. Please try again.')
         } finally {
           setActing(false)
         }
@@ -90,15 +97,19 @@ export default function AdminPosts() {
 
   async function onToggleFeatured(id, current) {
     openConfirm({
-      title: current ? 'Remove Featured' : 'Mark as Featured',
-      message: current ? 'Remove this post from featured?' : 'Mark this post as featured?',
+      title: current ? 'Remove from featured posts' : 'Show in featured posts',
+      message: current
+        ? 'Remove this post from the featured areas on the homepage?'
+        : 'Show this post in the featured areas on the homepage?',
+      confirmText: current ? 'Remove from featured posts' : 'Show in featured posts',
       action: async () => {
         setRowAction({ id, type: 'featured' })
+        setError('')
         try {
           await toggleFeatured(id, !current)
           await refetch()
         } catch (error) {
-          alert(error.message || 'Failed to update featured status.')
+          setError(error.message || 'We could not update the featured post setting. Please try again.')
         } finally {
           setRowAction({ id: null, type: null })
         }
@@ -121,15 +132,19 @@ export default function AdminPosts() {
   async function runBulkDelete() {
     if (!selectedIds.length) return
     openConfirm({
-      title: 'Delete Selected Posts',
-      message: `Delete ${selectedIds.length} selected post(s)?`,
+      title: 'Delete selected posts',
+      message: `Delete ${selectedIds.length} selected post(s)? This action cannot be undone.`,
+      confirmText: 'Delete selected posts',
       variant: 'danger',
       action: async () => {
         setActing(true)
+        setError('')
         try {
           await Promise.all(selectedIds.map((id) => deletePost(id)))
           setSelectedIds([])
           await refetch()
+        } catch (deleteError) {
+          setError(deleteError.message || 'We could not delete one or more selected posts. Please try again.')
         } finally {
           setActing(false)
         }
@@ -139,11 +154,16 @@ export default function AdminPosts() {
 
   function runBulkStatus(nextStatus) {
     if (!selectedIds.length) return
+    const isPublishing = nextStatus === 'published'
     openConfirm({
-      title: 'Update Status',
-      message: `Mark ${selectedIds.length} selected post(s) as ${nextStatus}?`,
+      title: isPublishing ? 'Publish selected posts' : 'Move selected posts to draft',
+      message: isPublishing
+        ? `Publish ${selectedIds.length} selected post(s) to the website?`
+        : `Move ${selectedIds.length} selected post(s) back to draft?`,
+      confirmText: isPublishing ? 'Publish selected posts' : 'Move selected posts to draft',
       action: async () => {
         setActing(true)
+        setError('')
         try {
           await Promise.all(
             selectedIds.map((id) =>
@@ -153,6 +173,8 @@ export default function AdminPosts() {
             )
           )
           await refetch()
+        } catch (statusError) {
+          setError(statusError.message || 'We could not update one or more selected posts. Please try again.')
         } finally {
           setActing(false)
         }
@@ -162,19 +184,21 @@ export default function AdminPosts() {
 
   return (
     <>
-      {(isLoading || acting) && <LoadingOverlay message={acting ? 'Applying changes...' : 'Loading posts...'} />}
+      {(isLoading || acting) && <LoadingOverlay message={acting ? 'Updating posts...' : 'Loading posts list...'} />}
 
       <div className="space-y-4">
         <AdminPageHeader
-          title="Posts Management"
-          description="Search, filter, bulk-edit, and publish content with fewer clicks."
+          title="Posts"
+          description="Search, review, update, and publish website posts from one place."
           actions={
             <button type="button" onClick={() => navigate('/admin/posts/new')} className="admin-button-primary">
               <FiPlus className="h-4 w-4" aria-hidden="true" />
-              New Post
+              Create new post
             </button>
           }
         />
+
+        {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{error}</p> : null}
 
         <section className="admin-card p-4">
           <div className="flex flex-col gap-3">
@@ -188,7 +212,7 @@ export default function AdminPosts() {
                     setSearch(event.target.value)
                     setPage(1)
                   }}
-                  placeholder="Search posts by title..."
+                  placeholder="Search posts by title"
                   className="admin-input pl-9"
                 />
               </div>
@@ -219,7 +243,7 @@ export default function AdminPosts() {
                   className="admin-input min-w-36 py-2"
                 >
                   <option value="all">All content</option>
-                  <option value="video">Video / Media</option>
+                  <option value="video">Posts with video</option>
                   <option value="events">Events</option>
                 </select>
               </div>
@@ -228,16 +252,16 @@ export default function AdminPosts() {
             <div className="flex flex-wrap items-center gap-2">
               <p className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
                 <FiCheckSquare className="h-4 w-4" aria-hidden="true" />
-                {selectedCount} selected
+                {selectedCount} post{selectedCount === 1 ? '' : 's'} selected
               </p>
               <button type="button" onClick={runBulkDelete} disabled={!selectedCount} className="admin-button-danger">
-                Delete selected
+                Delete selected posts
               </button>
               <button type="button" onClick={() => runBulkStatus('published')} disabled={!selectedCount} className="admin-button-secondary">
-                Mark published
+                Publish selected posts
               </button>
               <button type="button" onClick={() => runBulkStatus('draft')} disabled={!selectedCount} className="admin-button-secondary">
-                Mark draft
+                Move selected posts to draft
               </button>
             </div>
           </div>
@@ -261,9 +285,9 @@ export default function AdminPosts() {
                     <th className="border-b border-slate-200 px-4 py-3">Title</th>
                     <th className="border-b border-slate-200 px-4 py-3">Category</th>
                     <th className="border-b border-slate-200 px-4 py-3">Status</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Featured</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Updated</th>
-                    <th className="border-b border-slate-200 px-4 py-3">Media</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Homepage highlight</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Last updated</th>
+                    <th className="border-b border-slate-200 px-4 py-3">Main image</th>
                     <th className="border-b border-slate-200 px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -289,10 +313,10 @@ export default function AdminPosts() {
                         <button
                           type="button"
                           onClick={() => navigate(`/admin/posts/${post.id}`)}
-                          className="max-w-[320px] truncate text-left font-semibold text-slate-900 transition hover:text-brand-goldText"
-                          title={post.title}
-                        >
-                          {post.title || 'Untitled'}
+                        className="max-w-[320px] truncate text-left font-semibold text-slate-900 transition hover:text-brand-goldText"
+                        title={post.title}
+                      >
+                          {post.title || 'Untitled post'}
                         </button>
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-slate-600">
@@ -302,7 +326,7 @@ export default function AdminPosts() {
                         <StatusBadge status={post.status || 'draft'} />
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3">
-                        {post.is_featured ? <StatusBadge status="featured" /> : <span className="text-xs text-slate-500">Standard</span>}
+                        {post.is_featured ? <StatusBadge status="featured" /> : <span className="text-xs text-slate-500">Not featured</span>}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-slate-500">
                         {new Date(post.updated_at || post.created_at).toLocaleDateString()}
@@ -316,13 +340,7 @@ export default function AdminPosts() {
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-right">
                         <RowActions
-                          onEdit={() =>
-                            openConfirm({
-                              title: 'Edit Post',
-                              message: 'Open this post in editor?',
-                              action: async () => navigate(`/admin/posts/${post.id}`),
-                            })
-                          }
+                          onEdit={() => navigate(`/admin/posts/${post.id}`)}
                           onToggleFeatured={() => onToggleFeatured(post.id, post.is_featured)}
                           onDelete={() => onDelete(post.id)}
                           featured={Boolean(post.is_featured)}
@@ -338,7 +356,7 @@ export default function AdminPosts() {
           </div>
 
           {items.length === 0 ? (
-            <div className="px-4 py-10 text-center text-sm text-slate-500">No posts found for the current filters.</div>
+            <div className="px-4 py-10 text-center text-sm text-slate-500">No posts match the current filters. Try clearing a filter or create a new post.</div>
           ) : null}
         </section>
 
@@ -369,8 +387,8 @@ export default function AdminPosts() {
         }}
         title={confirmModal.title}
         message={confirmModal.message}
-        confirmText="Continue"
-        cancelText="Cancel"
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
         variant={confirmModal.variant}
       />
     </>
@@ -383,14 +401,14 @@ function RowActions({ onEdit, onToggleFeatured, onDelete, featured, busy, busyTy
       <IconActionButton
         onClick={onEdit}
         icon={FiEdit2}
-        label="Edit post"
+        label="Open post for editing"
         className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
         disabled={busy}
       />
       <IconActionButton
         onClick={onToggleFeatured}
         icon={busyType === 'featured' ? FiLoader : FiStar}
-        label={featured ? 'Remove featured' : 'Mark as featured'}
+        label={featured ? 'Remove from featured posts' : 'Show in featured posts'}
         className={
           featured
             ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'

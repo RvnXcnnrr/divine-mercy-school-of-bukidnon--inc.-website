@@ -3,14 +3,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate, useLocation, NavLink } from 'react-router-dom'
-import { FiLock, FiMail } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiLock, FiMail } from 'react-icons/fi'
 import { useAuth } from '../../providers/AppProviders.jsx'
 import usePageMeta from '../../hooks/usePageMeta.js'
 import LoadingOverlay from '../../components/LoadingOverlay.jsx'
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email('Enter a valid email address.'),
+  password: z.string().min(6, 'Enter a password with at least 6 characters.'),
 })
 
 export default function AdminLogin() {
@@ -21,13 +21,16 @@ export default function AdminLogin() {
   const location = useLocation()
   const from = location.state?.from || '/admin'
   const [signingIn, setSigningIn] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [authError, setAuthError] = useState('')
 
   async function onSubmit(values) {
     setSigningIn(true)
+    setAuthError('')
     const { error } = await signIn({ email: values.email, password: values.password })
     if (error) {
       setSigningIn(false)
-      alert(error.message)
+      setAuthError(error.message || 'We could not sign you in. Please check your email and password.')
       return
     }
     navigate(from, { replace: true })
@@ -39,8 +42,8 @@ export default function AdminLogin() {
         onSubmit={handleSubmit(onSubmit)}
         className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg ring-1 ring-slate-200"
       >
-        <h1 className="text-2xl font-black text-brand-goldText">Admin Login</h1>
-        <p className="mt-2 text-sm text-slate-600">Sign in with your Supabase credentials.</p>
+        <h1 className="text-2xl font-black text-brand-goldText">Sign in to the dashboard</h1>
+        <p className="mt-2 text-sm text-slate-600">Use your staff email address and password.</p>
 
         <label className="mt-5 block text-sm font-semibold text-slate-700">
           Email
@@ -49,10 +52,11 @@ export default function AdminLogin() {
             <input
               type="email"
               {...register('email')}
-              className="w-full bg-transparent text-sm text-slate-900 outline-none"
-              placeholder="you@example.com"
+              className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
+              placeholder="name@school.edu.ph"
             />
           </div>
+          {formState.errors.email ? <p className="mt-1 text-xs text-rose-600">{formState.errors.email.message}</p> : null}
         </label>
 
         <label className="mt-4 block text-sm font-semibold text-slate-700">
@@ -60,30 +64,38 @@ export default function AdminLogin() {
           <div className="mt-1 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/30">
             <FiLock className="h-4 w-4 text-slate-400" aria-hidden="true" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               {...register('password')}
-              className="w-full bg-transparent text-sm text-slate-900 outline-none"
-              placeholder="••••••••"
+              className="login-field-input w-full bg-transparent text-sm text-slate-900 outline-none selection:bg-transparent selection:text-slate-900"
+              placeholder="Enter your password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="inline-flex h-6 w-6 items-center justify-center text-slate-400 transition hover:text-slate-600 focus:outline-none"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <FiEyeOff className="h-4 w-4" aria-hidden="true" /> : <FiEye className="h-4 w-4" aria-hidden="true" />}
+            </button>
           </div>
+          {formState.errors.password ? <p className="mt-1 text-xs text-rose-600">{formState.errors.password.message}</p> : null}
         </label>
 
-        {formState.errors.email || formState.errors.password ? (
-          <p className="mt-2 text-xs text-rose-600">Invalid credentials format.</p>
-        ) : null}
+        {authError ? <p className="mt-2 text-xs text-rose-600">{authError}</p> : null}
 
         <button
           type="submit"
           className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-brand-goldText px-4 py-3 text-sm font-extrabold text-white transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2"
         >
-          Sign in
+          Sign in to dashboard
         </button>
 
         <p className="mt-4 text-center text-xs text-slate-500">
-          Need an account? Ask an admin to invite you in Supabase. <NavLink to="/" className="font-semibold text-brand-goldText">Back to site</NavLink>
+          Need an account? Ask a system administrator to create one for you. <NavLink to="/" className="font-semibold text-brand-goldText">Back to site</NavLink>
         </p>
       </form>
-      {signingIn && <LoadingOverlay message="Signing in…" />}
+      {signingIn && <LoadingOverlay message="Signing in to the dashboard..." />}
     </div>
   )
 }

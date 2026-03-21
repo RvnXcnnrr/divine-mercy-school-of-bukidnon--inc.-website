@@ -7,10 +7,10 @@ import About from './pages/About.jsx'
 import Academics from './pages/Academics.jsx'
 import Admissions from './pages/Admissions.jsx'
 import News from './pages/News.jsx'
+import NewsDetail from './pages/NewsDetail.jsx'
 import Contact from './pages/Contact.jsx'
 import Events from './pages/Events.jsx'
 import Gallery from './pages/Gallery.jsx'
-import AdminLogin from './pages/admin/AdminLogin.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminPosts from './pages/admin/AdminPosts.jsx'
@@ -150,10 +150,11 @@ function App() {
               <Route path="/academics" element={<Academics />} />
               <Route path="/admissions" element={<Admissions />} />
               <Route path="/news" element={<News />} />
+              <Route path="/news/:idOrSlug" element={<NewsDetail />} />
               <Route path="/events" element={<Events />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/login" element={<Navigate to="/?adminLogin=1" replace />} />
 
               <Route element={<ProtectedRoute roles={['admin', 'editor']} />}>
                 <Route path="/admin" element={<AdminLayout />}>

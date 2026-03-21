@@ -30,7 +30,7 @@ const NAV_SECTIONS = [
     items: [
       { to: '/admin', label: 'Dashboard', icon: FiGrid, end: true },
       { to: '/admin/posts', label: 'Posts', icon: FiPenTool, end: true },
-      { to: '/admin/posts/new', label: 'New Post', icon: FiPlusCircle, end: true },
+      { to: '/admin/posts/new', label: 'Create New Post', icon: FiPlusCircle, end: true },
     ],
   },
   {
@@ -51,10 +51,10 @@ const NAV_SECTIONS = [
       { to: '/admin/site/about', label: 'About Page', icon: FiInfo },
       { to: '/admin/site/academics', label: 'Academics Page', icon: FiBook },
       { to: '/admin/site/admissions', label: 'Admissions Page', icon: FiClipboard },
-      { to: '/admin/site/events', label: 'Events Settings', icon: FiCalendar },
-      { to: '/admin/site/gallery', label: 'Gallery Settings', icon: FiImage },
+      { to: '/admin/site/events', label: 'Events Page Settings', icon: FiCalendar },
+      { to: '/admin/site/gallery', label: 'Gallery Page Settings', icon: FiImage },
       { to: '/admin/site/contact', label: 'Contact Page', icon: FiPhoneCall },
-      { to: '/admin/site/footer', label: 'Footer', icon: FiMonitor },
+      { to: '/admin/site/footer', label: 'Footer Content', icon: FiMonitor },
     ],
   },
 ]
@@ -62,7 +62,7 @@ const NAV_SECTIONS = [
 const PAGE_TITLES = {
   '/admin': 'Dashboard',
   '/admin/posts': 'Posts',
-  '/admin/posts/new': 'New Post',
+  '/admin/posts/new': 'Create New Post',
   '/admin/testimonials': 'Testimonials',
   '/admin/site': 'Site Management',
 }
@@ -72,10 +72,10 @@ const SITE_PAGE_TITLES = {
   about: 'About Page Manager',
   academics: 'Academics Page Manager',
   admissions: 'Admissions Page Manager',
-  events: 'Events Settings',
-  gallery: 'Gallery Settings',
+  events: 'Events Page Settings',
+  gallery: 'Gallery Page Settings',
   contact: 'Contact Page Manager',
-  footer: 'Footer Manager',
+  footer: 'Footer Content',
 }
 
 function initialSidebarCollapsed() {
@@ -167,7 +167,7 @@ export default function AdminLayout() {
               {!isCollapsed ? (
                 <>
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-goldText">Divine Mercy School</p>
-                  <p className="text-sm font-semibold text-slate-700">Admin Control Panel</p>
+                  <p className="text-sm font-semibold text-slate-700">Staff Dashboard</p>
                 </>
               ) : (
                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-brand-goldText">
@@ -245,7 +245,7 @@ export default function AdminLayout() {
 
           <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
             <a href="/" className={isCollapsed ? 'admin-button-secondary w-full px-0' : 'admin-button-secondary w-full'}>
-              {isCollapsed ? 'Site' : 'View Site'}
+              {isCollapsed ? 'Site' : 'Open Website'}
             </a>
             <button
               type="button"

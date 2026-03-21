@@ -13,13 +13,14 @@ export default function SortableCardsEditor({
   title,
   description,
   items,
-  addLabel = 'Add Item',
-  emptyMessage = 'No items yet.',
+  addLabel = 'Add entry',
+  emptyMessage,
   onChange,
   onAdd,
   onDuplicate,
   renderBody,
   itemLabel,
+  itemName = 'Entry',
   className = '',
 }) {
   const dragIndexRef = useRef(-1)
@@ -62,7 +63,9 @@ export default function SortableCardsEditor({
       </div>
 
       {items.length === 0 ? (
-        <p className="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">{emptyMessage}</p>
+        <p className="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-500">
+          {emptyMessage || `No ${itemName.toLowerCase()} entries have been added yet. Select "${addLabel}" to create the first one.`}
+        </p>
       ) : (
         <div className="mt-4 space-y-3">
           {items.map((item, index) => (
@@ -84,14 +87,14 @@ export default function SortableCardsEditor({
               <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                   <FiMove className="h-3.5 w-3.5" aria-hidden="true" />
-                  {itemLabel ? itemLabel(item, index) : `Item ${index + 1}`}
+                  {itemLabel ? itemLabel(item, index) : `${itemName} ${index + 1}`}
                 </p>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => moveBy(index, -1)}
                     className="admin-button-secondary px-2"
-                    aria-label="Move item up"
+                    aria-label={`Move ${itemName.toLowerCase()} up`}
                   >
                     <FiArrowUp className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -99,7 +102,7 @@ export default function SortableCardsEditor({
                     type="button"
                     onClick={() => moveBy(index, 1)}
                     className="admin-button-secondary px-2"
-                    aria-label="Move item down"
+                    aria-label={`Move ${itemName.toLowerCase()} down`}
                   >
                     <FiArrowDown className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -108,7 +111,7 @@ export default function SortableCardsEditor({
                       type="button"
                       onClick={() => onDuplicate(item, index)}
                       className="admin-button-secondary px-2"
-                      aria-label="Duplicate item"
+                      aria-label={`Duplicate this ${itemName.toLowerCase()}`}
                     >
                       <FiCopy className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -117,7 +120,7 @@ export default function SortableCardsEditor({
                     type="button"
                     onClick={() => removeItem(index)}
                     className="admin-button-secondary px-2 text-rose-700 hover:bg-rose-50"
-                    aria-label="Remove item"
+                    aria-label={`Remove this ${itemName.toLowerCase()}`}
                   >
                     <FiTrash2 className="h-4 w-4" aria-hidden="true" />
                   </button>
